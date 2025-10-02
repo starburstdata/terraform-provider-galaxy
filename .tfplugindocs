@@ -1,0 +1,20 @@
+# Configuration for terraform-plugin-docs
+# See: https://github.com/hashicorp/terraform-plugin-docs
+
+# Provider name
+provider_name = "galaxy"
+
+# Website repository settings
+website_source_dir = "docs"
+website_temp_dir = ".tftmp"
+
+# Ignore certain files during generation
+ignore_deprecated_files = true
+
+# Template rendering settings
+rendered_provider_name = "Galaxy"
+rendered_website_dir = "website"
+
+# Example overrides - use this to exclude certain files if needed
+# examples_dir = "examples"
+# ignore_deprecated_files = true

@@ -1,0 +1,69 @@
+name: CI
+
+on:
+    pull_request:
+
+concurrency:
+    group: ${{ github.workflow }}-${{ github.ref }}
+
+jobs:
+    ci:
+        runs-on: [self-hosted, gha-fleet-ec2-2cpu-8gb-arm64, latest]
+        steps:
+            - name: Checkout PR branch
+              uses: actions/checkout@v4
+              with:
+                  fetch-depth: 0
+
+            - name: Setup Terraform
+              uses: hashicorp/setup-terraform@v3
+              with:
+                  terraform_wrapper: false
+
+            - name: Setup Go
+              uses: actions/setup-go@v5
+              with:
+                  go-version: "1.24.5"
+                  cache: true
+
+            - name: Configure AWS credentials
+              uses: aws-actions/configure-aws-credentials@v4
+              with:
+                  role-to-assume: ${{ secrets.AWS_ROLE_ARN }} # Configure this secret in GitHub
+                  aws-region: us-east-1
+                  role-chaining: true
+                  role-skip-session-tagging: true
+                  role-duration-seconds: 10800
+            - name: Install tools
+              run: |
+                  go install github.com/hashicorp/terraform-plugin-docs/cmd/tfplugindocs@latest
+                  go install github.com/golangci/golangci-lint/cmd/golangci-lint@v1.62.2
+
+            - name: Build provider
+              run: make install
+
+            - name: Format code check
+              run: |
+                  make fmt
+                  if [[ $(git status --porcelain) ]]; then
+                    echo "Code is not formatted. Please run 'make fmt' and commit the changes."
+                    git status --porcelain
+                    exit 1
+                  fi
+
+            - name: Run linter
+              run: make lint
+
+            - name: Configure Terraform CLI for local provider
+              run: |
+                  cat > ~/.terraformrc <<EOF
+                  provider_installation {
+                    dev_overrides {
+                      "hashicorp.com/starburstdata/galaxy" = "$(go env GOPATH)/bin"
+                    }
+                    direct {}
+                  }
+                  EOF
+
+            - name: Validate documentation
+              run: make docs-validate
