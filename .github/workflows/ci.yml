@@ -25,15 +25,6 @@ jobs:
               with:
                   go-version: "1.24.5"
                   cache: true
-
-            - name: Configure AWS credentials
-              uses: aws-actions/configure-aws-credentials@v4
-              with:
-                  role-to-assume: ${{ secrets.AWS_ROLE_ARN }} # Configure this secret in GitHub
-                  aws-region: us-east-1
-                  role-chaining: true
-                  role-skip-session-tagging: true
-                  role-duration-seconds: 10800
             - name: Install tools
               run: |
                   go install github.com/hashicorp/terraform-plugin-docs/cmd/tfplugindocs@latest
