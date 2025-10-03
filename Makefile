@@ -8,12 +8,12 @@ testacc:
 # Run all examples (integration with existing test infrastructure)
 .PHONY: test-examples
 test-examples:
-	cd examples && ./test_all_examples.sh
+	cd examples && ../../scripts/test_all_examples.sh
 
 # Build the provider
 .PHONY: build
 build:
-	go build -v ./...
+	go build -v -o terraform-provider-galaxy .
 
 # Install the provider locally
 .PHONY: install
@@ -33,7 +33,7 @@ docs-validate:
 # Clean up generated files
 .PHONY: clean
 clean:
-	rm -f terraform-provider-galaxy
+	rm -f terraform-provider-galaxy provider
 
 # Format Go code
 .PHONY: fmt
