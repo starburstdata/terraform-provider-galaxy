@@ -110,6 +110,9 @@ func (d *clusterDataSource) updateModelFromResponse(ctx context.Context, model *
 	if warpSpeedCluster, ok := response["warpSpeedCluster"].(bool); ok {
 		model.WarpSpeedCluster = types.BoolValue(warpSpeedCluster)
 	}
+	if replicas, ok := response["replicas"].(float64); ok {
+		model.Replicas = types.Int64Value(int64(replicas))
+	}
 	if catalogRefs, ok := response["catalogRefs"].([]interface{}); ok {
 		catalogList := make([]types.String, 0, len(catalogRefs))
 		for _, ref := range catalogRefs {

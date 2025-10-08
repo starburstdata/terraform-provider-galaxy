@@ -296,6 +296,9 @@ func (r *clusterResource) modelToCreateRequest(ctx context.Context, model *resou
 	if !model.ProcessingMode.IsNull() && !model.ProcessingMode.IsUnknown() && model.ProcessingMode.ValueString() != "" {
 		request["processingMode"] = model.ProcessingMode.ValueString()
 	}
+	if !model.Replicas.IsNull() && !model.Replicas.IsUnknown() && model.Replicas.ValueInt64() > 0 {
+		request["replicas"] = model.Replicas.ValueInt64()
+	}
 	if !model.ResultCacheDefaultVisibilitySeconds.IsNull() {
 		request["resultCacheDefaultVisibilitySeconds"] = model.ResultCacheDefaultVisibilitySeconds.ValueInt64()
 	}
@@ -408,6 +411,10 @@ func (r *clusterResource) updateModelFromResponse(ctx context.Context, model *re
 
 	if warpResiliencyEnabled, ok := response["warpResiliencyEnabled"].(bool); ok {
 		model.WarpResiliencyEnabled = types.BoolValue(warpResiliencyEnabled)
+	}
+
+	if replicas, ok := response["replicas"].(float64); ok {
+		model.Replicas = types.Int64Value(int64(replicas))
 	}
 
 	// Handle catalog references - preserve original plan order to avoid consistency errors
