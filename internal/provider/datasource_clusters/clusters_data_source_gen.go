@@ -67,6 +67,11 @@ func ClustersDataSourceSchema(ctx context.Context) schema.Schema {
 							Description:         "Cluster name (read only)",
 							MarkdownDescription: "Cluster name (read only)",
 						},
+						"replicas": schema.Int64Attribute{
+							Computed:            true,
+							Description:         "Number of replicas (read only)",
+							MarkdownDescription: "Number of replicas (read only)",
+						},
 						"trino_uri": schema.StringAttribute{
 							Computed:            true,
 							Description:         "Connection URL (read only)",
@@ -283,6 +288,24 @@ func (t ResultType) ValueFromObject(ctx context.Context, in basetypes.ObjectValu
 			fmt.Sprintf(`name expected to be basetypes.StringValue, was: %T`, nameAttribute))
 	}
 
+	replicasAttribute, ok := attributes["replicas"]
+
+	if !ok {
+		diags.AddError(
+			"Attribute Missing",
+			`replicas is missing from object`)
+
+		return nil, diags
+	}
+
+	replicasVal, ok := replicasAttribute.(basetypes.Int64Value)
+
+	if !ok {
+		diags.AddError(
+			"Attribute Wrong Type",
+			fmt.Sprintf(`replicas expected to be basetypes.Int64Value, was: %T`, replicasAttribute))
+	}
+
 	trinoUriAttribute, ok := attributes["trino_uri"]
 
 	if !ok {
@@ -333,6 +356,7 @@ func (t ResultType) ValueFromObject(ctx context.Context, in basetypes.ObjectValu
 		MaxWorkers:       maxWorkersVal,
 		MinWorkers:       minWorkersVal,
 		Name:             nameVal,
+		Replicas:         replicasVal,
 		TrinoUri:         trinoUriVal,
 		WarpSpeedCluster: warpSpeedClusterVal,
 		state:            attr.ValueStateKnown,
@@ -564,6 +588,24 @@ func NewResultValue(attributeTypes map[string]attr.Type, attributes map[string]a
 			fmt.Sprintf(`name expected to be basetypes.StringValue, was: %T`, nameAttribute))
 	}
 
+	replicasAttribute, ok := attributes["replicas"]
+
+	if !ok {
+		diags.AddError(
+			"Attribute Missing",
+			`replicas is missing from object`)
+
+		return NewResultValueUnknown(), diags
+	}
+
+	replicasVal, ok := replicasAttribute.(basetypes.Int64Value)
+
+	if !ok {
+		diags.AddError(
+			"Attribute Wrong Type",
+			fmt.Sprintf(`replicas expected to be basetypes.Int64Value, was: %T`, replicasAttribute))
+	}
+
 	trinoUriAttribute, ok := attributes["trino_uri"]
 
 	if !ok {
@@ -614,6 +656,7 @@ func NewResultValue(attributeTypes map[string]attr.Type, attributes map[string]a
 		MaxWorkers:       maxWorkersVal,
 		MinWorkers:       minWorkersVal,
 		Name:             nameVal,
+		Replicas:         replicasVal,
 		TrinoUri:         trinoUriVal,
 		WarpSpeedCluster: warpSpeedClusterVal,
 		state:            attr.ValueStateKnown,
@@ -697,13 +740,14 @@ type ResultValue struct {
 	MaxWorkers       basetypes.Int64Value  `tfsdk:"max_workers"`
 	MinWorkers       basetypes.Int64Value  `tfsdk:"min_workers"`
 	Name             basetypes.StringValue `tfsdk:"name"`
+	Replicas         basetypes.Int64Value  `tfsdk:"replicas"`
 	TrinoUri         basetypes.StringValue `tfsdk:"trino_uri"`
 	WarpSpeedCluster basetypes.BoolValue   `tfsdk:"warp_speed_cluster"`
 	state            attr.ValueState
 }
 
 func (v ResultValue) ToTerraformValue(ctx context.Context) (tftypes.Value, error) {
-	attrTypes := make(map[string]tftypes.Type, 11)
+	attrTypes := make(map[string]tftypes.Type, 12)
 
 	var val tftypes.Value
 	var err error
@@ -719,6 +763,7 @@ func (v ResultValue) ToTerraformValue(ctx context.Context) (tftypes.Value, error
 	attrTypes["max_workers"] = basetypes.Int64Type{}.TerraformType(ctx)
 	attrTypes["min_workers"] = basetypes.Int64Type{}.TerraformType(ctx)
 	attrTypes["name"] = basetypes.StringType{}.TerraformType(ctx)
+	attrTypes["replicas"] = basetypes.Int64Type{}.TerraformType(ctx)
 	attrTypes["trino_uri"] = basetypes.StringType{}.TerraformType(ctx)
 	attrTypes["warp_speed_cluster"] = basetypes.BoolType{}.TerraformType(ctx)
 
@@ -726,7 +771,7 @@ func (v ResultValue) ToTerraformValue(ctx context.Context) (tftypes.Value, error
 
 	switch v.state {
 	case attr.ValueStateKnown:
-		vals := make(map[string]tftypes.Value, 11)
+		vals := make(map[string]tftypes.Value, 12)
 
 		val, err = v.BatchCluster.ToTerraformValue(ctx)
 
@@ -800,6 +845,14 @@ func (v ResultValue) ToTerraformValue(ctx context.Context) (tftypes.Value, error
 
 		vals["name"] = val
 
+		val, err = v.Replicas.ToTerraformValue(ctx)
+
+		if err != nil {
+			return tftypes.NewValue(objectType, tftypes.UnknownValue), err
+		}
+
+		vals["replicas"] = val
+
 		val, err = v.TrinoUri.ToTerraformValue(ctx)
 
 		if err != nil {
@@ -870,6 +923,7 @@ func (v ResultValue) ToObjectValue(ctx context.Context) (basetypes.ObjectValue, 
 			"max_workers":        basetypes.Int64Type{},
 			"min_workers":        basetypes.Int64Type{},
 			"name":               basetypes.StringType{},
+			"replicas":           basetypes.Int64Type{},
 			"trino_uri":          basetypes.StringType{},
 			"warp_speed_cluster": basetypes.BoolType{},
 		}), diags
@@ -887,6 +941,7 @@ func (v ResultValue) ToObjectValue(ctx context.Context) (basetypes.ObjectValue, 
 		"max_workers":        basetypes.Int64Type{},
 		"min_workers":        basetypes.Int64Type{},
 		"name":               basetypes.StringType{},
+		"replicas":           basetypes.Int64Type{},
 		"trino_uri":          basetypes.StringType{},
 		"warp_speed_cluster": basetypes.BoolType{},
 	}
@@ -911,6 +966,7 @@ func (v ResultValue) ToObjectValue(ctx context.Context) (basetypes.ObjectValue, 
 			"max_workers":        v.MaxWorkers,
 			"min_workers":        v.MinWorkers,
 			"name":               v.Name,
+			"replicas":           v.Replicas,
 			"trino_uri":          v.TrinoUri,
 			"warp_speed_cluster": v.WarpSpeedCluster,
 		})
@@ -969,6 +1025,10 @@ func (v ResultValue) Equal(o attr.Value) bool {
 		return false
 	}
 
+	if !v.Replicas.Equal(other.Replicas) {
+		return false
+	}
+
 	if !v.TrinoUri.Equal(other.TrinoUri) {
 		return false
 	}
@@ -1001,6 +1061,7 @@ func (v ResultValue) AttributeTypes(ctx context.Context) map[string]attr.Type {
 		"max_workers":        basetypes.Int64Type{},
 		"min_workers":        basetypes.Int64Type{},
 		"name":               basetypes.StringType{},
+		"replicas":           basetypes.Int64Type{},
 		"trino_uri":          basetypes.StringType{},
 		"warp_speed_cluster": basetypes.BoolType{},
 	}
