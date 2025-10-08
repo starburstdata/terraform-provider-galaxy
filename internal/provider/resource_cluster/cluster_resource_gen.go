@@ -84,6 +84,12 @@ func ClusterResourceSchema(ctx context.Context) schema.Schema {
 					),
 				},
 			},
+			"replicas": schema.Int64Attribute{
+				Optional:            true,
+				Computed:            true,
+				Description:         "Number of replicas",
+				MarkdownDescription: "Number of replicas",
+			},
 			"result_cache_default_visibility_seconds": schema.Int64Attribute{
 				Optional:            true,
 				Computed:            true,
@@ -127,6 +133,7 @@ type ClusterModel struct {
 	Name                                types.String `tfsdk:"name"`
 	PrivateLinkCluster                  types.Bool   `tfsdk:"private_link_cluster"`
 	ProcessingMode                      types.String `tfsdk:"processing_mode"`
+	Replicas                            types.Int64  `tfsdk:"replicas"`
 	ResultCacheDefaultVisibilitySeconds types.Int64  `tfsdk:"result_cache_default_visibility_seconds"`
 	ResultCacheEnabled                  types.Bool   `tfsdk:"result_cache_enabled"`
 	TrinoUri                            types.String `tfsdk:"trino_uri"`

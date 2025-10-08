@@ -31,5 +31,6 @@ description: |-
 - `max_workers` (Number) Maximum worker count (read only)
 - `min_workers` (Number) Minimum worker count (read only)
 - `name` (String) Cluster name (read only)
+- `replicas` (Number) Number of replicas (read only)
 - `trino_uri` (String) Connection URL (read only)
 - `warp_speed_cluster` (Boolean) Supports warp speed mode (read only)

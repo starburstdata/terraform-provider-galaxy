@@ -63,6 +63,11 @@ func ClusterDataSourceSchema(ctx context.Context) schema.Schema {
 				Description:         "Cluster name (read only)",
 				MarkdownDescription: "Cluster name (read only)",
 			},
+			"replicas": schema.Int64Attribute{
+				Computed:            true,
+				Description:         "Number of replicas (read only)",
+				MarkdownDescription: "Number of replicas (read only)",
+			},
 			"trino_uri": schema.StringAttribute{
 				Computed:            true,
 				Description:         "Connection URL (read only)",
@@ -88,6 +93,7 @@ type ClusterModel struct {
 	MaxWorkers       types.Int64  `tfsdk:"max_workers"`
 	MinWorkers       types.Int64  `tfsdk:"min_workers"`
 	Name             types.String `tfsdk:"name"`
+	Replicas         types.Int64  `tfsdk:"replicas"`
 	TrinoUri         types.String `tfsdk:"trino_uri"`
 	WarpSpeedCluster types.Bool   `tfsdk:"warp_speed_cluster"`
 }

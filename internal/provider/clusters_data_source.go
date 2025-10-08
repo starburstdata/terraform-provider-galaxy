@@ -196,6 +196,13 @@ func (d *clustersDataSource) mapSingleCluster(ctx context.Context, clusterMap ma
 		attributes["warp_speed_cluster"] = types.BoolNull()
 	}
 
+	// Map replicas
+	if replicas, ok := clusterMap["replicas"].(float64); ok {
+		attributes["replicas"] = types.Int64Value(int64(replicas))
+	} else {
+		attributes["replicas"] = types.Int64Null()
+	}
+
 	// Map catalog refs list
 	attributes["catalog_refs"] = d.mapCatalogRefs(ctx, clusterMap)
 
