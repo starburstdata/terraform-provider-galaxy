@@ -277,28 +277,6 @@ See the [examples](./examples) directory for complete configuration examples:
 - [Data governance](./examples/data_governance.tf)
 - [Multiple catalog types](./examples/other_catalogs.tf)
 
-## Known Issues
-
-- **Cloud Region IDs**: The `cloud_region_id` parameter requires a valid UUID from your Galaxy environment. Contact your Galaxy administrator for valid region IDs.
-- **Cluster State**: The `trino_uri` field remains unknown after apply when the cluster is in DISABLED state. It only becomes available when the cluster is ENABLED.
-- **WarpSpeed**: When `processing_mode` is set to "WarpSpeed", `warp_resiliency_enabled` should also be set to `true`.
-- **Result Cache**: The `result_cache_default_visibility_seconds` can only be set when `result_cache_enabled` is `true`.
-
-## Contributing
-
-We welcome contributions! Please see [CONTRIBUTING.md](./CONTRIBUTING.md) for guidelines.
-
-### Development Workflow
-
-1. Fork the repository
-2. Create a feature branch (`git checkout -b feature/amazing-feature`)
-3. Make your changes
-4. Add tests for your changes
-5. Run tests (`go test ./...`)
-6. Commit your changes (`git commit -m 'Add amazing feature'`)
-7. Push to your branch (`git push origin feature/amazing-feature`)
-8. Open a Pull Request
-
 ## Support
 
 - **Documentation**: [Starburst Galaxy Documentation](https://docs.starburst.io/starburst-galaxy/)
@@ -307,7 +285,7 @@ We welcome contributions! Please see [CONTRIBUTING.md](./CONTRIBUTING.md) for gu
 
 ## License
 
-This provider is distributed under the [Apache License 2.0](./LICENSE).
+TBD
 
 ## Acknowledgments
 
