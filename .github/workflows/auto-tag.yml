@@ -1,6 +1,7 @@
 name: Auto Tag on Merge
 
 on:
+    workflow_dispatch:
     push:
         branches:
             - main
@@ -22,8 +23,7 @@ jobs:
                   fetch-depth: 0
 
             - name: Bump version and push tag
-              uses: mathieudutour/github-tag-action@a22cf08
+              uses: mathieudutour/github-tag-action@a22cf08638b34d5badda920f9daf6e72c477b07b
               with:
-                  github_token: ${{ secrets.GITHUB_TOKEN }}
-                  default_bump: patch
+                  github_token: ${{ secrets.GH_PAT_TOKEN }}
                   tag_prefix: v
