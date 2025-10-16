@@ -25,5 +25,3 @@ jobs:
                       style
                       revert
                   requireScope: false
-                  subjectPattern: ^(?![A-Z]).+ # disallow capitalized subject
-                  subjectPatternError: "PR title should start lowercase and be under ~100 chars."
