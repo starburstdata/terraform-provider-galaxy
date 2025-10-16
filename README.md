@@ -291,7 +291,7 @@ TBD
 
 This provider is built using:
 - [Terraform Plugin Framework](https://github.com/hashicorp/terraform-plugin-framework)
-- [Starburst Galaxy API](https://docs.starburst.io/starburst-galaxy/developer-tools/api//)
+- [Starburst Galaxy API](https://docs.starburst.io/starburst-galaxy/developer-tools/api/)
 
 ---
 
