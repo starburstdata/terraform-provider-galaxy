@@ -45,6 +45,18 @@ fmt:
 lint:
 	golangci-lint run
 
+# Check and add license headers
+.PHONY: license
+license:
+	@go install github.com/google/addlicense@latest
+	@addlicense -check -f .license-header.txt -ignore '**/*.yml' -ignore '**/*.yaml' -ignore '**/*.tf' .
+
+# Add license headers to files missing them
+.PHONY: license-add
+license-add:
+	@go install github.com/google/addlicense@latest
+	@addlicense -f .license-header.txt -ignore '**/*.yml' -ignore '**/*.yaml' -ignore '**/*.tf' .
+
 # Run tests
 .PHONY: test
 test:
@@ -76,6 +88,8 @@ help:
 	@echo "  test-all     Complete workflow: build + docs + validate + test examples"
 	@echo "  fmt          Format Go code"
 	@echo "  lint         Run linter"
+	@echo "  license      Check license headers"
+	@echo "  license-add  Add license headers to files missing them"
 	@echo "  clean        Clean up generated files"
 	@echo "  dev-setup    Install provider and generate docs"
 	@echo "  help         Show this help message"

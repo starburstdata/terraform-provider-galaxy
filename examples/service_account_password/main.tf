@@ -10,9 +10,13 @@ provider "galaxy" {
   # Credentials from environment variables
 }
 
+locals {
+  test_suffix = var.test_suffix != "" ? var.test_suffix : substr(replace(uuid(), "[^0-9]", ""), 0, 6)
+}
+
 # Create a service account first
 resource "galaxy_service_account" "example" {
-  username              = "exampleserviceaccount"
+  username              = "exampleserviceaccount${local.test_suffix}"
   with_initial_password = false # Don't create initial password
   additional_role_ids   = []
 }

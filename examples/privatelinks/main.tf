@@ -7,9 +7,6 @@ terraform {
 }
 
 provider "galaxy" {
-  domain        = var.galaxy_domain
-  client_id     = var.galaxy_client_id
-  client_secret = var.galaxy_client_secret
 }
 
 # Get all available privatelinks

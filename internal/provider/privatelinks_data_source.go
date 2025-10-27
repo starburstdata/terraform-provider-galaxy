@@ -1,3 +1,12 @@
+// Copyright Starburst Data, Inc. All rights reserved.
+//
+// The source code is the proprietary and confidential information of Starburst Data, Inc. and
+// may be used only for reference purposes in connection with the Terraform Registry. All rights,
+// title, interest and ownership of the code and any derivatives, updates, upgrades, enhancements
+// and modifications thereof remain with Starburst Data, Inc. You are not permitted to distribute,
+// disclose, sell, lease, transfer, assign, modify, create derivative works of, or sublicense the
+// code, or use the code to create or develop any products or services.
+
 package provider
 
 import (
@@ -78,53 +87,83 @@ func (d *privatelinksDataSource) updateModelFromResponse(ctx context.Context, mo
 	// Extract the result array from the API response
 	resultInterface, ok := response["result"]
 	if !ok {
+		// If no result field, set to empty list
+		elementType := datasource_privatelinks.ResultType{
+			ObjectType: types.ObjectType{
+				AttrTypes: datasource_privatelinks.ResultValue{}.AttributeTypes(ctx),
+			},
+		}
+		emptyList, _ := types.ListValueFrom(ctx, elementType, []datasource_privatelinks.ResultValue{})
+		model.Result = emptyList
 		return
 	}
 
 	resultArray, ok := resultInterface.([]interface{})
 	if !ok {
+		// If result is not an array, set to empty list
+		elementType := datasource_privatelinks.ResultType{
+			ObjectType: types.ObjectType{
+				AttrTypes: datasource_privatelinks.ResultValue{}.AttributeTypes(ctx),
+			},
+		}
+		emptyList, _ := types.ListValueFrom(ctx, elementType, []datasource_privatelinks.ResultValue{})
+		model.Result = emptyList
 		return
 	}
 
-	// Convert to list of Terraform objects
-	var resultList []attr.Value
+	// Convert to list of ResultValue objects using the proper constructor
+	attributeTypes := datasource_privatelinks.ResultValue{}.AttributeTypes(ctx)
+	var resultList []datasource_privatelinks.ResultValue
+
 	for _, item := range resultArray {
 		itemMap, ok := item.(map[string]interface{})
 		if !ok {
 			continue
 		}
 
-		// Create a ResultValue for each privatelink
-		resultValue := datasource_privatelinks.ResultValue{
-			CloudRegionId: types.StringValue(""),
-			Name:          types.StringValue(""),
-			PrivatelinkId: types.StringValue(""),
-		}
+		// Create attributes map
+		attributes := make(map[string]attr.Value)
 
 		if cloudRegionId, ok := itemMap["cloudRegionId"].(string); ok {
-			resultValue.CloudRegionId = types.StringValue(cloudRegionId)
-		}
-		if name, ok := itemMap["name"].(string); ok {
-			resultValue.Name = types.StringValue(name)
-		}
-		if privatelinkId, ok := itemMap["privatelinkId"].(string); ok {
-			resultValue.PrivatelinkId = types.StringValue(privatelinkId)
+			attributes["cloud_region_id"] = types.StringValue(cloudRegionId)
+		} else {
+			attributes["cloud_region_id"] = types.StringNull()
 		}
 
-		objectValue, diags := resultValue.ToObjectValue(ctx)
+		if name, ok := itemMap["name"].(string); ok {
+			attributes["name"] = types.StringValue(name)
+		} else {
+			attributes["name"] = types.StringNull()
+		}
+
+		if privatelinkId, ok := itemMap["privatelinkId"].(string); ok {
+			attributes["privatelink_id"] = types.StringValue(privatelinkId)
+		} else {
+			attributes["privatelink_id"] = types.StringNull()
+		}
+
+		// Use the proper constructor to create ResultValue
+		resultValue, diags := datasource_privatelinks.NewResultValue(attributeTypes, attributes)
 		if diags.HasError() {
-			tflog.Error(ctx, "Error converting privatelink result to object value", map[string]interface{}{"errors": diags})
+			tflog.Error(ctx, "Error creating privatelink ResultValue", map[string]interface{}{"errors": diags})
 			continue
 		}
 
-		resultList = append(resultList, objectValue)
+		resultList = append(resultList, resultValue)
 	}
 
 	// Convert to Terraform list
-	resultListValue, diags := types.ListValue(datasource_privatelinks.ResultType{}.ValueType(ctx).Type(ctx), resultList)
+	elementType := datasource_privatelinks.ResultType{
+		ObjectType: types.ObjectType{
+			AttrTypes: attributeTypes,
+		},
+	}
+	resultListValue, diags := types.ListValueFrom(ctx, elementType, resultList)
 	if diags.HasError() {
 		tflog.Error(ctx, "Error creating privatelinks result list", map[string]interface{}{"errors": diags})
-		model.Result = types.ListNull(datasource_privatelinks.ResultType{}.ValueType(ctx).Type(ctx))
+		// Still set an empty list instead of null
+		emptyList, _ := types.ListValueFrom(ctx, elementType, []datasource_privatelinks.ResultValue{})
+		model.Result = emptyList
 	} else {
 		model.Result = resultListValue
 	}
