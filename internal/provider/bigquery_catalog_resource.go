@@ -86,7 +86,7 @@ func (r *bigquery_catalogResource) Create(ctx context.Context, req resource.Crea
 		return
 	}
 
-	tflog.Debug(ctx, "Created bigquery_catalog", map[string]interface{}{"id": plan.Id.ValueString()})
+	tflog.Debug(ctx, "Created bigquery_catalog", map[string]interface{}{"id": plan.CatalogId.ValueString()})
 	resp.Diagnostics.Append(resp.State.Set(ctx, &plan)...)
 }
 
@@ -98,7 +98,7 @@ func (r *bigquery_catalogResource) Read(ctx context.Context, req resource.ReadRe
 		return
 	}
 
-	id := state.Id.ValueString()
+	id := state.CatalogId.ValueString()
 	tflog.Debug(ctx, "Reading bigquery_catalog", map[string]interface{}{"id": id})
 	response, err := r.client.GetCatalog(ctx, "bigquery", id)
 	if err != nil {
@@ -137,7 +137,7 @@ func (r *bigquery_catalogResource) Update(ctx context.Context, req resource.Upda
 		return
 	}
 
-	id := state.Id.ValueString()
+	id := state.CatalogId.ValueString()
 	request := r.modelToUpdateRequest(ctx, &plan, &resp.Diagnostics)
 	if resp.Diagnostics.HasError() {
 		return
@@ -158,7 +158,7 @@ func (r *bigquery_catalogResource) Update(ctx context.Context, req resource.Upda
 		return
 	}
 
-	tflog.Debug(ctx, "Updated bigquery_catalog", map[string]interface{}{"id": plan.Id.ValueString()})
+	tflog.Debug(ctx, "Updated bigquery_catalog", map[string]interface{}{"id": plan.CatalogId.ValueString()})
 	resp.Diagnostics.Append(resp.State.Set(ctx, &plan)...)
 }
 
@@ -170,7 +170,7 @@ func (r *bigquery_catalogResource) Delete(ctx context.Context, req resource.Dele
 		return
 	}
 
-	id := state.Id.ValueString()
+	id := state.CatalogId.ValueString()
 	tflog.Debug(ctx, "Deleting bigquery_catalog", map[string]interface{}{"id": id})
 	err := r.client.DeleteCatalog(ctx, "bigquery", id)
 	if err != nil {
@@ -243,7 +243,6 @@ func (r *bigquery_catalogResource) updateModelFromResponse(ctx context.Context, 
 	// Map response fields to model
 	// Use catalogId as the ID
 	if catalogId, ok := response["catalogId"].(string); ok {
-		model.Id = types.StringValue(catalogId)
 		model.CatalogId = types.StringValue(catalogId)
 	}
 	if name, ok := response["name"].(string); ok {

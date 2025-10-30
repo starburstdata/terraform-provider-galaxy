@@ -17,20 +17,15 @@ func PrivatelinkDataSourceSchema(ctx context.Context) schema.Schema {
 				Description:         "Cloud region ID (read only)",
 				MarkdownDescription: "Cloud region ID (read only)",
 			},
-			"id": schema.StringAttribute{
-				Required:            true,
-				Description:         "- A private link\n- This parameter can be looked up using `name` instead of its Id. Use `name=value` instead of an Id to lookup/search using the `value`. `value` must be encoded ([see RFC](https://www.rfc-editor.org/rfc/rfc3986#section-2.2) including `=`)\n",
-				MarkdownDescription: "- A private link\n- This parameter can be looked up using `name` instead of its Id. Use `name=value` instead of an Id to lookup/search using the `value`. `value` must be encoded ([see RFC](https://www.rfc-editor.org/rfc/rfc3986#section-2.2) including `=`)\n",
-			},
 			"name": schema.StringAttribute{
 				Computed:            true,
 				Description:         "Name (read only)",
 				MarkdownDescription: "Name (read only)",
 			},
 			"privatelink_id": schema.StringAttribute{
-				Computed:            true,
-				Description:         "Private link ID (read only)",
-				MarkdownDescription: "Private link ID (read only)",
+				Required:            true,
+				Description:         "- A private link\n- This parameter can be looked up using `name` instead of its Id. Use `name=value` instead of an Id to lookup/search using the `value`. `value` must be encoded ([see RFC](https://www.rfc-editor.org/rfc/rfc3986#section-2.2) including `=`)\n",
+				MarkdownDescription: "- A private link\n- This parameter can be looked up using `name` instead of its Id. Use `name=value` instead of an Id to lookup/search using the `value`. `value` must be encoded ([see RFC](https://www.rfc-editor.org/rfc/rfc3986#section-2.2) including `=`)\n",
 			},
 		},
 	}
@@ -38,7 +33,6 @@ func PrivatelinkDataSourceSchema(ctx context.Context) schema.Schema {
 
 type PrivatelinkModel struct {
 	CloudRegionId types.String `tfsdk:"cloud_region_id"`
-	Id            types.String `tfsdk:"id"`
 	Name          types.String `tfsdk:"name"`
 	PrivatelinkId types.String `tfsdk:"privatelink_id"`
 }

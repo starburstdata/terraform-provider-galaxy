@@ -65,7 +65,7 @@ func (d *cassandra_catalogDataSource) Read(ctx context.Context, req datasource.R
 		return
 	}
 
-	id := config.Id.ValueString()
+	id := config.CatalogId.ValueString()
 	tflog.Debug(ctx, "Reading cassandra_catalog", map[string]interface{}{"id": id})
 
 	response, err := d.client.GetCatalog(ctx, "cassandra", id)
@@ -85,9 +85,88 @@ func (d *cassandra_catalogDataSource) Read(ctx context.Context, req datasource.R
 
 func (d *cassandra_catalogDataSource) updateModelFromResponse(ctx context.Context, model *datasource_cassandra_catalog.CassandraCatalogModel, response map[string]interface{}) {
 	// Map response fields to model
-	if id, ok := response["id"].(string); ok {
-		model.Id = types.StringValue(id)
+	if catalogId, ok := response["catalogId"].(string); ok {
+		model.CatalogId = types.StringValue(catalogId)
 	}
 
-	// Map other fields based on actual response structure
+	if name, ok := response["name"].(string); ok {
+		model.Name = types.StringValue(name)
+	}
+
+	if description, ok := response["description"].(string); ok {
+		model.Description = types.StringValue(description)
+	} else if model.Description.IsUnknown() {
+		model.Description = types.StringNull()
+	}
+
+	if readOnly, ok := response["readOnly"].(bool); ok {
+		model.ReadOnly = types.BoolValue(readOnly)
+	}
+
+	if deploymentType, ok := response["deploymentType"].(string); ok {
+		model.DeploymentType = types.StringValue(deploymentType)
+	} else if model.DeploymentType.IsUnknown() {
+		model.DeploymentType = types.StringNull()
+	}
+
+	if contactPoints, ok := response["contactPoints"].(string); ok {
+		model.ContactPoints = types.StringValue(contactPoints)
+	} else if model.ContactPoints.IsUnknown() {
+		model.ContactPoints = types.StringNull()
+	}
+
+	if localDatacenter, ok := response["localDatacenter"].(string); ok {
+		model.LocalDatacenter = types.StringValue(localDatacenter)
+	} else if model.LocalDatacenter.IsUnknown() {
+		model.LocalDatacenter = types.StringNull()
+	}
+
+	if port, ok := response["port"].(float64); ok {
+		model.Port = types.Int64Value(int64(port))
+	}
+
+	if username, ok := response["username"].(string); ok {
+		model.Username = types.StringValue(username)
+	} else if model.Username.IsUnknown() {
+		model.Username = types.StringNull()
+	}
+
+	// Password is write-only - the API returns "<Value is encrypted>"
+	// We don't update the password field from the API response since it's not the actual value.
+
+	if cloudKind, ok := response["cloudKind"].(string); ok {
+		model.CloudKind = types.StringValue(cloudKind)
+	} else if model.CloudKind.IsUnknown() {
+		model.CloudKind = types.StringNull()
+	}
+
+	if databaseId, ok := response["databaseId"].(string); ok {
+		model.DatabaseId = types.StringValue(databaseId)
+	} else if model.DatabaseId.IsUnknown() {
+		model.DatabaseId = types.StringNull()
+	}
+
+	if region, ok := response["region"].(string); ok {
+		model.Region = types.StringValue(region)
+	} else if model.Region.IsUnknown() {
+		model.Region = types.StringNull()
+	}
+
+	if sshTunnelId, ok := response["sshTunnelId"].(string); ok {
+		model.SshTunnelId = types.StringValue(sshTunnelId)
+	} else if model.SshTunnelId.IsUnknown() {
+		model.SshTunnelId = types.StringNull()
+	}
+
+	if token, ok := response["token"].(string); ok {
+		model.Token = types.StringValue(token)
+	} else if model.Token.IsUnknown() {
+		model.Token = types.StringNull()
+	}
+
+	if validate, ok := response["validate"].(bool); ok {
+		model.Validate = types.BoolValue(validate)
+	} else if model.Validate.IsUnknown() {
+		model.Validate = types.BoolNull()
+	}
 }

@@ -17,7 +17,7 @@ description: |-
 
 ### Required
 
-- `id` (String) - A user
+- `user_id` (String) - A user
 - This parameter can be looked up using `email` instead of its Id. Use `email=value` instead of an Id to lookup/search using the `value`. `value` must be encoded ([see RFC](https://www.rfc-editor.org/rfc/rfc3986#section-2.2) including `=`)
 
 ### Read-Only
@@ -28,7 +28,6 @@ description: |-
 - `directly_granted_roles` (Attributes List) Directly granted roles (read only) (see [below for nested schema](#nestedatt--directly_granted_roles))
 - `email` (String) User email (read only)
 - `scim_managed` (Boolean) SCIM managed (read only)
-- `user_id` (String) User ID (read only)
 
 <a id="nestedatt--all_roles"></a>
 ### Nested Schema for `all_roles`

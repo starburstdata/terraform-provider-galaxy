@@ -104,7 +104,7 @@ func (r *s3_catalogResource) Create(ctx context.Context, req resource.CreateRequ
 		return
 	}
 
-	tflog.Debug(ctx, "Created s3_catalog", map[string]interface{}{"id": plan.Id.ValueString()})
+	tflog.Debug(ctx, "Created s3_catalog", map[string]interface{}{"id": plan.CatalogId.ValueString()})
 	resp.Diagnostics.Append(resp.State.Set(ctx, &plan)...)
 }
 
@@ -116,7 +116,7 @@ func (r *s3_catalogResource) Read(ctx context.Context, req resource.ReadRequest,
 		return
 	}
 
-	id := state.Id.ValueString()
+	id := state.CatalogId.ValueString()
 	tflog.Debug(ctx, "Reading s3_catalog", map[string]interface{}{"id": id})
 	response, err := r.client.GetCatalog(ctx, "s3", id)
 	if err != nil {
@@ -155,7 +155,7 @@ func (r *s3_catalogResource) Update(ctx context.Context, req resource.UpdateRequ
 		return
 	}
 
-	id := state.Id.ValueString()
+	id := state.CatalogId.ValueString()
 	request := r.modelToUpdateRequest(ctx, &plan, &resp.Diagnostics)
 	if resp.Diagnostics.HasError() {
 		return
@@ -176,7 +176,7 @@ func (r *s3_catalogResource) Update(ctx context.Context, req resource.UpdateRequ
 		return
 	}
 
-	tflog.Debug(ctx, "Updated s3_catalog", map[string]interface{}{"id": plan.Id.ValueString()})
+	tflog.Debug(ctx, "Updated s3_catalog", map[string]interface{}{"id": plan.CatalogId.ValueString()})
 	resp.Diagnostics.Append(resp.State.Set(ctx, &plan)...)
 }
 
@@ -188,7 +188,7 @@ func (r *s3_catalogResource) Delete(ctx context.Context, req resource.DeleteRequ
 		return
 	}
 
-	id := state.Id.ValueString()
+	id := state.CatalogId.ValueString()
 	tflog.Debug(ctx, "Deleting s3_catalog", map[string]interface{}{"id": id})
 	err := r.client.DeleteCatalog(ctx, "s3", id)
 	if err != nil {
@@ -337,7 +337,6 @@ func (r *s3_catalogResource) updateModelFromResponse(ctx context.Context, model 
 	// Map response fields to model
 	// Use catalogId as the ID for s3_catalog
 	if catalogId, ok := response["catalogId"].(string); ok {
-		model.Id = types.StringValue(catalogId)
 		model.CatalogId = types.StringValue(catalogId)
 	}
 	if name, ok := response["name"].(string); ok {

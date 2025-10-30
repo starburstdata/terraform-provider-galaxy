@@ -66,7 +66,7 @@ func (d *policyDataSource) Read(ctx context.Context, req datasource.ReadRequest,
 		return
 	}
 
-	id := config.Id.ValueString()
+	id := config.PolicyId.ValueString()
 	tflog.Debug(ctx, "Reading policy", map[string]interface{}{"id": id})
 
 	response, err := d.client.GetPolicy(ctx, id)
@@ -91,7 +91,7 @@ func (d *policyDataSource) updateModelFromResponse(ctx context.Context, model *d
 	if policyId, ok := response["policyId"].(string); ok {
 		model.PolicyId = types.StringValue(policyId)
 		// Also set the Id field to the policyId for proper identification
-		model.Id = types.StringValue(policyId)
+		model.PolicyId = types.StringValue(policyId)
 	}
 
 	if roleId, ok := response["roleId"].(string); ok {

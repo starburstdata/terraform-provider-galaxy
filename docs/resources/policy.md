@@ -26,8 +26,6 @@ description: |-
 ### Optional
 
 - `expiration` (String) Policy expiration (read only)
-- `id` (String) - A policy
-- This parameter can be looked up using `name` instead of its Id. Use `name=value` instead of an Id to lookup/search using the `value`. `value` must be encoded ([see RFC](https://www.rfc-editor.org/rfc/rfc3986#section-2.2) including `=`)
 
 ### Read-Only
 

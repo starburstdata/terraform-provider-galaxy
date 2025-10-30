@@ -28,16 +28,16 @@ resource "galaxy_mysql_catalog" "test" {
 # Data source to read the catalog
 data "galaxy_mysql_catalog" "test" {
   depends_on = [galaxy_mysql_catalog.test]
-  id         = galaxy_mysql_catalog.test.id
+  catalog_id = galaxy_mysql_catalog.test.catalog_id
 }
 
 data "galaxy_mysql_catalog_validation" "test" {
   depends_on = [galaxy_mysql_catalog.test]
-  id         = galaxy_mysql_catalog.test.id
+  id = galaxy_mysql_catalog.test.catalog_id
 }
 
 output "mysql_catalog_id" {
-  value = galaxy_mysql_catalog.test.id
+  value = galaxy_mysql_catalog.test.catalog_id
 }
 
 output "mysql_catalog_validation" {

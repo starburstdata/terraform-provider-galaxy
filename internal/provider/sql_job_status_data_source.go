@@ -67,7 +67,7 @@ func (d *sqlJobStatusDataSource) Read(ctx context.Context, req datasource.ReadRe
 	}
 
 	// Get the SQL job ID from config
-	id := config.Id.ValueString()
+	id := config.SqlJobId.ValueString()
 
 	tflog.Debug(ctx, "Reading sql_job_status data source", map[string]interface{}{"id": id})
 	response, err := d.client.GetSqlJobStatus(ctx, id)
@@ -86,9 +86,6 @@ func (d *sqlJobStatusDataSource) Read(ctx context.Context, req datasource.ReadRe
 }
 
 func (d *sqlJobStatusDataSource) updateModelFromResponse(ctx context.Context, model *datasource_sql_job_status.SqlJobStatusModel, response map[string]interface{}) {
-	if id, ok := response["id"].(string); ok {
-		model.Id = types.StringValue(id)
-	}
 	if sqlJobId, ok := response["sqlJobId"].(string); ok {
 		model.SqlJobId = types.StringValue(sqlJobId)
 	}

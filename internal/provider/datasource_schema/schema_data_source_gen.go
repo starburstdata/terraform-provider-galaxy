@@ -18,7 +18,7 @@ import (
 func SchemaDataSourceSchema(ctx context.Context) schema.Schema {
 	return schema.Schema{
 		Attributes: map[string]schema.Attribute{
-			"id": schema.StringAttribute{
+			"catalog_id": schema.StringAttribute{
 				Required:            true,
 				Description:         "- A catalog\n- This parameter can be looked up using `name` instead of its Id. Use `name=value` instead of an Id to lookup/search using the `value`. `value` must be encoded ([see RFC](https://www.rfc-editor.org/rfc/rfc3986#section-2.2) including `=`)\n",
 				MarkdownDescription: "- A catalog\n- This parameter can be looked up using `name` instead of its Id. Use `name=value` instead of an Id to lookup/search using the `value`. `value` must be encoded ([see RFC](https://www.rfc-editor.org/rfc/rfc3986#section-2.2) including `=`)\n",
@@ -146,8 +146,8 @@ func SchemaDataSourceSchema(ctx context.Context) schema.Schema {
 }
 
 type SchemaModel struct {
-	Id     types.String `tfsdk:"id"`
-	Result types.List   `tfsdk:"result"`
+	CatalogId types.String `tfsdk:"catalog_id"`
+	Result    types.List   `tfsdk:"result"`
 }
 
 var _ basetypes.ObjectTypable = ResultType{}

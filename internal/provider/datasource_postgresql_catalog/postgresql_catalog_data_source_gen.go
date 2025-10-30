@@ -13,9 +13,9 @@ func PostgresqlCatalogDataSourceSchema(ctx context.Context) schema.Schema {
 	return schema.Schema{
 		Attributes: map[string]schema.Attribute{
 			"catalog_id": schema.StringAttribute{
-				Computed:            true,
-				Description:         "PostgreSQL catalog identifier (read only)",
-				MarkdownDescription: "PostgreSQL catalog identifier (read only)",
+				Required:            true,
+				Description:         "A catalog connecting to PostgreSQL",
+				MarkdownDescription: "A catalog connecting to PostgreSQL",
 			},
 			"cloud_kind": schema.StringAttribute{
 				Computed:            true,
@@ -36,11 +36,6 @@ func PostgresqlCatalogDataSourceSchema(ctx context.Context) schema.Schema {
 				Computed:            true,
 				Description:         "PostgreSQL database endpoint",
 				MarkdownDescription: "PostgreSQL database endpoint",
-			},
-			"id": schema.StringAttribute{
-				Required:            true,
-				Description:         "A catalog connecting to PostgreSQL",
-				MarkdownDescription: "A catalog connecting to PostgreSQL",
 			},
 			"name": schema.StringAttribute{
 				Computed:            true,
@@ -92,7 +87,6 @@ type PostgresqlCatalogModel struct {
 	DatabaseName types.String `tfsdk:"database_name"`
 	Description  types.String `tfsdk:"description"`
 	Endpoint     types.String `tfsdk:"endpoint"`
-	Id           types.String `tfsdk:"id"`
 	Name         types.String `tfsdk:"name"`
 	Password     types.String `tfsdk:"password"`
 	Port         types.Int64  `tfsdk:"port"`

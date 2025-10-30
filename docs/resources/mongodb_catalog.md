@@ -33,7 +33,6 @@ description: |-
 - `dns_seed_list_enabled` (Boolean) Use DNS seed list (SRV). Defaults to false.
 - `federated_database_enabled` (Boolean) Is federated database. Defaults to false.
 - `hosts` (String) MongoDB hosts
-- `id` (String) A catalog connecting to MongoDB
 - `private_link_id` (String) PrivateLink Identifier
 - `ssh_tunnel_id` (String) SSH tunnel identifier
 - `tls_enabled` (Boolean) Use TLS for connections. Defaults to true.

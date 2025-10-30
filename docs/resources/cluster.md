@@ -28,8 +28,6 @@ description: |-
 
 ### Optional
 
-- `id` (String) - A Trino cluster
-- This parameter can be looked up using `name` instead of its Id. Use `name=value` instead of an Id to lookup/search using the `value`. `value` must be encoded ([see RFC](https://www.rfc-editor.org/rfc/rfc3986#section-2.2) including `=`)
 - `idle_stop_minutes` (Number) Idle suspend duration (in minutes)
 - `processing_mode` (String) Cluster query processing mode
 - `replicas` (Number) Number of replicas

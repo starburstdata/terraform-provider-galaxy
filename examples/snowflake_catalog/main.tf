@@ -29,11 +29,11 @@ resource "galaxy_snowflake_catalog" "test" {
 # Data source to read the catalog
 data "galaxy_snowflake_catalog" "test" {
   depends_on = [galaxy_snowflake_catalog.test]
-  id         = galaxy_snowflake_catalog.test.id
+  catalog_id = galaxy_snowflake_catalog.test.catalog_id
 }
 
 output "snowflake_catalog_id" {
-  value = galaxy_snowflake_catalog.test.id
+  value = galaxy_snowflake_catalog.test.catalog_id
 }
 
 output "snowflake_catalog_database" {

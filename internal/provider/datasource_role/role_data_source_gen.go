@@ -125,11 +125,6 @@ func RoleDataSourceSchema(ctx context.Context) schema.Schema {
 				Description:         "Directly granted roles (read only)",
 				MarkdownDescription: "Directly granted roles (read only)",
 			},
-			"id": schema.StringAttribute{
-				Required:            true,
-				Description:         "- A role\n- This parameter can be looked up using `name` instead of its Id. Use `name=value` instead of an Id to lookup/search using the `value`. `value` must be encoded ([see RFC](https://www.rfc-editor.org/rfc/rfc3986#section-2.2) including `=`)\n",
-				MarkdownDescription: "- A role\n- This parameter can be looked up using `name` instead of its Id. Use `name=value` instead of an Id to lookup/search using the `value`. `value` must be encoded ([see RFC](https://www.rfc-editor.org/rfc/rfc3986#section-2.2) including `=`)\n",
-			},
 			"modified_on": schema.StringAttribute{
 				Computed:            true,
 				Description:         "Modified date (read only)",
@@ -146,9 +141,9 @@ func RoleDataSourceSchema(ctx context.Context) schema.Schema {
 				MarkdownDescription: "Role description (read only)",
 			},
 			"role_id": schema.StringAttribute{
-				Computed:            true,
-				Description:         "Role ID (read only)",
-				MarkdownDescription: "Role ID (read only)",
+				Required:            true,
+				Description:         "- A role\n- This parameter can be looked up using `name` instead of its Id. Use `name=value` instead of an Id to lookup/search using the `value`. `value` must be encoded ([see RFC](https://www.rfc-editor.org/rfc/rfc3986#section-2.2) including `=`)\n",
+				MarkdownDescription: "- A role\n- This parameter can be looked up using `name` instead of its Id. Use `name=value` instead of an Id to lookup/search using the `value`. `value` must be encoded ([see RFC](https://www.rfc-editor.org/rfc/rfc3986#section-2.2) including `=`)\n",
 			},
 			"role_name": schema.StringAttribute{
 				Computed:            true,
@@ -163,7 +158,6 @@ type RoleModel struct {
 	AllRoles             types.List   `tfsdk:"all_roles"`
 	CreatedOn            types.String `tfsdk:"created_on"`
 	DirectlyGrantedRoles types.List   `tfsdk:"directly_granted_roles"`
-	Id                   types.String `tfsdk:"id"`
 	ModifiedOn           types.String `tfsdk:"modified_on"`
 	OwningRoleId         types.String `tfsdk:"owning_role_id"`
 	RoleDescription      types.String `tfsdk:"role_description"`

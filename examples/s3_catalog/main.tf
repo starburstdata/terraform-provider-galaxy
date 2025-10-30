@@ -62,22 +62,22 @@ resource "galaxy_s3_catalog" "galaxy_example" {
 
 # Validate S3 catalog configurations
 data "galaxy_s3_catalog_validation" "example" {
-  id = galaxy_s3_catalog.example.id
+  id = galaxy_s3_catalog.example.catalog_id
 }
 
 data "galaxy_s3_catalog_validation" "galaxy_example" {
-  id = galaxy_s3_catalog.galaxy_example.id
+  id = galaxy_s3_catalog.galaxy_example.catalog_id
 }
 
 # Read S3 catalogs by ID
 data "galaxy_s3_catalog" "example" {
   depends_on = [galaxy_s3_catalog.example]
-  id         = galaxy_s3_catalog.example.id
+  catalog_id = galaxy_s3_catalog.example.catalog_id
 }
 
 data "galaxy_s3_catalog" "galaxy_example" {
   depends_on = [galaxy_s3_catalog.galaxy_example]
-  id         = galaxy_s3_catalog.galaxy_example.id
+  catalog_id = galaxy_s3_catalog.galaxy_example.catalog_id
 }
 
 
@@ -90,12 +90,12 @@ output "all_s3_catalog_names" {
 
 output "glue_s3_catalog_id" {
   description = "Glue S3 catalog ID"
-  value       = galaxy_s3_catalog.example.id
+  value       = galaxy_s3_catalog.example.catalog_id
 }
 
 output "galaxy_s3_catalog_id" {
   description = "Galaxy S3 catalog ID"
-  value       = galaxy_s3_catalog.galaxy_example.id
+  value       = galaxy_s3_catalog.galaxy_example.catalog_id
 }
 
 output "glue_s3_catalog_validation" {

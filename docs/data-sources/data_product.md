@@ -17,7 +17,7 @@ description: |-
 
 ### Required
 
-- `id` (String) A Galaxy Data Product
+- `data_product_id` (String) A Galaxy Data Product
 
 ### Read-Only
 
@@ -25,7 +25,6 @@ description: |-
 - `contacts` (Attributes List) Data Product contacts (read only) (see [below for nested schema](#nestedatt--contacts))
 - `created_by` (Attributes) Created by user. If empty then the user is inactive/deleted. (read only) (see [below for nested schema](#nestedatt--created_by))
 - `created_on` (String) Creation date (read only)
-- `data_product_id` (String) Data Product ID (read only)
 - `default_cluster_id` (String) Default cluster ID for Data Product (read only)
 - `description` (String) Long form description of Data Product (read only)
 - `links` (Attributes List) Any links for this Data Product (read only) (see [below for nested schema](#nestedatt--links))

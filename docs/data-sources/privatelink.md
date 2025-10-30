@@ -17,11 +17,10 @@ description: |-
 
 ### Required
 
-- `id` (String) - A private link
+- `privatelink_id` (String) - A private link
 - This parameter can be looked up using `name` instead of its Id. Use `name=value` instead of an Id to lookup/search using the `value`. `value` must be encoded ([see RFC](https://www.rfc-editor.org/rfc/rfc3986#section-2.2) including `=`)
 
 ### Read-Only
 
 - `cloud_region_id` (String) Cloud region ID (read only)
 - `name` (String) Name (read only)
-- `privatelink_id` (String) Private link ID (read only)

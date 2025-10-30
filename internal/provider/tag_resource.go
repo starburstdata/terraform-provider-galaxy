@@ -86,7 +86,7 @@ func (r *tagResource) Create(ctx context.Context, req resource.CreateRequest, re
 		return
 	}
 
-	tflog.Debug(ctx, "Created tag", map[string]interface{}{"id": plan.Id.ValueString()})
+	tflog.Debug(ctx, "Created tag", map[string]interface{}{"id": plan.TagId.ValueString()})
 	resp.Diagnostics.Append(resp.State.Set(ctx, &plan)...)
 }
 
@@ -98,7 +98,7 @@ func (r *tagResource) Read(ctx context.Context, req resource.ReadRequest, resp *
 		return
 	}
 
-	id := state.Id.ValueString()
+	id := state.TagId.ValueString()
 	tflog.Debug(ctx, "Reading tag", map[string]interface{}{"id": id})
 	response, err := r.client.GetTag(ctx, id)
 	if err != nil {
@@ -137,7 +137,7 @@ func (r *tagResource) Update(ctx context.Context, req resource.UpdateRequest, re
 		return
 	}
 
-	id := state.Id.ValueString()
+	id := state.TagId.ValueString()
 	request := r.modelToUpdateRequest(ctx, &plan, &resp.Diagnostics)
 	if resp.Diagnostics.HasError() {
 		return
@@ -158,7 +158,7 @@ func (r *tagResource) Update(ctx context.Context, req resource.UpdateRequest, re
 		return
 	}
 
-	tflog.Debug(ctx, "Updated tag", map[string]interface{}{"id": plan.Id.ValueString()})
+	tflog.Debug(ctx, "Updated tag", map[string]interface{}{"id": plan.TagId.ValueString()})
 	resp.Diagnostics.Append(resp.State.Set(ctx, &plan)...)
 }
 
@@ -170,7 +170,7 @@ func (r *tagResource) Delete(ctx context.Context, req resource.DeleteRequest, re
 		return
 	}
 
-	id := state.Id.ValueString()
+	id := state.TagId.ValueString()
 	tflog.Debug(ctx, "Deleting tag", map[string]interface{}{"id": id})
 	err := r.client.DeleteTag(ctx, id)
 	if err != nil {
@@ -216,10 +216,8 @@ func (r *tagResource) modelToUpdateRequest(ctx context.Context, model *resource_
 
 func (r *tagResource) updateModelFromResponse(ctx context.Context, model *resource_tag.TagModel, response map[string]interface{}, diags *diag.Diagnostics) {
 	// Map response fields to model
-	if id, ok := response["id"].(string); ok {
-		model.Id = types.StringValue(id)
-	} else if id, ok := response["tagId"].(string); ok {
-		model.Id = types.StringValue(id)
+	if id, ok := response["tagId"].(string); ok {
+		model.TagId = types.StringValue(id)
 	}
 
 	if tagId, ok := response["tagId"].(string); ok {

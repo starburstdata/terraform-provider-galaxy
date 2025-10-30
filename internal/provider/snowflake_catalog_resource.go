@@ -86,7 +86,7 @@ func (r *snowflake_catalogResource) Create(ctx context.Context, req resource.Cre
 		return
 	}
 
-	tflog.Debug(ctx, "Created snowflake_catalog", map[string]interface{}{"id": plan.Id.ValueString()})
+	tflog.Debug(ctx, "Created snowflake_catalog", map[string]interface{}{"id": plan.CatalogId.ValueString()})
 	resp.Diagnostics.Append(resp.State.Set(ctx, &plan)...)
 }
 
@@ -98,15 +98,12 @@ func (r *snowflake_catalogResource) Read(ctx context.Context, req resource.ReadR
 		return
 	}
 
-	// Use either id or catalog_id from state - prefer catalog_id if id is empty
-	id := state.Id.ValueString()
-	if id == "" && !state.CatalogId.IsNull() {
-		id = state.CatalogId.ValueString()
-	}
+	// Get catalog ID from state
+	id := state.CatalogId.ValueString()
 	if id == "" {
 		resp.Diagnostics.AddError(
 			"Missing ID for snowflake_catalog",
-			"Both id and catalog_id are empty in state",
+			"catalog_id is empty in state",
 		)
 		return
 	}
@@ -149,15 +146,12 @@ func (r *snowflake_catalogResource) Update(ctx context.Context, req resource.Upd
 		return
 	}
 
-	// Use either id or catalog_id from state - prefer catalog_id if id is empty
-	id := state.Id.ValueString()
-	if id == "" && !state.CatalogId.IsNull() {
-		id = state.CatalogId.ValueString()
-	}
+	// Get catalog ID from state
+	id := state.CatalogId.ValueString()
 	if id == "" {
 		resp.Diagnostics.AddError(
 			"Missing ID for snowflake_catalog",
-			"Both id and catalog_id are empty in state",
+			"catalog_id is empty in state",
 		)
 		return
 	}
@@ -182,7 +176,7 @@ func (r *snowflake_catalogResource) Update(ctx context.Context, req resource.Upd
 		return
 	}
 
-	tflog.Debug(ctx, "Updated snowflake_catalog", map[string]interface{}{"id": plan.Id.ValueString()})
+	tflog.Debug(ctx, "Updated snowflake_catalog", map[string]interface{}{"id": plan.CatalogId.ValueString()})
 	resp.Diagnostics.Append(resp.State.Set(ctx, &plan)...)
 }
 
@@ -194,15 +188,12 @@ func (r *snowflake_catalogResource) Delete(ctx context.Context, req resource.Del
 		return
 	}
 
-	// Use either id or catalog_id from state - prefer catalog_id if id is empty
-	id := state.Id.ValueString()
-	if id == "" && !state.CatalogId.IsNull() {
-		id = state.CatalogId.ValueString()
-	}
+	// Get catalog ID from state
+	id := state.CatalogId.ValueString()
 	if id == "" {
 		resp.Diagnostics.AddError(
 			"Missing ID for snowflake_catalog",
-			"Both id and catalog_id are empty in state",
+			"catalog_id is empty in state",
 		)
 		return
 	}
@@ -286,12 +277,10 @@ func (r *snowflake_catalogResource) updateModelFromResponse(ctx context.Context,
 	// Map response fields to model
 	// The API returns catalogId as the primary identifier
 	if catalogId, ok := response["catalogId"].(string); ok {
-		model.Id = types.StringValue(catalogId)        // Use catalogId as the main ID
+		model.CatalogId = types.StringValue(catalogId) // Use catalogId as the main ID
 		model.CatalogId = types.StringValue(catalogId) // Also set the catalogId field
-	} else if id, ok := response["id"].(string); ok {
-		model.Id = types.StringValue(id)
 	} else if id, ok := response["snowflakeCatalogId"].(string); ok {
-		model.Id = types.StringValue(id)
+		model.CatalogId = types.StringValue(id)
 	}
 
 	if name, ok := response["name"].(string); ok {

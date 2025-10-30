@@ -103,9 +103,9 @@ func DataProductDataSourceSchema(ctx context.Context) schema.Schema {
 				MarkdownDescription: "Creation date (read only)",
 			},
 			"data_product_id": schema.StringAttribute{
-				Computed:            true,
-				Description:         "Data Product ID (read only)",
-				MarkdownDescription: "Data Product ID (read only)",
+				Required:            true,
+				Description:         "A Galaxy Data Product",
+				MarkdownDescription: "A Galaxy Data Product",
 			},
 			"default_cluster_id": schema.StringAttribute{
 				Computed:            true,
@@ -116,11 +116,6 @@ func DataProductDataSourceSchema(ctx context.Context) schema.Schema {
 				Computed:            true,
 				Description:         "Long form description of Data Product (read only)",
 				MarkdownDescription: "Long form description of Data Product (read only)",
-			},
-			"id": schema.StringAttribute{
-				Required:            true,
-				Description:         "A Galaxy Data Product",
-				MarkdownDescription: "A Galaxy Data Product",
 			},
 			"links": schema.ListNestedAttribute{
 				NestedObject: schema.NestedAttributeObject{
@@ -200,7 +195,6 @@ type DataProductModel struct {
 	DataProductId    types.String    `tfsdk:"data_product_id"`
 	DefaultClusterId types.String    `tfsdk:"default_cluster_id"`
 	Description      types.String    `tfsdk:"description"`
-	Id               types.String    `tfsdk:"id"`
 	Links            types.List      `tfsdk:"links"`
 	ModifiedBy       ModifiedByValue `tfsdk:"modified_by"`
 	ModifiedOn       types.String    `tfsdk:"modified_on"`

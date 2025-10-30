@@ -65,7 +65,7 @@ func (d *snowflake_catalogDataSource) Read(ctx context.Context, req datasource.R
 		return
 	}
 
-	id := config.Id.ValueString()
+	id := config.CatalogId.ValueString()
 	tflog.Debug(ctx, "Reading snowflake_catalog", map[string]interface{}{"id": id})
 
 	response, err := d.client.GetCatalog(ctx, "snowflake", id)
@@ -85,9 +85,72 @@ func (d *snowflake_catalogDataSource) Read(ctx context.Context, req datasource.R
 
 func (d *snowflake_catalogDataSource) updateModelFromResponse(ctx context.Context, model *datasource_snowflake_catalog.SnowflakeCatalogModel, response map[string]interface{}) {
 	// Map response fields to model
-	if id, ok := response["id"].(string); ok {
-		model.Id = types.StringValue(id)
+	if catalogId, ok := response["catalogId"].(string); ok {
+		model.CatalogId = types.StringValue(catalogId)
 	}
 
-	// Map other fields based on actual response structure
+	if name, ok := response["name"].(string); ok {
+		model.Name = types.StringValue(name)
+	}
+
+	if description, ok := response["description"].(string); ok {
+		model.Description = types.StringValue(description)
+	} else if model.Description.IsUnknown() {
+		model.Description = types.StringNull()
+	}
+
+	if readOnly, ok := response["readOnly"].(bool); ok {
+		model.ReadOnly = types.BoolValue(readOnly)
+	}
+
+	if accountIdentifier, ok := response["accountIdentifier"].(string); ok {
+		model.AccountIdentifier = types.StringValue(accountIdentifier)
+	}
+
+	if databaseName, ok := response["databaseName"].(string); ok {
+		model.DatabaseName = types.StringValue(databaseName)
+	}
+
+	if warehouse, ok := response["warehouse"].(string); ok {
+		model.Warehouse = types.StringValue(warehouse)
+	}
+
+	if authenticationType, ok := response["authenticationType"].(string); ok {
+		model.AuthenticationType = types.StringValue(authenticationType)
+	} else if model.AuthenticationType.IsUnknown() {
+		model.AuthenticationType = types.StringNull()
+	}
+
+	if username, ok := response["username"].(string); ok {
+		model.Username = types.StringValue(username)
+	} else if model.Username.IsUnknown() {
+		model.Username = types.StringNull()
+	}
+
+	// Password is write-only - the API returns "<Value is encrypted>"
+	// We don't update the password field from the API response since it's not the actual value.
+
+	// PrivateKey is write-only - the API returns "<Value is encrypted>"
+	// We don't update the private_key field from the API response since it's not the actual value.
+
+	// PrivateKeyPassphrase is write-only - the API returns "<Value is encrypted>"
+	// We don't update the private_key_passphrase field from the API response since it's not the actual value.
+
+	if role, ok := response["role"].(string); ok {
+		model.Role = types.StringValue(role)
+	} else if model.Role.IsUnknown() {
+		model.Role = types.StringNull()
+	}
+
+	if cloudKind, ok := response["cloudKind"].(string); ok {
+		model.CloudKind = types.StringValue(cloudKind)
+	} else if model.CloudKind.IsUnknown() {
+		model.CloudKind = types.StringNull()
+	}
+
+	if validate, ok := response["validate"].(bool); ok {
+		model.Validate = types.BoolValue(validate)
+	} else if model.Validate.IsUnknown() {
+		model.Validate = types.BoolNull()
+	}
 }

@@ -25,7 +25,7 @@ locals {
 # Test the singular privatelink data source (only if we have privatelinks available)
 data "galaxy_privatelink" "test" {
   count = local.has_privatelinks ? 1 : 0
-  id    = local.first_privatelink.privatelink_id
+  privatelink_id = local.first_privatelink.privatelink_id
 }
 
 # Diagnostic outputs
@@ -49,15 +49,13 @@ output "first_privatelink_debug" {
 # Privatelink data source test outputs (conditional)
 output "privatelink_data_source_test" {
   value = local.has_privatelinks ? {
-    id              = data.galaxy_privatelink.test[0].id
-    name           = data.galaxy_privatelink.test[0].name
     privatelink_id  = data.galaxy_privatelink.test[0].privatelink_id
+    name           = data.galaxy_privatelink.test[0].name
     cloud_region_id = data.galaxy_privatelink.test[0].cloud_region_id
     status         = "success"
   } : {
-    id              = "not_available"
-    name           = "No privatelinks available for testing"
     privatelink_id  = "none"
+    name           = "No privatelinks available for testing"
     cloud_region_id = "none"
     status         = "failed"
   }

@@ -65,7 +65,7 @@ func (d *tagDataSource) Read(ctx context.Context, req datasource.ReadRequest, re
 		return
 	}
 
-	id := config.Id.ValueString()
+	id := config.TagId.ValueString()
 	tflog.Debug(ctx, "Reading tag", map[string]interface{}{"id": id})
 
 	response, err := d.client.GetTag(ctx, id)
@@ -85,11 +85,8 @@ func (d *tagDataSource) Read(ctx context.Context, req datasource.ReadRequest, re
 
 func (d *tagDataSource) updateModelFromResponse(ctx context.Context, model *datasource_tag.TagModel, response map[string]interface{}) {
 	// Map response fields to model
-	if id, ok := response["id"].(string); ok {
-		model.Id = types.StringValue(id)
-	}
-	if tagId, ok := response["id"].(string); ok {
-		model.Id = types.StringValue(tagId)
+	if tagId, ok := response["tagId"].(string); ok {
+		model.TagId = types.StringValue(tagId)
 	}
 	if name, ok := response["name"].(string); ok {
 		model.Name = types.StringValue(name)

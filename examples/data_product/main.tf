@@ -103,7 +103,7 @@ resource "galaxy_data_product" "customer_360" {
   name        = "cust360${local.test_suffix}"
   description = "E2E testing - complete 360-degree view of customer data across all systems"
   summary     = "Customer 360 data product for testing"
-  catalog_id  = galaxy_postgresql_catalog.source1.id
+  catalog_id  = galaxy_postgresql_catalog.source1.catalog_id
   schema_name = "public"
 
   contacts = [
@@ -117,11 +117,11 @@ resource "galaxy_data_product" "customer_360" {
 # Data source to read the data product
 data "galaxy_data_product" "customer_360" {
   depends_on = [galaxy_data_product.customer_360]
-  id         = galaxy_data_product.customer_360.id
+  data_product_id = galaxy_data_product.customer_360.data_product_id
 }
 
 output "data_product_id" {
-  value = galaxy_data_product.customer_360.id
+  value = galaxy_data_product.customer_360.data_product_id
 }
 
 output "data_product_name" {

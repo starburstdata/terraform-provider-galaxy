@@ -17,13 +17,12 @@ description: |-
 
 ### Required
 
-- `id` (String) A catalog connecting to AWS Redshift
+- `catalog_id` (String) A catalog connecting to AWS Redshift
 
 ### Read-Only
 
 - `access_key` (String) AWS access key
 - `auth_type` (String)
-- `catalog_id` (String) Redshift catalog identifier (read only)
 - `description` (String) Catalog description
 - `endpoint` (String) Redshift cluster endpoint
 - `name` (String) Catalog name

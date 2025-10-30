@@ -65,7 +65,7 @@ func (d *row_filterDataSource) Read(ctx context.Context, req datasource.ReadRequ
 		return
 	}
 
-	id := config.Id.ValueString()
+	id := config.RowFilterId.ValueString()
 	tflog.Debug(ctx, "Reading row_filter", map[string]interface{}{"id": id})
 
 	response, err := d.client.GetRowFilter(ctx, id)
@@ -86,7 +86,6 @@ func (d *row_filterDataSource) Read(ctx context.Context, req datasource.ReadRequ
 func (d *row_filterDataSource) updateModelFromResponse(ctx context.Context, model *datasource_row_filter.RowFilterModel, response map[string]interface{}) {
 	// Map response fields to model based on API response structure
 	if rowFilterId, ok := response["rowFilterId"].(string); ok {
-		model.Id = types.StringValue(rowFilterId)
 		model.RowFilterId = types.StringValue(rowFilterId)
 	}
 	if name, ok := response["name"].(string); ok {

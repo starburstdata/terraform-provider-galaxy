@@ -28,7 +28,6 @@ description: |-
 
 - `cloud_kind` (String) PostgreSQL cloud kind. Defaults to AWS.
 - `description` (String) Catalog description
-- `id` (String) A catalog connecting to PostgreSQL
 - `port` (Number) PostgreSQL database port. Defaults to 5432.
 - `ssh_tunnel_id` (String) SSH tunnel identifier
 - `tls_enabled` (Boolean) Use TLS for PostgreSQL connections. Defaults to true.

@@ -58,7 +58,7 @@ output "read_only_role_id" {
 
 # Data source example for role
 data "galaxy_role" "existing_admin" {
-  id = galaxy_role.admin.id
+  role_id = galaxy_role.admin.role_id
 }
 
 output "admin_role_data" {

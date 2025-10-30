@@ -28,7 +28,6 @@ description: |-
 - `authentication_type` (String) Snowflake authentication type
 - `cloud_kind` (String) Snowflake cloud kind. Defaults to AWS.
 - `description` (String) Catalog description
-- `id` (String) A catalog connecting to Snowflake
 - `password` (String)
 - `private_key` (String)
 - `private_key_passphrase` (String)

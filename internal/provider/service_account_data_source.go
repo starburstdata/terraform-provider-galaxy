@@ -66,7 +66,7 @@ func (d *service_accountDataSource) Read(ctx context.Context, req datasource.Rea
 		return
 	}
 
-	id := config.Id.ValueString()
+	id := config.ServiceAccountId.ValueString()
 	tflog.Debug(ctx, "Reading service_account", map[string]interface{}{"id": id})
 
 	response, err := d.client.GetServiceAccount(ctx, id)
@@ -86,10 +86,7 @@ func (d *service_accountDataSource) Read(ctx context.Context, req datasource.Rea
 
 func (d *service_accountDataSource) updateModelFromResponse(ctx context.Context, model *datasource_service_account.ServiceAccountModel, response map[string]interface{}) {
 	// Map response fields to model
-	if id, ok := response["id"].(string); ok {
-		model.Id = types.StringValue(id)
-	}
-	if serviceAccountId, ok := response["id"].(string); ok {
+	if serviceAccountId, ok := response["serviceAccountId"].(string); ok {
 		model.ServiceAccountId = types.StringValue(serviceAccountId)
 	}
 	// Map UserName and RoleId

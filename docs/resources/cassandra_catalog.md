@@ -27,7 +27,6 @@ description: |-
 - `contact_points` (String) Cassandra hosts
 - `database_id` (String) AstraDB database ID
 - `description` (String) Catalog description
-- `id` (String) A catalog connecting to Cassandra, with options for integration with AstraDB
 - `local_datacenter` (String) Local datacenter
 - `password` (String)
 - `port` (Number) Cassandra port. Defaults to 9042.

@@ -99,7 +99,7 @@ func (r *gcs_catalogResource) Create(ctx context.Context, req resource.CreateReq
 		return
 	}
 
-	tflog.Debug(ctx, "Created gcs_catalog", map[string]interface{}{"id": plan.Id.ValueString()})
+	tflog.Debug(ctx, "Created gcs_catalog", map[string]interface{}{"id": plan.CatalogId.ValueString()})
 	resp.Diagnostics.Append(resp.State.Set(ctx, &plan)...)
 }
 
@@ -111,7 +111,7 @@ func (r *gcs_catalogResource) Read(ctx context.Context, req resource.ReadRequest
 		return
 	}
 
-	id := state.Id.ValueString()
+	id := state.CatalogId.ValueString()
 	tflog.Debug(ctx, "Reading gcs_catalog", map[string]interface{}{"id": id})
 	response, err := r.client.GetCatalog(ctx, "gcs", id)
 	if err != nil {
@@ -150,7 +150,7 @@ func (r *gcs_catalogResource) Update(ctx context.Context, req resource.UpdateReq
 		return
 	}
 
-	id := state.Id.ValueString()
+	id := state.CatalogId.ValueString()
 	request := r.modelToUpdateRequest(ctx, &plan, &resp.Diagnostics)
 	if resp.Diagnostics.HasError() {
 		return
@@ -171,7 +171,7 @@ func (r *gcs_catalogResource) Update(ctx context.Context, req resource.UpdateReq
 		return
 	}
 
-	tflog.Debug(ctx, "Updated gcs_catalog", map[string]interface{}{"id": plan.Id.ValueString()})
+	tflog.Debug(ctx, "Updated gcs_catalog", map[string]interface{}{"id": plan.CatalogId.ValueString()})
 	resp.Diagnostics.Append(resp.State.Set(ctx, &plan)...)
 }
 
@@ -183,7 +183,7 @@ func (r *gcs_catalogResource) Delete(ctx context.Context, req resource.DeleteReq
 		return
 	}
 
-	id := state.Id.ValueString()
+	id := state.CatalogId.ValueString()
 	tflog.Debug(ctx, "Deleting gcs_catalog", map[string]interface{}{"id": id})
 	err := r.client.DeleteCatalog(ctx, "gcs", id)
 	if err != nil {
@@ -251,12 +251,8 @@ func (r *gcs_catalogResource) modelToUpdateRequest(ctx context.Context, model *r
 
 func (r *gcs_catalogResource) updateModelFromResponse(ctx context.Context, model *resource_gcs_catalog.GcsCatalogModel, response map[string]interface{}, diags *diag.Diagnostics) {
 	// Map response fields to model
-	if id, ok := response["id"].(string); ok {
-		model.Id = types.StringValue(id)
-		model.CatalogId = types.StringValue(id)
-	} else if id, ok := response["catalogId"].(string); ok {
-		model.Id = types.StringValue(id)
-		model.CatalogId = types.StringValue(id)
+	if catalogId, ok := response["catalogId"].(string); ok {
+		model.CatalogId = types.StringValue(catalogId)
 	}
 
 	if name, ok := response["name"].(string); ok {

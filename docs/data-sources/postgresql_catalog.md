@@ -17,11 +17,10 @@ description: |-
 
 ### Required
 
-- `id` (String) A catalog connecting to PostgreSQL
+- `catalog_id` (String) A catalog connecting to PostgreSQL
 
 ### Read-Only
 
-- `catalog_id` (String) PostgreSQL catalog identifier (read only)
 - `cloud_kind` (String) PostgreSQL cloud kind. Defaults to AWS.
 - `database_name` (String) PostgreSQL database name
 - `description` (String) Catalog description

@@ -36,7 +36,7 @@ resource "galaxy_opensearch_catalog" "example" {
 # Data source to read the catalog
 data "galaxy_opensearch_catalog" "example" {
   depends_on = [galaxy_opensearch_catalog.example]
-  id         = galaxy_opensearch_catalog.example.id
+  catalog_id = galaxy_opensearch_catalog.example.catalog_id
 }
 
 # List all OpenSearch catalogs
@@ -45,7 +45,7 @@ data "galaxy_opensearch_catalogs" "all" {
 }
 
 output "opensearch_catalog_id" {
-  value = galaxy_opensearch_catalog.example.id
+  value = galaxy_opensearch_catalog.example.catalog_id
 }
 
 output "all_opensearch_catalogs" {

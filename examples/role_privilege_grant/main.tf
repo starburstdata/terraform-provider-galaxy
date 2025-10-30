@@ -43,7 +43,7 @@ resource "galaxy_role" "example" {
 # Grant privileges on the catalog to the role
 resource "galaxy_role_privilege_grant" "catalog_grant" {
   role_id      = galaxy_role.example.role_id
-  entity_id    = galaxy_postgresql_catalog.example.id
+  entity_id    = galaxy_postgresql_catalog.example.catalog_id
   entity_kind  = "Catalog"
   privilege    = "CreateSchema"
   grant_kind   = "Allow"
@@ -51,11 +51,11 @@ resource "galaxy_role_privilege_grant" "catalog_grant" {
 }
 
 output "catalog_id" {
-  value = galaxy_postgresql_catalog.example.id
+  value = galaxy_postgresql_catalog.example.catalog_id
 }
 
 output "example_role_id" {
-  value = galaxy_role.example.id
+  value = galaxy_role.example.role_id
 }
 
 output "privilege_grant_info" {

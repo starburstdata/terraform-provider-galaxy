@@ -123,9 +123,6 @@ func (r *clusterResource) Read(ctx context.Context, req resource.ReadRequest, re
 	}
 
 	clusterID := state.ClusterId.ValueString()
-	if clusterID == "" {
-		clusterID = state.Id.ValueString()
-	}
 
 	tflog.Debug(ctx, "Reading cluster", map[string]interface{}{
 		"cluster_id": clusterID,
@@ -182,9 +179,6 @@ func (r *clusterResource) Update(ctx context.Context, req resource.UpdateRequest
 	}
 
 	clusterID := state.ClusterId.ValueString()
-	if clusterID == "" {
-		clusterID = state.Id.ValueString()
-	}
 
 	// Convert plan to API request
 	updateRequest := r.modelToUpdateRequest(ctx, &plan, &resp.Diagnostics)
@@ -230,9 +224,6 @@ func (r *clusterResource) Delete(ctx context.Context, req resource.DeleteRequest
 	}
 
 	clusterID := state.ClusterId.ValueString()
-	if clusterID == "" {
-		clusterID = state.Id.ValueString()
-	}
 
 	tflog.Debug(ctx, "Deleting cluster", map[string]interface{}{
 		"cluster_id": clusterID,
@@ -344,7 +335,6 @@ func (r *clusterResource) updateModelFromResponse(ctx context.Context, model *re
 	// Set computed fields from response
 	if clusterId, ok := response["clusterId"].(string); ok {
 		model.ClusterId = types.StringValue(clusterId)
-		model.Id = types.StringValue(clusterId) // Set ID to cluster ID
 	}
 
 	if clusterState, ok := response["clusterState"].(string); ok {

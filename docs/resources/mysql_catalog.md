@@ -28,7 +28,6 @@ description: |-
 - `cloud_kind` (String) MySQL cloud kind. Defaults to AWS.
 - `description` (String) Catalog description
 - `host` (String) MySQL host
-- `id` (String) A catalog connecting to MySQL
 - `port` (Number) MySQL database port. Defaults to 3306.
 - `private_link_id` (String) PrivateLink Identifier
 - `ssh_tunnel_id` (String) SSH tunnel identifier

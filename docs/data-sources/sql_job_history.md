@@ -17,7 +17,7 @@ description: |-
 
 ### Required
 
-- `id` (String) SQL query scheduled job
+- `sql_job_id` (String) SQL query scheduled job
 
 ### Read-Only
 

@@ -65,7 +65,7 @@ func (d *bigquery_catalogDataSource) Read(ctx context.Context, req datasource.Re
 		return
 	}
 
-	id := config.Id.ValueString()
+	id := config.CatalogId.ValueString()
 	tflog.Debug(ctx, "Reading bigquery_catalog", map[string]interface{}{"id": id})
 
 	response, err := d.client.GetCatalog(ctx, "bigquery", id)
@@ -85,10 +85,7 @@ func (d *bigquery_catalogDataSource) Read(ctx context.Context, req datasource.Re
 
 func (d *bigquery_catalogDataSource) updateModelFromResponse(ctx context.Context, model *datasource_bigquery_catalog.BigqueryCatalogModel, response map[string]interface{}) {
 	// Map response fields to model
-	if id, ok := response["id"].(string); ok {
-		model.Id = types.StringValue(id)
-	}
-	if catalogId, ok := response["id"].(string); ok {
+	if catalogId, ok := response["catalogId"].(string); ok {
 		model.CatalogId = types.StringValue(catalogId)
 	}
 	if name, ok := response["name"].(string); ok {

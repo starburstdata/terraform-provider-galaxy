@@ -55,9 +55,9 @@ resource "galaxy_redshift_catalog" "test" {
 # Data source to read the catalog
 data "galaxy_redshift_catalog" "test" {
   depends_on = [galaxy_redshift_catalog.test]
-  id         = galaxy_redshift_catalog.test.id
+  catalog_id = galaxy_redshift_catalog.test.catalog_id
 }
 
 output "redshift_catalog_id" {
-  value = galaxy_redshift_catalog.test.id
+  value = galaxy_redshift_catalog.test.catalog_id
 }

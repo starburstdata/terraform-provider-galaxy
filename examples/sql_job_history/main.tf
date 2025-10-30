@@ -24,8 +24,8 @@ locals {
 
 # Test the SQL job history data source (only if we have SQL jobs available)
 data "galaxy_sql_job_history" "test" {
-  count = local.has_sql_jobs ? 1 : 0
-  id    = local.first_sql_job.sql_job_id
+  count      = local.has_sql_jobs ? 1 : 0
+  sql_job_id = local.first_sql_job.sql_job_id
 }
 
 # Local processing of history results
@@ -58,12 +58,12 @@ output "first_sql_job_debug" {
 # SQL Job History data source test outputs (conditional)
 output "sql_job_history_test" {
   value = local.has_sql_jobs ? {
-    id              = data.galaxy_sql_job_history.test[0].id
+    sql_job_id      = data.galaxy_sql_job_history.test[0].sql_job_id
     history_count   = length(local.history_result)
     has_history     = local.has_history
     test_status     = "success"
   } : {
-    id              = "not_available"
+    sql_job_id      = "not_available"
     history_count   = 0
     has_history     = false
     test_status     = "failed"

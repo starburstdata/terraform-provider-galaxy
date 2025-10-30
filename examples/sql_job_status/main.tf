@@ -24,8 +24,8 @@ locals {
 
 # Test the SQL job status data source (only if we have SQL jobs available)
 data "galaxy_sql_job_status" "test" {
-  count = local.has_sql_jobs ? 1 : 0
-  id    = local.first_sql_job.sql_job_id
+  count      = local.has_sql_jobs ? 1 : 0
+  sql_job_id = local.first_sql_job.sql_job_id
 }
 
 # Diagnostic outputs
@@ -48,23 +48,21 @@ output "first_sql_job_debug" {
 # SQL Job Status data source test outputs (conditional)
 output "sql_job_status_test" {
   value = local.has_sql_jobs ? {
-    id                  = data.galaxy_sql_job_status.test[0].id
-    sql_job_id         = data.galaxy_sql_job_status.test[0].sql_job_id
-    status             = data.galaxy_sql_job_status.test[0].status
+    sql_job_id          = data.galaxy_sql_job_status.test[0].sql_job_id
+    status              = data.galaxy_sql_job_status.test[0].status
     progress_percentage = data.galaxy_sql_job_status.test[0].progress_percentage
-    query_id           = try(data.galaxy_sql_job_status.test[0].query_id, "")
-    error_message      = try(data.galaxy_sql_job_status.test[0].error_message, "")
-    updated_at         = try(data.galaxy_sql_job_status.test[0].updated_at, "")
-    test_status        = "success"
+    query_id            = try(data.galaxy_sql_job_status.test[0].query_id, "")
+    error_message       = try(data.galaxy_sql_job_status.test[0].error_message, "")
+    updated_at          = try(data.galaxy_sql_job_status.test[0].updated_at, "")
+    test_status         = "success"
   } : {
-    id                  = "not_available"
-    sql_job_id         = "No SQL jobs available for testing"
-    status             = "none"
+    sql_job_id          = "No SQL jobs available for testing"
+    status              = "none"
     progress_percentage = 0
-    query_id           = "none"
-    error_message      = "none"
-    updated_at         = "none"
-    test_status        = "failed"
+    query_id            = "none"
+    error_message       = "none"
+    updated_at          = "none"
+    test_status         = "failed"
   }
 }
 

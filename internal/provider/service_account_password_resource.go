@@ -265,8 +265,6 @@ func (r *service_account_passwordResource) updateModelFromResponse(ctx context.C
 	// Map response fields to model
 	if id, ok := response["serviceAccountPasswordId"].(string); ok {
 		model.ServiceAccountPasswordId = types.StringValue(id)
-	} else if id, ok := response["id"].(string); ok {
-		model.ServiceAccountPasswordId = types.StringValue(id)
 	} else {
 		model.ServiceAccountPasswordId = types.StringNull()
 	}

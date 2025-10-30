@@ -21,9 +21,9 @@ func RedshiftCatalogDataSourceSchema(ctx context.Context) schema.Schema {
 				Computed: true,
 			},
 			"catalog_id": schema.StringAttribute{
-				Computed:            true,
-				Description:         "Redshift catalog identifier (read only)",
-				MarkdownDescription: "Redshift catalog identifier (read only)",
+				Required:            true,
+				Description:         "A catalog connecting to AWS Redshift",
+				MarkdownDescription: "A catalog connecting to AWS Redshift",
 			},
 			"description": schema.StringAttribute{
 				Computed:            true,
@@ -34,11 +34,6 @@ func RedshiftCatalogDataSourceSchema(ctx context.Context) schema.Schema {
 				Computed:            true,
 				Description:         "Redshift cluster endpoint",
 				MarkdownDescription: "Redshift cluster endpoint",
-			},
-			"id": schema.StringAttribute{
-				Required:            true,
-				Description:         "A catalog connecting to AWS Redshift",
-				MarkdownDescription: "A catalog connecting to AWS Redshift",
 			},
 			"name": schema.StringAttribute{
 				Computed:            true,
@@ -95,7 +90,6 @@ type RedshiftCatalogModel struct {
 	CatalogId   types.String `tfsdk:"catalog_id"`
 	Description types.String `tfsdk:"description"`
 	Endpoint    types.String `tfsdk:"endpoint"`
-	Id          types.String `tfsdk:"id"`
 	Name        types.String `tfsdk:"name"`
 	Password    types.String `tfsdk:"password"`
 	ReadOnly    types.Bool   `tfsdk:"read_only"`

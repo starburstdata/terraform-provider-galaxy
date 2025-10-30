@@ -17,11 +17,10 @@ description: |-
 
 ### Required
 
-- `id` (String) A catalog connecting to GCS
+- `catalog_id` (String) A catalog connecting to GCS
 
 ### Read-Only
 
-- `catalog_id` (String) GCS catalog identifier (read only)
 - `credentials_key` (String) Base64 encoded or plain text GCS JSON key
 - `default_bucket` (String) GCS bucket to use when storing data for new schemas
 - `default_data_location` (String) Default location to store data for new schemas

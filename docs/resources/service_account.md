@@ -23,7 +23,6 @@ description: |-
 
 ### Optional
 
-- `id` (String) A service account
 - `role_id` (String) Default role ID (read only)
 
 ### Read-Only

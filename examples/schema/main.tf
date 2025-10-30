@@ -24,8 +24,8 @@ locals {
 
 # Test the schema data source (only if we have catalogs available)
 data "galaxy_schema" "test" {
-  count = local.has_catalogs ? 1 : 0
-  id    = local.first_catalog.catalog_id
+  count      = local.has_catalogs ? 1 : 0
+  catalog_id = local.first_catalog.catalog_id
 }
 
 # Local processing of schema results
@@ -58,12 +58,12 @@ output "first_catalog_debug" {
 # Schema data source test outputs (conditional)
 output "schema_test" {
   value = local.has_catalogs ? {
-    id            = data.galaxy_schema.test[0].id
+    catalog_id    = data.galaxy_schema.test[0].catalog_id
     schemas_count = length(local.schema_result)
     has_schemas   = local.has_schemas
     test_status   = "success"
   } : {
-    id            = "not_available"
+    catalog_id    = "not_available"
     schemas_count = 0
     has_schemas   = false
     test_status   = "failed"

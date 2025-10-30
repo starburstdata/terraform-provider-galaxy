@@ -17,7 +17,7 @@ description: |-
 
 ### Required
 
-- `id` (String) SQL query scheduled job
+- `sql_job_id` (String) SQL query scheduled job
 
 ### Read-Only
 
@@ -28,5 +28,4 @@ description: |-
 - `next_execution` (String) Timestamp of SQL job next execution (read only)
 - `query` (String) SQL query to execute
 - `role_id` (String) Role used when SQL job is executed
-- `sql_job_id` (String) ID of a SQL job (read only)
 - `timezone` (String) Timezone in which CRON is evaluated. Defaults to UTC

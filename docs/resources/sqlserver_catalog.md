@@ -28,7 +28,6 @@ description: |-
 
 - `cloud_kind` (String) SQL Server cloud kind. Defaults to AWS.
 - `description` (String) Catalog description
-- `id` (String) A catalog connecting to SQL Server
 - `port` (Number) SQL Server database port. Defaults to 1433.
 - `ssh_tunnel_id` (String) SSH tunnel identifier
 - `validate` (Boolean) Validate catalog configuration before creation

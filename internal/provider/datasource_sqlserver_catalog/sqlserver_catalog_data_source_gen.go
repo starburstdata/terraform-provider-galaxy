@@ -13,9 +13,9 @@ func SqlserverCatalogDataSourceSchema(ctx context.Context) schema.Schema {
 	return schema.Schema{
 		Attributes: map[string]schema.Attribute{
 			"catalog_id": schema.StringAttribute{
-				Computed:            true,
-				Description:         "SQL Server catalog identifier (read only)",
-				MarkdownDescription: "SQL Server catalog identifier (read only)",
+				Required:            true,
+				Description:         "A catalog connecting to SQL Server",
+				MarkdownDescription: "A catalog connecting to SQL Server",
 			},
 			"cloud_kind": schema.StringAttribute{
 				Computed:            true,
@@ -36,11 +36,6 @@ func SqlserverCatalogDataSourceSchema(ctx context.Context) schema.Schema {
 				Computed:            true,
 				Description:         "SQL Server database endpoint",
 				MarkdownDescription: "SQL Server database endpoint",
-			},
-			"id": schema.StringAttribute{
-				Required:            true,
-				Description:         "A catalog connecting to SQL Server",
-				MarkdownDescription: "A catalog connecting to SQL Server",
 			},
 			"name": schema.StringAttribute{
 				Computed:            true,
@@ -87,7 +82,6 @@ type SqlserverCatalogModel struct {
 	DatabaseName types.String `tfsdk:"database_name"`
 	Description  types.String `tfsdk:"description"`
 	Endpoint     types.String `tfsdk:"endpoint"`
-	Id           types.String `tfsdk:"id"`
 	Name         types.String `tfsdk:"name"`
 	Password     types.String `tfsdk:"password"`
 	Port         types.Int64  `tfsdk:"port"`

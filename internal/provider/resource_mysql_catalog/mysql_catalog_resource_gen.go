@@ -47,12 +47,6 @@ func MysqlCatalogResourceSchema(ctx context.Context) schema.Schema {
 				Description:         "MySQL host",
 				MarkdownDescription: "MySQL host",
 			},
-			"id": schema.StringAttribute{
-				Optional:            true,
-				Computed:            true,
-				Description:         "A catalog connecting to MySQL",
-				MarkdownDescription: "A catalog connecting to MySQL",
-			},
 			"name": schema.StringAttribute{
 				Required:            true,
 				Description:         "Catalog name",
@@ -107,7 +101,6 @@ type MysqlCatalogModel struct {
 	ConnectionType types.String `tfsdk:"connection_type"`
 	Description    types.String `tfsdk:"description"`
 	Host           types.String `tfsdk:"host"`
-	Id             types.String `tfsdk:"id"`
 	Name           types.String `tfsdk:"name"`
 	Password       types.String `tfsdk:"password"`
 	Port           types.Int64  `tfsdk:"port"`

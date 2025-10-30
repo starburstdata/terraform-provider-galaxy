@@ -21,11 +21,6 @@ description: |-
 - `expression` (String) Row filter expression (read only)
 - `name` (String) Row filter name (read only)
 
-### Optional
-
-- `id` (String) - A row filter
-- This parameter can be looked up using `name` instead of its Id. Use `name=value` instead of an Id to lookup/search using the `value`. `value` must be encoded ([see RFC](https://www.rfc-editor.org/rfc/rfc3986#section-2.2) including `=`)
-
 ### Read-Only
 
 - `created` (String) Created on (read only)

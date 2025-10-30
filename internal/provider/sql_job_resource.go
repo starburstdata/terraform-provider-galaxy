@@ -86,7 +86,7 @@ func (r *sqlJobResource) Create(ctx context.Context, req resource.CreateRequest,
 		return
 	}
 
-	tflog.Debug(ctx, "Created sql_job", map[string]interface{}{"id": plan.Id.ValueString()})
+	tflog.Debug(ctx, "Created sql_job", map[string]interface{}{"id": plan.SqlJobId.ValueString()})
 	resp.Diagnostics.Append(resp.State.Set(ctx, &plan)...)
 }
 
@@ -100,9 +100,6 @@ func (r *sqlJobResource) Read(ctx context.Context, req resource.ReadRequest, res
 
 	// Get the SQL job ID from state
 	id := state.SqlJobId.ValueString()
-	if id == "" {
-		id = state.Id.ValueString()
-	}
 
 	tflog.Debug(ctx, "Reading sql_job", map[string]interface{}{"id": id})
 	response, err := r.client.GetSqlJob(ctx, id)
@@ -144,9 +141,6 @@ func (r *sqlJobResource) Update(ctx context.Context, req resource.UpdateRequest,
 
 	// Get the SQL job ID from state
 	id := state.SqlJobId.ValueString()
-	if id == "" {
-		id = state.Id.ValueString()
-	}
 
 	request := r.modelToUpdateRequest(ctx, &plan, &resp.Diagnostics)
 	if resp.Diagnostics.HasError() {
@@ -181,9 +175,6 @@ func (r *sqlJobResource) Delete(ctx context.Context, req resource.DeleteRequest,
 
 	// Get the SQL job ID from state
 	id := state.SqlJobId.ValueString()
-	if id == "" {
-		id = state.Id.ValueString()
-	}
 
 	tflog.Debug(ctx, "Deleting sql_job", map[string]interface{}{"id": id})
 	err := r.client.DeleteSqlJob(ctx, id)
@@ -233,9 +224,6 @@ func (r *sqlJobResource) modelToUpdateRequest(ctx context.Context, model *resour
 }
 
 func (r *sqlJobResource) updateModelFromResponse(ctx context.Context, model *resource_sql_job.SqlJobModel, response map[string]interface{}, diags *diag.Diagnostics) {
-	if id, ok := response["id"].(string); ok {
-		model.Id = types.StringValue(id)
-	}
 	if sqlJobId, ok := response["sqlJobId"].(string); ok {
 		model.SqlJobId = types.StringValue(sqlJobId)
 	}

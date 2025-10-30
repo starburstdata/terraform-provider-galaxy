@@ -23,13 +23,13 @@ resource "galaxy_service_account" "example" {
 
 # Create a password for the service account
 resource "galaxy_service_account_password" "example_password" {
-  service_account_id = galaxy_service_account.example.id
+  service_account_id = galaxy_service_account.example.service_account_id
   description        = "Production API access password"
 }
 
 # Create another password for rotation
 resource "galaxy_service_account_password" "rotation_password" {
-  service_account_id = galaxy_service_account.example.id
+  service_account_id = galaxy_service_account.example.service_account_id
   description        = "Rotation password for zero-downtime updates"
 }
 
@@ -39,11 +39,11 @@ data "galaxy_service_account" "example" {
     galaxy_service_account_password.example_password,
     galaxy_service_account_password.rotation_password
   ]
-  id = galaxy_service_account.example.id
+  service_account_id = galaxy_service_account.example.service_account_id
 }
 
 output "service_account_id" {
-  value = galaxy_service_account.example.id
+  value = galaxy_service_account.example.service_account_id
 }
 
 output "password_id" {

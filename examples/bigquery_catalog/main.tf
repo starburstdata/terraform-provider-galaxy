@@ -24,11 +24,11 @@ resource "galaxy_bigquery_catalog" "test" {
 # Data source to read the catalog
 data "galaxy_bigquery_catalog" "test" {
   depends_on = [galaxy_bigquery_catalog.test]
-  id         = galaxy_bigquery_catalog.test.id
+  catalog_id = galaxy_bigquery_catalog.test.catalog_id
 }
 
 output "bigquery_catalog_id" {
-  value = galaxy_bigquery_catalog.test.id
+  value = galaxy_bigquery_catalog.test.catalog_id
 }
 
 output "bigquery_catalog_name" {

@@ -63,9 +63,9 @@ resource "galaxy_sqlserver_catalog" "test" {
 # Data source to read the catalog
 data "galaxy_sqlserver_catalog" "test" {
   depends_on = [galaxy_sqlserver_catalog.test]
-  id         = galaxy_sqlserver_catalog.test.id
+  catalog_id = galaxy_sqlserver_catalog.test.catalog_id
 }
 
 output "sqlserver_catalog_id" {
-  value = galaxy_sqlserver_catalog.test.id
+  value = galaxy_sqlserver_catalog.test.catalog_id
 }

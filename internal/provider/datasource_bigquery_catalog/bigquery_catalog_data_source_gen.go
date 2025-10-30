@@ -13,9 +13,9 @@ func BigqueryCatalogDataSourceSchema(ctx context.Context) schema.Schema {
 	return schema.Schema{
 		Attributes: map[string]schema.Attribute{
 			"catalog_id": schema.StringAttribute{
-				Computed:            true,
-				Description:         "BigQuery catalog identifier (read only)",
-				MarkdownDescription: "BigQuery catalog identifier (read only)",
+				Required:            true,
+				Description:         "A catalog connecting to BigQuery",
+				MarkdownDescription: "A catalog connecting to BigQuery",
 			},
 			"credentials_key": schema.StringAttribute{
 				Computed:            true,
@@ -26,11 +26,6 @@ func BigqueryCatalogDataSourceSchema(ctx context.Context) schema.Schema {
 				Computed:            true,
 				Description:         "Catalog description",
 				MarkdownDescription: "Catalog description",
-			},
-			"id": schema.StringAttribute{
-				Required:            true,
-				Description:         "A catalog connecting to BigQuery",
-				MarkdownDescription: "A catalog connecting to BigQuery",
 			},
 			"name": schema.StringAttribute{
 				Computed:            true,
@@ -65,7 +60,6 @@ type BigqueryCatalogModel struct {
 	CatalogId       types.String `tfsdk:"catalog_id"`
 	CredentialsKey  types.String `tfsdk:"credentials_key"`
 	Description     types.String `tfsdk:"description"`
-	Id              types.String `tfsdk:"id"`
 	Name            types.String `tfsdk:"name"`
 	ParentProjectId types.String `tfsdk:"parent_project_id"`
 	ProjectId       types.String `tfsdk:"project_id"`

@@ -40,7 +40,7 @@ resource "galaxy_cluster" "test" {
 
 
 output "cluster_id" {
-  value = galaxy_cluster.test.id
+  value = galaxy_cluster.test.cluster_id
 }
 
 output "cluster_state" {
@@ -53,7 +53,7 @@ output "trino_uri" {
 
 # Data source example for cluster
 data "galaxy_cluster" "existing_cluster" {
-  id = galaxy_cluster.test.id
+  cluster_id = galaxy_cluster.test.cluster_id
 }
 
 output "cluster_data" {

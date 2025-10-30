@@ -23,9 +23,9 @@ func SnowflakeCatalogDataSourceSchema(ctx context.Context) schema.Schema {
 				MarkdownDescription: "Snowflake authentication type",
 			},
 			"catalog_id": schema.StringAttribute{
-				Computed:            true,
-				Description:         "Snowflake catalog identifier (read only)",
-				MarkdownDescription: "Snowflake catalog identifier (read only)",
+				Required:            true,
+				Description:         "A catalog connecting to Snowflake",
+				MarkdownDescription: "A catalog connecting to Snowflake",
 			},
 			"cloud_kind": schema.StringAttribute{
 				Computed:            true,
@@ -41,11 +41,6 @@ func SnowflakeCatalogDataSourceSchema(ctx context.Context) schema.Schema {
 				Computed:            true,
 				Description:         "Catalog description",
 				MarkdownDescription: "Catalog description",
-			},
-			"id": schema.StringAttribute{
-				Required:            true,
-				Description:         "A catalog connecting to Snowflake",
-				MarkdownDescription: "A catalog connecting to Snowflake",
 			},
 			"name": schema.StringAttribute{
 				Computed:            true,
@@ -103,7 +98,6 @@ type SnowflakeCatalogModel struct {
 	CloudKind            types.String `tfsdk:"cloud_kind"`
 	DatabaseName         types.String `tfsdk:"database_name"`
 	Description          types.String `tfsdk:"description"`
-	Id                   types.String `tfsdk:"id"`
 	Name                 types.String `tfsdk:"name"`
 	Password             types.String `tfsdk:"password"`
 	PrivateKey           types.String `tfsdk:"private_key"`

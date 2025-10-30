@@ -65,7 +65,7 @@ func (d *data_productDataSource) Read(ctx context.Context, req datasource.ReadRe
 		return
 	}
 
-	id := config.Id.ValueString()
+	id := config.DataProductId.ValueString()
 	tflog.Debug(ctx, "Reading data_product", map[string]interface{}{"id": id})
 
 	response, err := d.client.GetDataProduct(ctx, id)
@@ -85,10 +85,7 @@ func (d *data_productDataSource) Read(ctx context.Context, req datasource.ReadRe
 
 func (d *data_productDataSource) updateModelFromResponse(ctx context.Context, model *datasource_data_product.DataProductModel, response map[string]interface{}) {
 	// Map response fields to model
-	if id, ok := response["id"].(string); ok {
-		model.Id = types.StringValue(id)
-	}
-	if dataProductId, ok := response["id"].(string); ok {
+	if dataProductId, ok := response["dataProductId"].(string); ok {
 		model.DataProductId = types.StringValue(dataProductId)
 	}
 	if name, ok := response["name"].(string); ok {

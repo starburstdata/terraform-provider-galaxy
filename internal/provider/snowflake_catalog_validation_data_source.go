@@ -89,5 +89,58 @@ func (d *snowflake_catalog_validationDataSource) updateModelFromResponse(ctx con
 		model.Id = types.StringValue(id)
 	}
 
-	// Map other fields based on actual response structure
+	if validationSuccessful, ok := response["validationSuccessful"].(bool); ok {
+		model.ValidationSuccessful = types.BoolValue(validationSuccessful)
+	}
+
+	// Handle error messages list
+	if errorMessages, ok := response["errorMessages"].([]interface{}); ok {
+		var errorValues []types.String
+		for _, msg := range errorMessages {
+			if msgStr, ok := msg.(string); ok {
+				errorValues = append(errorValues, types.StringValue(msgStr))
+			}
+		}
+		if len(errorValues) > 0 {
+			model.ErrorMessages, _ = types.ListValueFrom(ctx, types.StringType, errorValues)
+		} else {
+			model.ErrorMessages = types.ListNull(types.StringType)
+		}
+	} else {
+		model.ErrorMessages = types.ListNull(types.StringType)
+	}
+
+	// Handle warning messages list
+	if warningMessages, ok := response["warningMessages"].([]interface{}); ok {
+		var warningValues []types.String
+		for _, msg := range warningMessages {
+			if msgStr, ok := msg.(string); ok {
+				warningValues = append(warningValues, types.StringValue(msgStr))
+			}
+		}
+		if len(warningValues) > 0 {
+			model.WarningMessages, _ = types.ListValueFrom(ctx, types.StringType, warningValues)
+		} else {
+			model.WarningMessages = types.ListNull(types.StringType)
+		}
+	} else {
+		model.WarningMessages = types.ListNull(types.StringType)
+	}
+
+	// Handle info messages list
+	if infoMessages, ok := response["infoMessages"].([]interface{}); ok {
+		var infoValues []types.String
+		for _, msg := range infoMessages {
+			if msgStr, ok := msg.(string); ok {
+				infoValues = append(infoValues, types.StringValue(msgStr))
+			}
+		}
+		if len(infoValues) > 0 {
+			model.InfoMessages, _ = types.ListValueFrom(ctx, types.StringType, infoValues)
+		} else {
+			model.InfoMessages = types.ListNull(types.StringType)
+		}
+	} else {
+		model.InfoMessages = types.ListNull(types.StringType)
+	}
 }

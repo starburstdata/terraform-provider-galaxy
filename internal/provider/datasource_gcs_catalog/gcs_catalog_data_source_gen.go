@@ -13,9 +13,9 @@ func GcsCatalogDataSourceSchema(ctx context.Context) schema.Schema {
 	return schema.Schema{
 		Attributes: map[string]schema.Attribute{
 			"catalog_id": schema.StringAttribute{
-				Computed:            true,
-				Description:         "GCS catalog identifier (read only)",
-				MarkdownDescription: "GCS catalog identifier (read only)",
+				Required:            true,
+				Description:         "A catalog connecting to GCS",
+				MarkdownDescription: "A catalog connecting to GCS",
 			},
 			"credentials_key": schema.StringAttribute{
 				Computed:            true,
@@ -62,11 +62,6 @@ func GcsCatalogDataSourceSchema(ctx context.Context) schema.Schema {
 				Description:         "Hive metastore host port. Defaults to 9083.",
 				MarkdownDescription: "Hive metastore host port. Defaults to 9083.",
 			},
-			"id": schema.StringAttribute{
-				Required:            true,
-				Description:         "A catalog connecting to GCS",
-				MarkdownDescription: "A catalog connecting to GCS",
-			},
 			"metastore_type": schema.StringAttribute{
 				Computed: true,
 			},
@@ -105,7 +100,6 @@ type GcsCatalogModel struct {
 	ExternalTableWritesEnabled   types.Bool   `tfsdk:"external_table_writes_enabled"`
 	HiveMetastoreHost            types.String `tfsdk:"hive_metastore_host"`
 	HiveMetastorePort            types.Int64  `tfsdk:"hive_metastore_port"`
-	Id                           types.String `tfsdk:"id"`
 	MetastoreType                types.String `tfsdk:"metastore_type"`
 	Name                         types.String `tfsdk:"name"`
 	ReadOnly                     types.Bool   `tfsdk:"read_only"`

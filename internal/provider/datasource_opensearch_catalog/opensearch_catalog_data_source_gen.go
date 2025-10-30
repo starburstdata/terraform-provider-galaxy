@@ -21,9 +21,9 @@ func OpensearchCatalogDataSourceSchema(ctx context.Context) schema.Schema {
 				Computed: true,
 			},
 			"catalog_id": schema.StringAttribute{
-				Computed:            true,
-				Description:         "OpenSearch catalog identifier (read only)",
-				MarkdownDescription: "OpenSearch catalog identifier (read only)",
+				Required:            true,
+				Description:         "A catalog connecting to OpenSearch",
+				MarkdownDescription: "A catalog connecting to OpenSearch",
 			},
 			"description": schema.StringAttribute{
 				Computed:            true,
@@ -34,11 +34,6 @@ func OpensearchCatalogDataSourceSchema(ctx context.Context) schema.Schema {
 				Computed:            true,
 				Description:         "OpenSearch cluster endpoint",
 				MarkdownDescription: "OpenSearch cluster endpoint",
-			},
-			"id": schema.StringAttribute{
-				Required:            true,
-				Description:         "A catalog connecting to OpenSearch",
-				MarkdownDescription: "A catalog connecting to OpenSearch",
 			},
 			"name": schema.StringAttribute{
 				Computed:            true,
@@ -100,7 +95,6 @@ type OpensearchCatalogModel struct {
 	CatalogId   types.String `tfsdk:"catalog_id"`
 	Description types.String `tfsdk:"description"`
 	Endpoint    types.String `tfsdk:"endpoint"`
-	Id          types.String `tfsdk:"id"`
 	Name        types.String `tfsdk:"name"`
 	Password    types.String `tfsdk:"password"`
 	Port        types.Int64  `tfsdk:"port"`

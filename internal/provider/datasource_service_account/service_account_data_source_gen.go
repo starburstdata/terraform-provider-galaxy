@@ -24,11 +24,6 @@ func ServiceAccountDataSourceSchema(ctx context.Context) schema.Schema {
 				Description:         "Additional roles (read only)",
 				MarkdownDescription: "Additional roles (read only)",
 			},
-			"id": schema.StringAttribute{
-				Required:            true,
-				Description:         "A service account",
-				MarkdownDescription: "A service account",
-			},
 			"passwords": schema.ListNestedAttribute{
 				NestedObject: schema.NestedAttributeObject{
 					Attributes: map[string]schema.Attribute{
@@ -79,9 +74,9 @@ func ServiceAccountDataSourceSchema(ctx context.Context) schema.Schema {
 				MarkdownDescription: "Default role (read only)",
 			},
 			"service_account_id": schema.StringAttribute{
-				Computed:            true,
-				Description:         "Service account ID (read only)",
-				MarkdownDescription: "Service account ID (read only)",
+				Required:            true,
+				Description:         "A service account",
+				MarkdownDescription: "A service account",
 			},
 			"user_name": schema.StringAttribute{
 				Computed:            true,
@@ -94,7 +89,6 @@ func ServiceAccountDataSourceSchema(ctx context.Context) schema.Schema {
 
 type ServiceAccountModel struct {
 	AdditionalRoleIds types.List   `tfsdk:"additional_role_ids"`
-	Id                types.String `tfsdk:"id"`
 	Passwords         types.List   `tfsdk:"passwords"`
 	RoleId            types.String `tfsdk:"role_id"`
 	ServiceAccountId  types.String `tfsdk:"service_account_id"`

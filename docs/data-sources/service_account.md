@@ -17,14 +17,13 @@ description: |-
 
 ### Required
 
-- `id` (String) A service account
+- `service_account_id` (String) A service account
 
 ### Read-Only
 
 - `additional_role_ids` (List of String) Additional roles (read only)
 - `passwords` (Attributes List) Passwords (read only) (see [below for nested schema](#nestedatt--passwords))
 - `role_id` (String) Default role (read only)
-- `service_account_id` (String) Service account ID (read only)
 - `user_name` (String) Service account user name (read only)
 
 <a id="nestedatt--passwords"></a>

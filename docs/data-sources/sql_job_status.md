@@ -17,13 +17,12 @@ description: |-
 
 ### Required
 
-- `id` (String) SQL query scheduled job
+- `sql_job_id` (String) SQL query scheduled job
 
 ### Read-Only
 
 - `error_message` (String) Error encountered when SQL query was run (read only)
 - `progress_percentage` (Number) Percentage progress of SQL job execution (read only)
 - `query_id` (String) ID of SQL query (read only)
-- `sql_job_id` (String) ID of a SQL job (read only)
 - `status` (String) SQL job status (read only)
 - `updated_at` (String) Status last update time (read only)

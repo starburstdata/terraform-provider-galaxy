@@ -65,7 +65,7 @@ func (d *redshift_catalogDataSource) Read(ctx context.Context, req datasource.Re
 		return
 	}
 
-	id := config.Id.ValueString()
+	id := config.CatalogId.ValueString()
 	tflog.Debug(ctx, "Reading redshift_catalog", map[string]interface{}{"id": id})
 
 	response, err := d.client.GetCatalog(ctx, "redshift", id)
@@ -85,9 +85,73 @@ func (d *redshift_catalogDataSource) Read(ctx context.Context, req datasource.Re
 
 func (d *redshift_catalogDataSource) updateModelFromResponse(ctx context.Context, model *datasource_redshift_catalog.RedshiftCatalogModel, response map[string]interface{}) {
 	// Map response fields to model
-	if id, ok := response["id"].(string); ok {
-		model.Id = types.StringValue(id)
+	if catalogId, ok := response["catalogId"].(string); ok {
+		model.CatalogId = types.StringValue(catalogId)
 	}
 
-	// Map other fields based on actual response structure
+	if name, ok := response["name"].(string); ok {
+		model.Name = types.StringValue(name)
+	}
+
+	if description, ok := response["description"].(string); ok {
+		model.Description = types.StringValue(description)
+	} else if model.Description.IsUnknown() {
+		model.Description = types.StringNull()
+	}
+
+	if readOnly, ok := response["readOnly"].(bool); ok {
+		model.ReadOnly = types.BoolValue(readOnly)
+	}
+
+	if endpoint, ok := response["endpoint"].(string); ok {
+		model.Endpoint = types.StringValue(endpoint)
+	}
+
+	if region, ok := response["region"].(string); ok {
+		model.Region = types.StringValue(region)
+	} else if model.Region.IsUnknown() {
+		model.Region = types.StringNull()
+	}
+
+	if authType, ok := response["authType"].(string); ok {
+		model.AuthType = types.StringValue(authType)
+	} else if model.AuthType.IsUnknown() {
+		model.AuthType = types.StringNull()
+	}
+
+	if username, ok := response["username"].(string); ok {
+		model.Username = types.StringValue(username)
+	} else if model.Username.IsUnknown() {
+		model.Username = types.StringNull()
+	}
+
+	// Password is write-only - the API returns "<Value is encrypted>"
+	// We don't update the password field from the API response since it's not the actual value.
+
+	if accessKey, ok := response["accessKey"].(string); ok {
+		model.AccessKey = types.StringValue(accessKey)
+	} else if model.AccessKey.IsUnknown() {
+		model.AccessKey = types.StringNull()
+	}
+
+	// SecretKey is write-only - the API returns "<Value is encrypted>"
+	// We don't update the secret_key field from the API response since it's not the actual value.
+
+	if roleArn, ok := response["roleArn"].(string); ok {
+		model.RoleArn = types.StringValue(roleArn)
+	} else if model.RoleArn.IsUnknown() {
+		model.RoleArn = types.StringNull()
+	}
+
+	if sshTunnelId, ok := response["sshTunnelId"].(string); ok {
+		model.SshTunnelId = types.StringValue(sshTunnelId)
+	} else if model.SshTunnelId.IsUnknown() {
+		model.SshTunnelId = types.StringNull()
+	}
+
+	if validate, ok := response["validate"].(bool); ok {
+		model.Validate = types.BoolValue(validate)
+	} else if model.Validate.IsUnknown() {
+		model.Validate = types.BoolNull()
+	}
 }

@@ -86,7 +86,7 @@ func (r *column_maskResource) Create(ctx context.Context, req resource.CreateReq
 		return
 	}
 
-	tflog.Debug(ctx, "Created column_mask", map[string]interface{}{"id": plan.Id.ValueString()})
+	tflog.Debug(ctx, "Created column_mask", map[string]interface{}{"id": plan.ColumnMaskId.ValueString()})
 	resp.Diagnostics.Append(resp.State.Set(ctx, &plan)...)
 }
 
@@ -98,7 +98,7 @@ func (r *column_maskResource) Read(ctx context.Context, req resource.ReadRequest
 		return
 	}
 
-	id := state.Id.ValueString()
+	id := state.ColumnMaskId.ValueString()
 	tflog.Debug(ctx, "Reading column_mask", map[string]interface{}{"id": id})
 	response, err := r.client.GetColumnMask(ctx, id)
 	if err != nil {
@@ -137,7 +137,7 @@ func (r *column_maskResource) Update(ctx context.Context, req resource.UpdateReq
 		return
 	}
 
-	id := state.Id.ValueString()
+	id := state.ColumnMaskId.ValueString()
 	request := r.modelToUpdateRequest(ctx, &plan, &resp.Diagnostics)
 	if resp.Diagnostics.HasError() {
 		return
@@ -158,7 +158,7 @@ func (r *column_maskResource) Update(ctx context.Context, req resource.UpdateReq
 		return
 	}
 
-	tflog.Debug(ctx, "Updated column_mask", map[string]interface{}{"id": plan.Id.ValueString()})
+	tflog.Debug(ctx, "Updated column_mask", map[string]interface{}{"id": plan.ColumnMaskId.ValueString()})
 	resp.Diagnostics.Append(resp.State.Set(ctx, &plan)...)
 }
 
@@ -170,7 +170,7 @@ func (r *column_maskResource) Delete(ctx context.Context, req resource.DeleteReq
 		return
 	}
 
-	id := state.Id.ValueString()
+	id := state.ColumnMaskId.ValueString()
 	tflog.Debug(ctx, "Deleting column_mask", map[string]interface{}{"id": id})
 	err := r.client.DeleteColumnMask(ctx, id)
 	if err != nil {
@@ -215,10 +215,8 @@ func (r *column_maskResource) modelToUpdateRequest(ctx context.Context, model *r
 
 func (r *column_maskResource) updateModelFromResponse(ctx context.Context, model *resource_column_mask.ColumnMaskModel, response map[string]interface{}, diags *diag.Diagnostics) {
 	// Map response fields to model
-	if id, ok := response["id"].(string); ok {
-		model.Id = types.StringValue(id)
-	} else if id, ok := response["columnMaskId"].(string); ok {
-		model.Id = types.StringValue(id)
+	if id, ok := response["columnMaskId"].(string); ok {
+		model.ColumnMaskId = types.StringValue(id)
 	}
 
 	if columnMaskId, ok := response["columnMaskId"].(string); ok {

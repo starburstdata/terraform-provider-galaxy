@@ -32,7 +32,6 @@ description: |-
 - `external_table_writes_enabled` (Boolean) Allow writing to external tables. Defaults to false.
 - `hive_metastore_host` (String) Hive metastore host url
 - `hive_metastore_port` (Number) Hive metastore host port. Defaults to 9083.
-- `id` (String) A catalog connecting to GCS
 - `ssh_tunnel_id` (String) SSH tunnel identifier
 - `validate` (Boolean) Validate catalog configuration before creation
 

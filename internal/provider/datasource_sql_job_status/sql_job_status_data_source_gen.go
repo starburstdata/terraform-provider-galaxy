@@ -17,11 +17,6 @@ func SqlJobStatusDataSourceSchema(ctx context.Context) schema.Schema {
 				Description:         "Error encountered when SQL query was run (read only)",
 				MarkdownDescription: "Error encountered when SQL query was run (read only)",
 			},
-			"id": schema.StringAttribute{
-				Required:            true,
-				Description:         "SQL query scheduled job",
-				MarkdownDescription: "SQL query scheduled job",
-			},
 			"progress_percentage": schema.Float64Attribute{
 				Computed:            true,
 				Description:         "Percentage progress of SQL job execution (read only)",
@@ -33,9 +28,9 @@ func SqlJobStatusDataSourceSchema(ctx context.Context) schema.Schema {
 				MarkdownDescription: "ID of SQL query (read only)",
 			},
 			"sql_job_id": schema.StringAttribute{
-				Computed:            true,
-				Description:         "ID of a SQL job (read only)",
-				MarkdownDescription: "ID of a SQL job (read only)",
+				Required:            true,
+				Description:         "SQL query scheduled job",
+				MarkdownDescription: "SQL query scheduled job",
 			},
 			"status": schema.StringAttribute{
 				Computed:            true,
@@ -53,7 +48,6 @@ func SqlJobStatusDataSourceSchema(ctx context.Context) schema.Schema {
 
 type SqlJobStatusModel struct {
 	ErrorMessage       types.String  `tfsdk:"error_message"`
-	Id                 types.String  `tfsdk:"id"`
 	ProgressPercentage types.Float64 `tfsdk:"progress_percentage"`
 	QueryId            types.String  `tfsdk:"query_id"`
 	SqlJobId           types.String  `tfsdk:"sql_job_id"`

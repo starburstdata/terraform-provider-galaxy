@@ -23,12 +23,6 @@ func TagResourceSchema(ctx context.Context) schema.Schema {
 				Description:         "comment (read only)",
 				MarkdownDescription: "comment (read only)",
 			},
-			"id": schema.StringAttribute{
-				Optional:            true,
-				Computed:            true,
-				Description:         "- A tag\n- This parameter can be looked up using `name` instead of its Id. Use `name=value` instead of an Id to lookup/search using the `value`. `value` must be encoded ([see RFC](https://www.rfc-editor.org/rfc/rfc3986#section-2.2) including `=`)\n",
-				MarkdownDescription: "- A tag\n- This parameter can be looked up using `name` instead of its Id. Use `name=value` instead of an Id to lookup/search using the `value`. `value` must be encoded ([see RFC](https://www.rfc-editor.org/rfc/rfc3986#section-2.2) including `=`)\n",
-			},
 			"name": schema.StringAttribute{
 				Required:            true,
 				Description:         "Tag name (read only)",
@@ -46,7 +40,6 @@ func TagResourceSchema(ctx context.Context) schema.Schema {
 type TagModel struct {
 	Color       types.String `tfsdk:"color"`
 	Description types.String `tfsdk:"description"`
-	Id          types.String `tfsdk:"id"`
 	Name        types.String `tfsdk:"name"`
 	TagId       types.String `tfsdk:"tag_id"`
 }

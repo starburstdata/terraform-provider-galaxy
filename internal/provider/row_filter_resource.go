@@ -86,7 +86,7 @@ func (r *row_filterResource) Create(ctx context.Context, req resource.CreateRequ
 		return
 	}
 
-	tflog.Debug(ctx, "Created row_filter", map[string]interface{}{"id": plan.Id.ValueString()})
+	tflog.Debug(ctx, "Created row_filter", map[string]interface{}{"id": plan.RowFilterId.ValueString()})
 	resp.Diagnostics.Append(resp.State.Set(ctx, &plan)...)
 }
 
@@ -98,7 +98,7 @@ func (r *row_filterResource) Read(ctx context.Context, req resource.ReadRequest,
 		return
 	}
 
-	id := state.Id.ValueString()
+	id := state.RowFilterId.ValueString()
 	tflog.Debug(ctx, "Reading row_filter", map[string]interface{}{"id": id})
 	response, err := r.client.GetRowFilter(ctx, id)
 	if err != nil {
@@ -137,7 +137,7 @@ func (r *row_filterResource) Update(ctx context.Context, req resource.UpdateRequ
 		return
 	}
 
-	id := state.Id.ValueString()
+	id := state.RowFilterId.ValueString()
 	request := r.modelToUpdateRequest(ctx, &plan, &resp.Diagnostics)
 	if resp.Diagnostics.HasError() {
 		return
@@ -158,7 +158,7 @@ func (r *row_filterResource) Update(ctx context.Context, req resource.UpdateRequ
 		return
 	}
 
-	tflog.Debug(ctx, "Updated row_filter", map[string]interface{}{"id": plan.Id.ValueString()})
+	tflog.Debug(ctx, "Updated row_filter", map[string]interface{}{"id": plan.RowFilterId.ValueString()})
 	resp.Diagnostics.Append(resp.State.Set(ctx, &plan)...)
 }
 
@@ -170,7 +170,7 @@ func (r *row_filterResource) Delete(ctx context.Context, req resource.DeleteRequ
 		return
 	}
 
-	id := state.Id.ValueString()
+	id := state.RowFilterId.ValueString()
 	tflog.Debug(ctx, "Deleting row_filter", map[string]interface{}{"id": id})
 	err := r.client.DeleteRowFilter(ctx, id)
 	if err != nil {
@@ -212,10 +212,8 @@ func (r *row_filterResource) modelToUpdateRequest(ctx context.Context, model *re
 
 func (r *row_filterResource) updateModelFromResponse(ctx context.Context, model *resource_row_filter.RowFilterModel, response map[string]interface{}, diags *diag.Diagnostics) {
 	// Map response fields to model
-	if id, ok := response["id"].(string); ok {
-		model.Id = types.StringValue(id)
-	} else if id, ok := response["rowFilterId"].(string); ok {
-		model.Id = types.StringValue(id)
+	if id, ok := response["rowFilterId"].(string); ok {
+		model.RowFilterId = types.StringValue(id)
 	}
 
 	if rowFilterId, ok := response["rowFilterId"].(string); ok {

@@ -17,13 +17,12 @@ description: |-
 
 ### Required
 
-- `id` (String) A catalog connecting to OpenSearch
+- `catalog_id` (String) A catalog connecting to OpenSearch
 
 ### Read-Only
 
 - `access_key` (String) AWS access key
 - `auth_type` (String)
-- `catalog_id` (String) OpenSearch catalog identifier (read only)
 - `description` (String) Catalog description
 - `endpoint` (String) OpenSearch cluster endpoint
 - `name` (String) Catalog name

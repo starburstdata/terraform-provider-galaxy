@@ -17,11 +17,10 @@ description: |-
 
 ### Required
 
-- `id` (String) A catalog connecting to MySQL
+- `catalog_id` (String) A catalog connecting to MySQL
 
 ### Read-Only
 
-- `catalog_id` (String) MySQL catalog identifier (read only)
 - `cloud_kind` (String) MySQL cloud kind. Defaults to AWS.
 - `connection_type` (String)
 - `description` (String) Catalog description

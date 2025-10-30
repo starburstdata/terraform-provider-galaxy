@@ -72,7 +72,6 @@ func (r *data_productResource) Create(ctx context.Context, req resource.CreateRe
 	}
 
 	// Ensure no computed-only fields are included in create request
-	delete(request, "id")
 	delete(request, "dataProductId")
 	delete(request, "createdOn")
 	delete(request, "modifiedOn")
@@ -97,7 +96,7 @@ func (r *data_productResource) Create(ctx context.Context, req resource.CreateRe
 		return
 	}
 
-	tflog.Debug(ctx, "Created data_product", map[string]interface{}{"id": plan.Id.ValueString()})
+	tflog.Debug(ctx, "Created data_product", map[string]interface{}{"id": plan.DataProductId.ValueString()})
 	resp.Diagnostics.Append(resp.State.Set(ctx, &plan)...)
 }
 
@@ -109,7 +108,7 @@ func (r *data_productResource) Read(ctx context.Context, req resource.ReadReques
 		return
 	}
 
-	id := state.Id.ValueString()
+	id := state.DataProductId.ValueString()
 	tflog.Debug(ctx, "Reading data_product", map[string]interface{}{"id": id})
 	response, err := r.client.GetDataProduct(ctx, id)
 	if err != nil {
@@ -148,7 +147,7 @@ func (r *data_productResource) Update(ctx context.Context, req resource.UpdateRe
 		return
 	}
 
-	id := state.Id.ValueString()
+	id := state.DataProductId.ValueString()
 	request := r.modelToUpdateRequest(ctx, &plan, &resp.Diagnostics)
 	if resp.Diagnostics.HasError() {
 		return
@@ -169,7 +168,7 @@ func (r *data_productResource) Update(ctx context.Context, req resource.UpdateRe
 		return
 	}
 
-	tflog.Debug(ctx, "Updated data_product", map[string]interface{}{"id": plan.Id.ValueString()})
+	tflog.Debug(ctx, "Updated data_product", map[string]interface{}{"id": plan.DataProductId.ValueString()})
 	resp.Diagnostics.Append(resp.State.Set(ctx, &plan)...)
 }
 
@@ -181,7 +180,7 @@ func (r *data_productResource) Delete(ctx context.Context, req resource.DeleteRe
 		return
 	}
 
-	id := state.Id.ValueString()
+	id := state.DataProductId.ValueString()
 	tflog.Debug(ctx, "Deleting data_product", map[string]interface{}{"id": id})
 	err := r.client.DeleteDataProduct(ctx, id)
 	if err != nil {
@@ -274,10 +273,8 @@ func (r *data_productResource) updateModelFromResponse(ctx context.Context, mode
 		"model_contacts_unknown": model.Contacts.IsUnknown(),
 	})
 	// Map response fields to model
-	if id, ok := response["id"].(string); ok {
-		model.Id = types.StringValue(id)
-	} else if id, ok := response["dataProductId"].(string); ok {
-		model.Id = types.StringValue(id)
+	if id, ok := response["dataProductId"].(string); ok {
+		model.DataProductId = types.StringValue(id)
 	}
 
 	if dataProductId, ok := response["dataProductId"].(string); ok {

@@ -17,7 +17,7 @@ description: |-
 
 ### Required
 
-- `id` (String) - A tag
+- `tag_id` (String) - A tag
 - This parameter can be looked up using `name` instead of its Id. Use `name=value` instead of an Id to lookup/search using the `value`. `value` must be encoded ([see RFC](https://www.rfc-editor.org/rfc/rfc3986#section-2.2) including `=`)
 
 ### Read-Only
@@ -25,4 +25,3 @@ description: |-
 - `color` (String) Tag color (read only)
 - `description` (String) Comment (read only)
 - `name` (String) Tag name (read only)
-- `tag_id` (String) Tag ID (read only)

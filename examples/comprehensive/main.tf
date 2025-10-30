@@ -82,9 +82,9 @@ resource "galaxy_cluster" "main" {
 
   # Attach catalogs to cluster (ordered to match API response)
   catalog_refs = [
-    galaxy_redshift_catalog.warehouse.id,   # c-6145040459
-    galaxy_mysql_catalog.transactional.id,  # c-3661228661
-    galaxy_postgresql_catalog.analytics.id, # c-6981255000
+    galaxy_redshift_catalog.warehouse.catalog_id,   # c-6145040459
+    galaxy_mysql_catalog.transactional.catalog_id,  # c-3661228661
+    galaxy_postgresql_catalog.analytics.catalog_id, # c-6981255000
   ]
 }
 
@@ -129,7 +129,7 @@ resource "galaxy_service_account" "etl" {
   with_initial_password = true
 
   additional_role_ids = [
-    galaxy_role.data_engineer.id
+    galaxy_role.data_engineer.role_id
   ]
 }
 
@@ -138,7 +138,7 @@ resource "galaxy_service_account" "reporting" {
   with_initial_password = true
 
   additional_role_ids = [
-    galaxy_role.data_analyst.id
+    galaxy_role.data_analyst.role_id
   ]
 }
 
@@ -189,7 +189,7 @@ resource "galaxy_data_product" "customer_360" {
   description = "Complete customer view across all systems"
   summary     = "360-degree view of customer data"
   schema_name = "customeranalytics"
-  catalog_id  = galaxy_mysql_catalog.transactional.id
+  catalog_id  = galaxy_mysql_catalog.transactional.catalog_id
 
   contacts = []
   # contacts = [
@@ -207,14 +207,14 @@ resource "galaxy_data_product" "customer_360" {
 resource "galaxy_policy" "data_retention" {
   name        = "retention${local.test_suffix}"
   description = "30-day retention for temporary tables"
-  role_id     = galaxy_role.admin.id
+  role_id     = galaxy_role.admin.role_id
   predicate   = "true"
 
   scopes = [
     {
-      entity_id       = galaxy_mysql_catalog.transactional.id
+      entity_id       = galaxy_mysql_catalog.transactional.catalog_id
       entity_kind     = "Catalog"
-      row_filter_ids  = [galaxy_row_filter.region_filter.id]
+      row_filter_ids  = [galaxy_row_filter.region_filter.row_filter_id]
       column_mask_ids = []
     }
   ]
@@ -225,9 +225,9 @@ resource "galaxy_policy" "data_retention" {
 # ==========================================
 
 
-# Role data source 
+# Role data source
 data "galaxy_role" "existing_admin" {
-  id = galaxy_role.admin.id
+  role_id = galaxy_role.admin.role_id
 }
 
 # Catalogs data source
@@ -241,7 +241,7 @@ data "galaxy_catalogs" "all_catalogs" {
 
 # Cluster data source
 data "galaxy_cluster" "main_cluster" {
-  id = galaxy_cluster.main.id
+  cluster_id = galaxy_cluster.main.cluster_id
 }
 
 # Policies data source
@@ -256,7 +256,7 @@ data "galaxy_cross_account_iam_roles" "iam_roles" {
 
 # Catalog metadata data source
 data "galaxy_catalog_metadata" "transactional_metadata" {
-  id = "name=${galaxy_mysql_catalog.transactional.name}"
+  catalog_id = "name=${galaxy_mysql_catalog.transactional.name}"
 
   depends_on = [
     galaxy_mysql_catalog.transactional
@@ -266,7 +266,7 @@ data "galaxy_catalog_metadata" "transactional_metadata" {
 # User data source example using a valid email address
 data "galaxy_user" "current_user" {
   # Use email lookup for the current user
-  id = "email=brady.burke@starburstdata.com"
+  user_id = "email=brady.burke@starburstdata.com"
 }
 
 # ==========================================
@@ -274,7 +274,7 @@ data "galaxy_user" "current_user" {
 # ==========================================
 
 output "cluster_id" {
-  value       = galaxy_cluster.main.id
+  value       = galaxy_cluster.main.cluster_id
   description = "The ID of the main cluster"
 }
 
@@ -295,7 +295,7 @@ output "service_account_etl" {
 }
 
 output "admin_role_id" {
-  value       = galaxy_role.admin.id
+  value       = galaxy_role.admin.role_id
   description = "Admin role ID"
 }
 

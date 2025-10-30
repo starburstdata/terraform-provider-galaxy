@@ -108,11 +108,11 @@ resource "galaxy_column_mask" "phone_hash" {
 # Data source to read column mask
 data "galaxy_column_mask" "ssn" {
   depends_on = [galaxy_column_mask.ssn_mask]
-  id         = galaxy_column_mask.ssn_mask.id
+  column_mask_id = galaxy_column_mask.ssn_mask.column_mask_id
 }
 
 output "ssn_mask_id" {
-  value = galaxy_column_mask.ssn_mask.id
+  value = galaxy_column_mask.ssn_mask.column_mask_id
 }
 output "ssn_mask_data" {
   value = data.galaxy_column_mask.ssn
