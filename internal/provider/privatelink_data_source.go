@@ -67,7 +67,7 @@ func (d *privatelinkDataSource) Read(ctx context.Context, req datasource.ReadReq
 	}
 
 	// Get the privatelink ID from config
-	id := config.Id.ValueString()
+	id := config.PrivatelinkId.ValueString()
 
 	tflog.Debug(ctx, "Reading privatelink data source", map[string]interface{}{"id": id})
 	response, err := d.client.GetPrivatelink(ctx, id)
@@ -86,9 +86,6 @@ func (d *privatelinkDataSource) Read(ctx context.Context, req datasource.ReadReq
 }
 
 func (d *privatelinkDataSource) updateModelFromResponse(ctx context.Context, model *datasource_privatelink.PrivatelinkModel, response map[string]interface{}) {
-	if id, ok := response["id"].(string); ok {
-		model.Id = types.StringValue(id)
-	}
 	if privatelinkId, ok := response["privatelinkId"].(string); ok {
 		model.PrivatelinkId = types.StringValue(privatelinkId)
 	}

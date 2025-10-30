@@ -42,8 +42,8 @@ resource "galaxy_sql_job" "example" {
 
 # Test the data source (only if SQL job was created)
 data "galaxy_sql_job" "test" {
-  count = local.can_create_sql_job ? 1 : 0
-  id    = galaxy_sql_job.example[0].sql_job_id
+  count      = local.can_create_sql_job ? 1 : 0
+  sql_job_id = galaxy_sql_job.example[0].sql_job_id
 
   depends_on = [galaxy_sql_job.example]
 }

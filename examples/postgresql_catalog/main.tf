@@ -35,16 +35,16 @@ resource "galaxy_postgresql_catalog" "test" {
 # Data source to read the catalog
 data "galaxy_postgresql_catalog" "test" {
   depends_on = [galaxy_postgresql_catalog.test]
-  id         = galaxy_postgresql_catalog.test.id
+  catalog_id = galaxy_postgresql_catalog.test.catalog_id
 }
 
 data "galaxy_postgresql_catalog_validation" "test" {
   depends_on = [galaxy_postgresql_catalog.test]
-  id         = galaxy_postgresql_catalog.test.id
+  id = galaxy_postgresql_catalog.test.catalog_id
 }
 
 output "postgresql_catalog_id" {
-  value = galaxy_postgresql_catalog.test.id
+  value = galaxy_postgresql_catalog.test.catalog_id
 }
 
 output "postgresql_catalog_validation" {

@@ -26,7 +26,6 @@ description: |-
 
 - `access_key` (String) AWS access key
 - `description` (String) Catalog description
-- `id` (String) A catalog connecting to OpenSearch
 - `password` (String) Password
 - `port` (Number) OpenSearch cluster port. Defaults to 443.
 - `region` (String) AWS region

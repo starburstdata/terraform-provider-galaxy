@@ -17,7 +17,7 @@ description: |-
 
 ### Required
 
-- `id` (String) - A policy
+- `policy_id` (String) - A policy
 - This parameter can be looked up using `name` instead of its Id. Use `name=value` instead of an Id to lookup/search using the `value`. `value` must be encoded ([see RFC](https://www.rfc-editor.org/rfc/rfc3986#section-2.2) including `=`)
 
 ### Read-Only
@@ -27,7 +27,6 @@ description: |-
 - `expiration` (String) Policy expiration
 - `modified` (String) Modified on (read only)
 - `name` (String) Policy name
-- `policy_id` (String) Policy ID (read only)
 - `predicate` (String) Policy predicate
 - `role_id` (String) Enabling role ID
 - `scopes` (Attributes List) Policy scopes (read only) (see [below for nested schema](#nestedatt--scopes))

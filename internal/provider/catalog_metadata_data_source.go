@@ -67,7 +67,7 @@ func (d *catalog_metadataDataSource) Read(ctx context.Context, req datasource.Re
 		return
 	}
 
-	id := config.Id.ValueString()
+	id := config.CatalogId.ValueString()
 	tflog.Debug(ctx, "Reading catalog_metadata", map[string]interface{}{"id": id})
 
 	response, err := d.client.GetCatalogMetadata(ctx, id)
@@ -87,9 +87,6 @@ func (d *catalog_metadataDataSource) Read(ctx context.Context, req datasource.Re
 
 func (d *catalog_metadataDataSource) updateModelFromResponse(ctx context.Context, model *datasource_catalog_metadata.CatalogMetadataModel, response map[string]interface{}) {
 	// Map response fields to model
-	if id, ok := response["id"].(string); ok {
-		model.Id = types.StringValue(id)
-	}
 	if catalogId, ok := response["catalogId"].(string); ok {
 		model.CatalogId = types.StringValue(catalogId)
 	}

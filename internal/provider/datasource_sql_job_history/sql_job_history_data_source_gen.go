@@ -18,11 +18,6 @@ import (
 func SqlJobHistoryDataSourceSchema(ctx context.Context) schema.Schema {
 	return schema.Schema{
 		Attributes: map[string]schema.Attribute{
-			"id": schema.StringAttribute{
-				Required:            true,
-				Description:         "SQL query scheduled job",
-				MarkdownDescription: "SQL query scheduled job",
-			},
 			"result": schema.ListNestedAttribute{
 				NestedObject: schema.NestedAttributeObject{
 					Attributes: map[string]schema.Attribute{
@@ -72,13 +67,18 @@ func SqlJobHistoryDataSourceSchema(ctx context.Context) schema.Schema {
 				Description:         "A page of results.",
 				MarkdownDescription: "A page of results.",
 			},
+			"sql_job_id": schema.StringAttribute{
+				Required:            true,
+				Description:         "SQL query scheduled job",
+				MarkdownDescription: "SQL query scheduled job",
+			},
 		},
 	}
 }
 
 type SqlJobHistoryModel struct {
-	Id     types.String `tfsdk:"id"`
-	Result types.List   `tfsdk:"result"`
+	Result   types.List   `tfsdk:"result"`
+	SqlJobId types.String `tfsdk:"sql_job_id"`
 }
 
 var _ basetypes.ObjectTypable = ResultType{}

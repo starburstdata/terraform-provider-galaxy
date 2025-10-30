@@ -54,7 +54,7 @@ resource "galaxy_tag" "healthcare" {
 
 # Data source to read a tag
 data "galaxy_tag" "pii" {
-  id = galaxy_tag.pii.id
+  tag_id = galaxy_tag.pii.tag_id
 }
 
 # List all tags -
@@ -63,7 +63,7 @@ data "galaxy_tags" "all" {
 }
 
 output "pii_tag_id" {
-  value = galaxy_tag.pii.id
+  value = galaxy_tag.pii.tag_id
 }
 
 output "all_tag_names" {

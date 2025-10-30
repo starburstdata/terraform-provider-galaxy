@@ -62,15 +62,15 @@ resource "galaxy_policy" "row_security" {
   predicate = "true"
 
   # Role that this policy applies to
-  role_id = galaxy_role.example.id
+  role_id = galaxy_role.example.role_id
 
   # Scopes define what entities this policy applies to
   scopes = [
     {
-      entity_id       = galaxy_postgresql_catalog.example.id
+      entity_id       = galaxy_postgresql_catalog.example.catalog_id
       entity_kind     = "Column"
-      row_filter_ids  = [galaxy_row_filter.example.id]
-      column_mask_ids = [galaxy_column_mask.example.id]
+      row_filter_ids  = [galaxy_row_filter.example.row_filter_id]
+      column_mask_ids = [galaxy_column_mask.example.column_mask_id]
       schema_name     = "*"
       table_name      = "*"
       column_name     = "*"
@@ -81,27 +81,27 @@ resource "galaxy_policy" "row_security" {
 # Data source to read the policy
 data "galaxy_policy" "example" {
   depends_on = [galaxy_policy.row_security]
-  id         = galaxy_policy.row_security.id
+  policy_id = galaxy_policy.row_security.policy_id
 }
 
 output "catalog_id" {
-  value = galaxy_postgresql_catalog.example.id
+  value = galaxy_postgresql_catalog.example.catalog_id
 }
 
 output "role_id" {
-  value = galaxy_role.example.id
+  value = galaxy_role.example.role_id
 }
 
 output "row_filter_id" {
-  value = galaxy_row_filter.example.id
+  value = galaxy_row_filter.example.row_filter_id
 }
 
 output "column_mask_id" {
-  value = galaxy_column_mask.example.id
+  value = galaxy_column_mask.example.column_mask_id
 }
 
 output "policy_id" {
-  value = galaxy_policy.row_security.id
+  value = galaxy_policy.row_security.policy_id
 }
 
 output "policy_predicate" {

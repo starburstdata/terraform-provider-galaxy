@@ -13,9 +13,9 @@ func MysqlCatalogDataSourceSchema(ctx context.Context) schema.Schema {
 	return schema.Schema{
 		Attributes: map[string]schema.Attribute{
 			"catalog_id": schema.StringAttribute{
-				Computed:            true,
-				Description:         "MySQL catalog identifier (read only)",
-				MarkdownDescription: "MySQL catalog identifier (read only)",
+				Required:            true,
+				Description:         "A catalog connecting to MySQL",
+				MarkdownDescription: "A catalog connecting to MySQL",
 			},
 			"cloud_kind": schema.StringAttribute{
 				Computed:            true,
@@ -34,11 +34,6 @@ func MysqlCatalogDataSourceSchema(ctx context.Context) schema.Schema {
 				Computed:            true,
 				Description:         "MySQL host",
 				MarkdownDescription: "MySQL host",
-			},
-			"id": schema.StringAttribute{
-				Required:            true,
-				Description:         "A catalog connecting to MySQL",
-				MarkdownDescription: "A catalog connecting to MySQL",
 			},
 			"name": schema.StringAttribute{
 				Computed:            true,
@@ -90,7 +85,6 @@ type MysqlCatalogModel struct {
 	ConnectionType types.String `tfsdk:"connection_type"`
 	Description    types.String `tfsdk:"description"`
 	Host           types.String `tfsdk:"host"`
-	Id             types.String `tfsdk:"id"`
 	Name           types.String `tfsdk:"name"`
 	Password       types.String `tfsdk:"password"`
 	Port           types.Int64  `tfsdk:"port"`

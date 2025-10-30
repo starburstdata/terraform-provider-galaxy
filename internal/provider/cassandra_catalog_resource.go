@@ -89,7 +89,7 @@ func (r *cassandra_catalogResource) Create(ctx context.Context, req resource.Cre
 		return
 	}
 
-	tflog.Debug(ctx, "Created cassandra_catalog", map[string]interface{}{"id": plan.Id.ValueString()})
+	tflog.Debug(ctx, "Created cassandra_catalog", map[string]interface{}{"id": plan.CatalogId.ValueString()})
 	resp.Diagnostics.Append(resp.State.Set(ctx, &plan)...)
 }
 
@@ -101,7 +101,7 @@ func (r *cassandra_catalogResource) Read(ctx context.Context, req resource.ReadR
 		return
 	}
 
-	id := state.Id.ValueString()
+	id := state.CatalogId.ValueString()
 	tflog.Debug(ctx, "Reading cassandra_catalog", map[string]interface{}{"id": id})
 	response, err := r.client.GetCatalog(ctx, "cassandra", id)
 	if err != nil {
@@ -140,7 +140,7 @@ func (r *cassandra_catalogResource) Update(ctx context.Context, req resource.Upd
 		return
 	}
 
-	id := state.Id.ValueString()
+	id := state.CatalogId.ValueString()
 	request := r.modelToUpdateRequest(ctx, &plan, &resp.Diagnostics)
 	if resp.Diagnostics.HasError() {
 		return
@@ -161,7 +161,7 @@ func (r *cassandra_catalogResource) Update(ctx context.Context, req resource.Upd
 		return
 	}
 
-	tflog.Debug(ctx, "Updated cassandra_catalog", map[string]interface{}{"id": plan.Id.ValueString()})
+	tflog.Debug(ctx, "Updated cassandra_catalog", map[string]interface{}{"id": plan.CatalogId.ValueString()})
 	resp.Diagnostics.Append(resp.State.Set(ctx, &plan)...)
 }
 
@@ -173,7 +173,7 @@ func (r *cassandra_catalogResource) Delete(ctx context.Context, req resource.Del
 		return
 	}
 
-	id := state.Id.ValueString()
+	id := state.CatalogId.ValueString()
 	tflog.Debug(ctx, "Deleting cassandra_catalog", map[string]interface{}{"id": id})
 	err := r.client.DeleteCatalog(ctx, "cassandra", id)
 	if err != nil {
@@ -258,12 +258,8 @@ func (r *cassandra_catalogResource) modelToUpdateRequest(ctx context.Context, mo
 
 func (r *cassandra_catalogResource) updateModelFromResponse(ctx context.Context, model *CassandraCatalogModel, response map[string]interface{}, diags *diag.Diagnostics) {
 	// Map response fields to model
-	if id, ok := response["id"].(string); ok {
-		model.Id = types.StringValue(id)
-		model.CatalogId = types.StringValue(id)
-	} else if id, ok := response["catalogId"].(string); ok {
-		model.Id = types.StringValue(id)
-		model.CatalogId = types.StringValue(id)
+	if catalogId, ok := response["catalogId"].(string); ok {
+		model.CatalogId = types.StringValue(catalogId)
 	}
 
 	if name, ok := response["name"].(string); ok {

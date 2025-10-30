@@ -66,7 +66,7 @@ func (d *userDataSource) Read(ctx context.Context, req datasource.ReadRequest, r
 		return
 	}
 
-	id := config.Id.ValueString()
+	id := config.UserId.ValueString()
 	tflog.Debug(ctx, "Reading user", map[string]interface{}{"id": id})
 
 	response, err := d.client.GetUser(ctx, id)
@@ -90,7 +90,6 @@ func (d *userDataSource) Read(ctx context.Context, req datasource.ReadRequest, r
 func (d *userDataSource) updateModelFromResponse(ctx context.Context, model *datasource_user.UserModel, response map[string]interface{}) {
 	// Map response fields to model
 	if userId, ok := response["userId"].(string); ok {
-		model.Id = types.StringValue(userId)
 		model.UserId = types.StringValue(userId)
 	}
 	if email, ok := response["email"].(string); ok {

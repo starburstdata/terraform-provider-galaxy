@@ -24,8 +24,8 @@ locals {
 
 # Test the rolegrant data source (only if we have roles available)
 data "galaxy_rolegrant" "test" {
-  count = local.has_roles ? 1 : 0
-  id    = local.first_role.role_id
+  count   = local.has_roles ? 1 : 0
+  role_id = local.first_role.role_id
 }
 
 # Local processing of rolegrant results
@@ -58,12 +58,12 @@ output "first_role_debug" {
 # Rolegrant data source test outputs (conditional)
 output "rolegrant_test" {
   value = local.has_roles ? {
-    id               = data.galaxy_rolegrant.test[0].id
+    role_id          = data.galaxy_rolegrant.test[0].role_id
     rolegrants_count = length(local.rolegrant_result)
     has_rolegrants   = local.has_rolegrants
     test_status      = "success"
   } : {
-    id               = "not_available"
+    role_id          = "not_available"
     rolegrants_count = 0
     has_rolegrants   = false
     test_status      = "failed"

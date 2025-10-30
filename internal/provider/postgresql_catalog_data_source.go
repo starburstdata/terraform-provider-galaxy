@@ -65,7 +65,7 @@ func (d *postgresql_catalogDataSource) Read(ctx context.Context, req datasource.
 		return
 	}
 
-	id := config.Id.ValueString()
+	id := config.CatalogId.ValueString()
 	tflog.Debug(ctx, "Reading postgresql_catalog", map[string]interface{}{"id": id})
 
 	response, err := d.client.GetCatalog(ctx, "postgresql", id)
@@ -85,9 +85,64 @@ func (d *postgresql_catalogDataSource) Read(ctx context.Context, req datasource.
 
 func (d *postgresql_catalogDataSource) updateModelFromResponse(ctx context.Context, model *datasource_postgresql_catalog.PostgresqlCatalogModel, response map[string]interface{}) {
 	// Map response fields to model
-	if id, ok := response["id"].(string); ok {
-		model.Id = types.StringValue(id)
+	if catalogId, ok := response["catalogId"].(string); ok {
+		model.CatalogId = types.StringValue(catalogId)
 	}
 
-	// Map other fields based on actual response structure
+	if name, ok := response["name"].(string); ok {
+		model.Name = types.StringValue(name)
+	}
+
+	if description, ok := response["description"].(string); ok {
+		model.Description = types.StringValue(description)
+	} else if model.Description.IsUnknown() {
+		model.Description = types.StringNull()
+	}
+
+	if readOnly, ok := response["readOnly"].(bool); ok {
+		model.ReadOnly = types.BoolValue(readOnly)
+	}
+
+	if endpoint, ok := response["endpoint"].(string); ok {
+		model.Endpoint = types.StringValue(endpoint)
+	}
+
+	if databaseName, ok := response["databaseName"].(string); ok {
+		model.DatabaseName = types.StringValue(databaseName)
+	}
+
+	if port, ok := response["port"].(float64); ok {
+		model.Port = types.Int64Value(int64(port))
+	}
+
+	if username, ok := response["username"].(string); ok {
+		model.Username = types.StringValue(username)
+	} else if model.Username.IsUnknown() {
+		model.Username = types.StringNull()
+	}
+
+	// Password is write-only - the API returns "<Value is encrypted>"
+	// We don't update the password field from the API response since it's not the actual value.
+
+	if cloudKind, ok := response["cloudKind"].(string); ok {
+		model.CloudKind = types.StringValue(cloudKind)
+	} else if model.CloudKind.IsUnknown() {
+		model.CloudKind = types.StringNull()
+	}
+
+	if tlsEnabled, ok := response["tlsEnabled"].(bool); ok {
+		model.TlsEnabled = types.BoolValue(tlsEnabled)
+	}
+
+	if sshTunnelId, ok := response["sshTunnelId"].(string); ok {
+		model.SshTunnelId = types.StringValue(sshTunnelId)
+	} else if model.SshTunnelId.IsUnknown() {
+		model.SshTunnelId = types.StringNull()
+	}
+
+	if validate, ok := response["validate"].(bool); ok {
+		model.Validate = types.BoolValue(validate)
+	} else if model.Validate.IsUnknown() {
+		model.Validate = types.BoolNull()
+	}
 }

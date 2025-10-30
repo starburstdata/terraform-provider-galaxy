@@ -65,7 +65,7 @@ func (d *mongodb_catalogDataSource) Read(ctx context.Context, req datasource.Rea
 		return
 	}
 
-	id := config.Id.ValueString()
+	id := config.CatalogId.ValueString()
 	tflog.Debug(ctx, "Reading mongodb_catalog", map[string]interface{}{"id": id})
 
 	response, err := d.client.GetCatalog(ctx, "mongodb", id)
@@ -85,9 +85,95 @@ func (d *mongodb_catalogDataSource) Read(ctx context.Context, req datasource.Rea
 
 func (d *mongodb_catalogDataSource) updateModelFromResponse(ctx context.Context, model *datasource_mongodb_catalog.MongodbCatalogModel, response map[string]interface{}) {
 	// Map response fields to model
-	if id, ok := response["id"].(string); ok {
-		model.Id = types.StringValue(id)
+	if catalogId, ok := response["catalogId"].(string); ok {
+		model.CatalogId = types.StringValue(catalogId)
 	}
 
-	// Map other fields based on actual response structure
+	if name, ok := response["name"].(string); ok {
+		model.Name = types.StringValue(name)
+	}
+
+	if description, ok := response["description"].(string); ok {
+		model.Description = types.StringValue(description)
+	} else if model.Description.IsUnknown() {
+		model.Description = types.StringNull()
+	}
+
+	if readOnly, ok := response["readOnly"].(bool); ok {
+		model.ReadOnly = types.BoolValue(readOnly)
+	}
+
+	if hosts, ok := response["hosts"].(string); ok {
+		model.Hosts = types.StringValue(hosts)
+	} else if model.Hosts.IsUnknown() {
+		model.Hosts = types.StringNull()
+	}
+
+	if username, ok := response["username"].(string); ok {
+		model.Username = types.StringValue(username)
+	} else if model.Username.IsUnknown() {
+		model.Username = types.StringNull()
+	}
+
+	// Password is write-only - the API returns "<Value is encrypted>"
+	// We don't update the password field from the API response since it's not the actual value.
+
+	if dnsSeedListEnabled, ok := response["dnsSeedListEnabled"].(bool); ok {
+		model.DnsSeedListEnabled = types.BoolValue(dnsSeedListEnabled)
+	}
+
+	if federatedDatabaseEnabled, ok := response["federatedDatabaseEnabled"].(bool); ok {
+		model.FederatedDatabaseEnabled = types.BoolValue(federatedDatabaseEnabled)
+	}
+
+	if tlsEnabled, ok := response["tlsEnabled"].(bool); ok {
+		model.TlsEnabled = types.BoolValue(tlsEnabled)
+	}
+
+	if connectionType, ok := response["connectionType"].(string); ok {
+		model.ConnectionType = types.StringValue(connectionType)
+	} else if model.ConnectionType.IsUnknown() {
+		model.ConnectionType = types.StringNull()
+	}
+
+	if cloudKind, ok := response["cloudKind"].(string); ok {
+		model.CloudKind = types.StringValue(cloudKind)
+	} else if model.CloudKind.IsUnknown() {
+		model.CloudKind = types.StringNull()
+	}
+
+	// Handle regions list
+	if regions, ok := response["regions"].([]interface{}); ok {
+		var regionValues []types.String
+		for _, region := range regions {
+			if regionStr, ok := region.(string); ok {
+				regionValues = append(regionValues, types.StringValue(regionStr))
+			}
+		}
+		if len(regionValues) > 0 {
+			model.Regions, _ = types.ListValueFrom(ctx, types.StringType, regionValues)
+		} else {
+			model.Regions = types.ListNull(types.StringType)
+		}
+	} else {
+		model.Regions = types.ListNull(types.StringType)
+	}
+
+	if privateLinkId, ok := response["privateLinkId"].(string); ok {
+		model.PrivateLinkId = types.StringValue(privateLinkId)
+	} else if model.PrivateLinkId.IsUnknown() {
+		model.PrivateLinkId = types.StringNull()
+	}
+
+	if sshTunnelId, ok := response["sshTunnelId"].(string); ok {
+		model.SshTunnelId = types.StringValue(sshTunnelId)
+	} else if model.SshTunnelId.IsUnknown() {
+		model.SshTunnelId = types.StringNull()
+	}
+
+	if validate, ok := response["validate"].(bool); ok {
+		model.Validate = types.BoolValue(validate)
+	} else if model.Validate.IsUnknown() {
+		model.Validate = types.BoolNull()
+	}
 }

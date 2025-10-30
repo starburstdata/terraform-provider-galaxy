@@ -17,12 +17,11 @@ description: |-
 
 ### Required
 
-- `id` (String) A catalog connecting to S3
+- `catalog_id` (String) A catalog connecting to S3
 
 ### Read-Only
 
 - `access_key` (String) AWS access key
-- `catalog_id` (String) S3 catalog identifier (read only)
 - `default_bucket` (String) S3 bucket to use when storing data for new schemas
 - `default_data_location` (String) Default location to store data for new schemas
 - `default_table_format` (String) Default table format for new tables: ICEBERG, DELTA, or HIVE. Defaults to ICEBERG.

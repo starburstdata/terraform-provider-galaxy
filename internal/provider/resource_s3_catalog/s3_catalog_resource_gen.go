@@ -89,12 +89,6 @@ func S3CatalogResourceSchema(ctx context.Context) schema.Schema {
 				Description:         "Hive metastore host port. Defaults to 9083.",
 				MarkdownDescription: "Hive metastore host port. Defaults to 9083.",
 			},
-			"id": schema.StringAttribute{
-				Optional:            true,
-				Computed:            true,
-				Description:         "A catalog connecting to S3",
-				MarkdownDescription: "A catalog connecting to S3",
-			},
 			"metastore_type": schema.StringAttribute{
 				Required: true,
 			},
@@ -156,7 +150,6 @@ type S3CatalogModel struct {
 	GlueSecretKey                types.String `tfsdk:"glue_secret_key"`
 	HiveMetastoreHost            types.String `tfsdk:"hive_metastore_host"`
 	HiveMetastorePort            types.Int64  `tfsdk:"hive_metastore_port"`
-	Id                           types.String `tfsdk:"id"`
 	MetastoreType                types.String `tfsdk:"metastore_type"`
 	Name                         types.String `tfsdk:"name"`
 	ReadOnly                     types.Bool   `tfsdk:"read_only"`

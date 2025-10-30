@@ -62,7 +62,7 @@ resource "galaxy_cassandra_catalog" "example" {
 # Data source to read the catalog
 data "galaxy_cassandra_catalog" "example" {
   depends_on = [galaxy_cassandra_catalog.example]
-  id         = galaxy_cassandra_catalog.example.id
+  catalog_id = galaxy_cassandra_catalog.example.catalog_id
 }
 
 # List all Cassandra catalogs
@@ -71,7 +71,7 @@ data "galaxy_cassandra_catalogs" "all" {
 }
 
 output "cassandra_catalog_id" {
-  value = galaxy_cassandra_catalog.example.id
+  value = galaxy_cassandra_catalog.example.catalog_id
 }
 
 output "all_cassandra_catalogs" {

@@ -33,7 +33,7 @@ resource "galaxy_service_account" "etl" {
   with_initial_password = true
 
   additional_role_ids = [
-    galaxy_role.automation.id
+    galaxy_role.automation.role_id
   ]
 }
 
@@ -43,23 +43,23 @@ resource "galaxy_service_account" "reporting" {
   with_initial_password = true
 
   additional_role_ids = [
-    galaxy_role.automation.id
+    galaxy_role.automation.role_id
   ]
 }
 
 # Get service account password (if needed)
 resource "galaxy_service_account_password" "etl_password" {
-  service_account_id = galaxy_service_account.etl.id
+  service_account_id = galaxy_service_account.etl.service_account_id
 }
 
 # Data source to read service account
 data "galaxy_service_account" "etl" {
   depends_on = [galaxy_service_account.etl]
-  id         = galaxy_service_account.etl.id
+  service_account_id = galaxy_service_account.etl.service_account_id
 }
 
 output "etl_service_account_id" {
-  value = galaxy_service_account.etl.id
+  value = galaxy_service_account.etl.service_account_id
 }
 
 output "etl_service_account_username" {

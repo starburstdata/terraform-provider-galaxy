@@ -65,7 +65,7 @@ func (d *s3_catalogDataSource) Read(ctx context.Context, req datasource.ReadRequ
 		return
 	}
 
-	id := config.Id.ValueString()
+	id := config.CatalogId.ValueString()
 	tflog.Debug(ctx, "Reading s3_catalog", map[string]interface{}{"id": id})
 
 	response, err := d.client.GetCatalog(ctx, "s3", id)
@@ -85,10 +85,6 @@ func (d *s3_catalogDataSource) Read(ctx context.Context, req datasource.ReadRequ
 
 func (d *s3_catalogDataSource) updateModelFromResponse(ctx context.Context, model *datasource_s3_catalog.S3CatalogModel, response map[string]interface{}) {
 	// Map response fields to model - this is now a regular catalog data source with full catalog fields
-	if id, ok := response["id"].(string); ok {
-		model.Id = types.StringValue(id)
-	}
-
 	if catalogId, ok := response["catalogId"].(string); ok {
 		model.CatalogId = types.StringValue(catalogId)
 	}

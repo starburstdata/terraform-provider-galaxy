@@ -31,7 +31,7 @@ resource "galaxy_mongodb_catalog" "example" {
 # Data source to read the catalog
 data "galaxy_mongodb_catalog" "example" {
   depends_on = [galaxy_mongodb_catalog.example]
-  id         = galaxy_mongodb_catalog.example.id
+  catalog_id = galaxy_mongodb_catalog.example.catalog_id
 }
 
 # List all MongoDB catalogs
@@ -40,7 +40,7 @@ data "galaxy_mongodb_catalogs" "all" {
 }
 
 output "mongodb_catalog_id" {
-  value = galaxy_mongodb_catalog.example.id
+  value = galaxy_mongodb_catalog.example.catalog_id
 }
 
 output "all_mongodb_catalogs" {

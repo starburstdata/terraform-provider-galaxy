@@ -17,11 +17,10 @@ description: |-
 
 ### Required
 
-- `id` (String) A catalog connecting to Cassandra, with options for integration with AstraDB
+- `catalog_id` (String) A catalog connecting to Cassandra, with options for integration with AstraDB
 
 ### Read-Only
 
-- `catalog_id` (String) Cassandra catalog identifier (read only)
 - `cloud_kind` (String) Cassandra cloud kind. Defaults to AWS.
 - `contact_points` (String) Cassandra hosts
 - `database_id` (String) AstraDB database ID

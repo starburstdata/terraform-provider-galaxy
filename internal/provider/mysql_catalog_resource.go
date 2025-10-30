@@ -96,7 +96,7 @@ func (r *mysql_catalogResource) Create(ctx context.Context, req resource.CreateR
 		return
 	}
 
-	tflog.Debug(ctx, "Created mysql_catalog", map[string]interface{}{"id": plan.Id.ValueString()})
+	tflog.Debug(ctx, "Created mysql_catalog", map[string]interface{}{"id": plan.CatalogId.ValueString()})
 	resp.Diagnostics.Append(resp.State.Set(ctx, &plan)...)
 }
 
@@ -108,7 +108,7 @@ func (r *mysql_catalogResource) Read(ctx context.Context, req resource.ReadReque
 		return
 	}
 
-	id := state.Id.ValueString()
+	id := state.CatalogId.ValueString()
 	tflog.Debug(ctx, "Reading mysql_catalog", map[string]interface{}{"id": id})
 	response, err := r.client.GetCatalog(ctx, "mysql", id)
 	if err != nil {
@@ -147,7 +147,7 @@ func (r *mysql_catalogResource) Update(ctx context.Context, req resource.UpdateR
 		return
 	}
 
-	id := state.Id.ValueString()
+	id := state.CatalogId.ValueString()
 	request := r.modelToUpdateRequest(ctx, &plan, &resp.Diagnostics)
 	if resp.Diagnostics.HasError() {
 		return
@@ -168,7 +168,7 @@ func (r *mysql_catalogResource) Update(ctx context.Context, req resource.UpdateR
 		return
 	}
 
-	tflog.Debug(ctx, "Updated mysql_catalog", map[string]interface{}{"id": plan.Id.ValueString()})
+	tflog.Debug(ctx, "Updated mysql_catalog", map[string]interface{}{"id": plan.CatalogId.ValueString()})
 	resp.Diagnostics.Append(resp.State.Set(ctx, &plan)...)
 }
 
@@ -180,7 +180,7 @@ func (r *mysql_catalogResource) Delete(ctx context.Context, req resource.DeleteR
 		return
 	}
 
-	id := state.Id.ValueString()
+	id := state.CatalogId.ValueString()
 	tflog.Debug(ctx, "Deleting mysql_catalog", map[string]interface{}{"id": id})
 	err := r.client.DeleteCatalog(ctx, "mysql", id)
 	if err != nil {
@@ -239,12 +239,8 @@ func (r *mysql_catalogResource) modelToUpdateRequest(ctx context.Context, model 
 
 func (r *mysql_catalogResource) updateModelFromResponse(ctx context.Context, model *resource_mysql_catalog.MysqlCatalogModel, response map[string]interface{}, diags *diag.Diagnostics) {
 	// Map response fields to model
-	if id, ok := response["id"].(string); ok {
-		model.Id = types.StringValue(id)
-		model.CatalogId = types.StringValue(id)
-	} else if id, ok := response["catalogId"].(string); ok {
-		model.Id = types.StringValue(id)
-		model.CatalogId = types.StringValue(id)
+	if catalogId, ok := response["catalogId"].(string); ok {
+		model.CatalogId = types.StringValue(catalogId)
 	}
 
 	if name, ok := response["name"].(string); ok {

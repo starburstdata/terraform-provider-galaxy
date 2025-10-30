@@ -24,7 +24,6 @@ description: |-
 ### Optional
 
 - `description` (String) Catalog description
-- `id` (String) A catalog connecting to BigQuery
 - `parent_project_id` (String) The Google Cloud Project ID to bill for the export. Mutually required with projectId
 - `project_id` (String) The Google Cloud Project ID. Mutually required with parentProjectId
 - `validate` (Boolean) Validate catalog configuration before creation

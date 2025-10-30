@@ -65,7 +65,7 @@ func (d *column_maskDataSource) Read(ctx context.Context, req datasource.ReadReq
 		return
 	}
 
-	id := config.Id.ValueString()
+	id := config.ColumnMaskId.ValueString()
 	tflog.Debug(ctx, "Reading column_mask", map[string]interface{}{"id": id})
 
 	response, err := d.client.GetColumnMask(ctx, id)
@@ -86,7 +86,6 @@ func (d *column_maskDataSource) Read(ctx context.Context, req datasource.ReadReq
 func (d *column_maskDataSource) updateModelFromResponse(ctx context.Context, model *datasource_column_mask.ColumnMaskModel, response map[string]interface{}) {
 	// Map response fields to model based on API response structure
 	if columnMaskId, ok := response["columnMaskId"].(string); ok {
-		model.Id = types.StringValue(columnMaskId)
 		model.ColumnMaskId = types.StringValue(columnMaskId)
 	}
 	if name, ok := response["name"].(string); ok {

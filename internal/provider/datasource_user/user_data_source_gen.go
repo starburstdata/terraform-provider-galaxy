@@ -135,20 +135,15 @@ func UserDataSourceSchema(ctx context.Context) schema.Schema {
 				Description:         "User email (read only)",
 				MarkdownDescription: "User email (read only)",
 			},
-			"id": schema.StringAttribute{
-				Required:            true,
-				Description:         "- A user\n- This parameter can be looked up using `email` instead of its Id. Use `email=value` instead of an Id to lookup/search using the `value`. `value` must be encoded ([see RFC](https://www.rfc-editor.org/rfc/rfc3986#section-2.2) including `=`)\n",
-				MarkdownDescription: "- A user\n- This parameter can be looked up using `email` instead of its Id. Use `email=value` instead of an Id to lookup/search using the `value`. `value` must be encoded ([see RFC](https://www.rfc-editor.org/rfc/rfc3986#section-2.2) including `=`)\n",
-			},
 			"scim_managed": schema.BoolAttribute{
 				Computed:            true,
 				Description:         "SCIM managed (read only)",
 				MarkdownDescription: "SCIM managed (read only)",
 			},
 			"user_id": schema.StringAttribute{
-				Computed:            true,
-				Description:         "User ID (read only)",
-				MarkdownDescription: "User ID (read only)",
+				Required:            true,
+				Description:         "- A user\n- This parameter can be looked up using `email` instead of its Id. Use `email=value` instead of an Id to lookup/search using the `value`. `value` must be encoded ([see RFC](https://www.rfc-editor.org/rfc/rfc3986#section-2.2) including `=`)\n",
+				MarkdownDescription: "- A user\n- This parameter can be looked up using `email` instead of its Id. Use `email=value` instead of an Id to lookup/search using the `value`. `value` must be encoded ([see RFC](https://www.rfc-editor.org/rfc/rfc3986#section-2.2) including `=`)\n",
 			},
 		},
 	}
@@ -160,7 +155,6 @@ type UserModel struct {
 	DefaultRoleId        types.String `tfsdk:"default_role_id"`
 	DirectlyGrantedRoles types.List   `tfsdk:"directly_granted_roles"`
 	Email                types.String `tfsdk:"email"`
-	Id                   types.String `tfsdk:"id"`
 	ScimManaged          types.Bool   `tfsdk:"scim_managed"`
 	UserId               types.String `tfsdk:"user_id"`
 }

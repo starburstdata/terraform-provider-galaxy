@@ -13,9 +13,9 @@ func CassandraCatalogDataSourceSchema(ctx context.Context) schema.Schema {
 	return schema.Schema{
 		Attributes: map[string]schema.Attribute{
 			"catalog_id": schema.StringAttribute{
-				Computed:            true,
-				Description:         "Cassandra catalog identifier (read only)",
-				MarkdownDescription: "Cassandra catalog identifier (read only)",
+				Required:            true,
+				Description:         "A catalog connecting to Cassandra, with options for integration with AstraDB",
+				MarkdownDescription: "A catalog connecting to Cassandra, with options for integration with AstraDB",
 			},
 			"cloud_kind": schema.StringAttribute{
 				Computed:            true,
@@ -39,11 +39,6 @@ func CassandraCatalogDataSourceSchema(ctx context.Context) schema.Schema {
 				Computed:            true,
 				Description:         "Catalog description",
 				MarkdownDescription: "Catalog description",
-			},
-			"id": schema.StringAttribute{
-				Required:            true,
-				Description:         "A catalog connecting to Cassandra, with options for integration with AstraDB",
-				MarkdownDescription: "A catalog connecting to Cassandra, with options for integration with AstraDB",
 			},
 			"local_datacenter": schema.StringAttribute{
 				Computed:            true,
@@ -106,7 +101,6 @@ type CassandraCatalogModel struct {
 	DatabaseId      types.String `tfsdk:"database_id"`
 	DeploymentType  types.String `tfsdk:"deployment_type"`
 	Description     types.String `tfsdk:"description"`
-	Id              types.String `tfsdk:"id"`
 	LocalDatacenter types.String `tfsdk:"local_datacenter"`
 	Name            types.String `tfsdk:"name"`
 	Password        types.String `tfsdk:"password"`

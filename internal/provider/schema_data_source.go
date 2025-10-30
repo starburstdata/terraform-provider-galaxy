@@ -66,7 +66,7 @@ func (d *schemaDataSource) Read(ctx context.Context, req datasource.ReadRequest,
 		return
 	}
 
-	catalogID := config.Id.ValueString()
+	catalogID := config.CatalogId.ValueString()
 	tflog.Debug(ctx, "Reading schemas", map[string]interface{}{"catalogId": catalogID})
 
 	response, err := d.client.ListSchemas(ctx, catalogID)

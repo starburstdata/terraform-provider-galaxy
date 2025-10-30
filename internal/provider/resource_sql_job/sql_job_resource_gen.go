@@ -28,12 +28,6 @@ func SqlJobResourceSchema(ctx context.Context) schema.Schema {
 				Description:         "SQL job description (read only)",
 				MarkdownDescription: "SQL job description (read only)",
 			},
-			"id": schema.StringAttribute{
-				Optional:            true,
-				Computed:            true,
-				Description:         "SQL query scheduled job",
-				MarkdownDescription: "SQL query scheduled job",
-			},
 			"name": schema.StringAttribute{
 				Required:            true,
 				Description:         "SQL job name (read only)",
@@ -73,7 +67,6 @@ type SqlJobModel struct {
 	ClusterId      types.String `tfsdk:"cluster_id"`
 	CronExpression types.String `tfsdk:"cron_expression"`
 	Description    types.String `tfsdk:"description"`
-	Id             types.String `tfsdk:"id"`
 	Name           types.String `tfsdk:"name"`
 	NextExecution  types.String `tfsdk:"next_execution"`
 	Query          types.String `tfsdk:"query"`

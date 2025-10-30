@@ -65,7 +65,7 @@ func (d *gcs_catalogDataSource) Read(ctx context.Context, req datasource.ReadReq
 		return
 	}
 
-	id := config.Id.ValueString()
+	id := config.CatalogId.ValueString()
 	tflog.Debug(ctx, "Reading gcs_catalog", map[string]interface{}{"id": id})
 
 	response, err := d.client.GetCatalog(ctx, "gcs", id)
@@ -85,9 +85,78 @@ func (d *gcs_catalogDataSource) Read(ctx context.Context, req datasource.ReadReq
 
 func (d *gcs_catalogDataSource) updateModelFromResponse(ctx context.Context, model *datasource_gcs_catalog.GcsCatalogModel, response map[string]interface{}) {
 	// Map response fields to model
-	if id, ok := response["id"].(string); ok {
-		model.Id = types.StringValue(id)
+	if catalogId, ok := response["catalogId"].(string); ok {
+		model.CatalogId = types.StringValue(catalogId)
 	}
 
-	// Map other fields based on actual response structure
+	if name, ok := response["name"].(string); ok {
+		model.Name = types.StringValue(name)
+	}
+
+	if description, ok := response["description"].(string); ok {
+		model.Description = types.StringValue(description)
+	} else if model.Description.IsUnknown() {
+		model.Description = types.StringNull()
+	}
+
+	if readOnly, ok := response["readOnly"].(bool); ok {
+		model.ReadOnly = types.BoolValue(readOnly)
+	}
+
+	if metastoreType, ok := response["metastoreType"].(string); ok {
+		model.MetastoreType = types.StringValue(metastoreType)
+	} else if model.MetastoreType.IsUnknown() {
+		model.MetastoreType = types.StringNull()
+	}
+
+	// CredentialsKey is write-only - the API returns "<Value is encrypted>"
+	// We don't update the credentials_key field from the API response since it's not the actual value.
+
+	if defaultBucket, ok := response["defaultBucket"].(string); ok {
+		model.DefaultBucket = types.StringValue(defaultBucket)
+	} else if model.DefaultBucket.IsUnknown() {
+		model.DefaultBucket = types.StringNull()
+	}
+
+	if defaultDataLocation, ok := response["defaultDataLocation"].(string); ok {
+		model.DefaultDataLocation = types.StringValue(defaultDataLocation)
+	} else if model.DefaultDataLocation.IsUnknown() {
+		model.DefaultDataLocation = types.StringNull()
+	}
+
+	if defaultTableFormat, ok := response["defaultTableFormat"].(string); ok {
+		model.DefaultTableFormat = types.StringValue(defaultTableFormat)
+	} else if model.DefaultTableFormat.IsUnknown() {
+		model.DefaultTableFormat = types.StringNull()
+	}
+
+	if externalTableCreationEnabled, ok := response["externalTableCreationEnabled"].(bool); ok {
+		model.ExternalTableCreationEnabled = types.BoolValue(externalTableCreationEnabled)
+	}
+
+	if externalTableWritesEnabled, ok := response["externalTableWritesEnabled"].(bool); ok {
+		model.ExternalTableWritesEnabled = types.BoolValue(externalTableWritesEnabled)
+	}
+
+	if hiveMetastoreHost, ok := response["hiveMetastoreHost"].(string); ok {
+		model.HiveMetastoreHost = types.StringValue(hiveMetastoreHost)
+	} else if model.HiveMetastoreHost.IsUnknown() {
+		model.HiveMetastoreHost = types.StringNull()
+	}
+
+	if hiveMetastorePort, ok := response["hiveMetastorePort"].(float64); ok {
+		model.HiveMetastorePort = types.Int64Value(int64(hiveMetastorePort))
+	}
+
+	if sshTunnelId, ok := response["sshTunnelId"].(string); ok {
+		model.SshTunnelId = types.StringValue(sshTunnelId)
+	} else if model.SshTunnelId.IsUnknown() {
+		model.SshTunnelId = types.StringNull()
+	}
+
+	if validate, ok := response["validate"].(bool); ok {
+		model.Validate = types.BoolValue(validate)
+	} else if model.Validate.IsUnknown() {
+		model.Validate = types.BoolNull()
+	}
 }

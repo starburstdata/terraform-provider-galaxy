@@ -13,9 +13,9 @@ func MongodbCatalogDataSourceSchema(ctx context.Context) schema.Schema {
 	return schema.Schema{
 		Attributes: map[string]schema.Attribute{
 			"catalog_id": schema.StringAttribute{
-				Computed:            true,
-				Description:         "MongoDB catalog identifier (read only)",
-				MarkdownDescription: "MongoDB catalog identifier (read only)",
+				Required:            true,
+				Description:         "A catalog connecting to MongoDB",
+				MarkdownDescription: "A catalog connecting to MongoDB",
 			},
 			"cloud_kind": schema.StringAttribute{
 				Computed:            true,
@@ -44,11 +44,6 @@ func MongodbCatalogDataSourceSchema(ctx context.Context) schema.Schema {
 				Computed:            true,
 				Description:         "MongoDB hosts",
 				MarkdownDescription: "MongoDB hosts",
-			},
-			"id": schema.StringAttribute{
-				Required:            true,
-				Description:         "A catalog connecting to MongoDB",
-				MarkdownDescription: "A catalog connecting to MongoDB",
 			},
 			"name": schema.StringAttribute{
 				Computed:            true,
@@ -108,7 +103,6 @@ type MongodbCatalogModel struct {
 	DnsSeedListEnabled       types.Bool   `tfsdk:"dns_seed_list_enabled"`
 	FederatedDatabaseEnabled types.Bool   `tfsdk:"federated_database_enabled"`
 	Hosts                    types.String `tfsdk:"hosts"`
-	Id                       types.String `tfsdk:"id"`
 	Name                     types.String `tfsdk:"name"`
 	Password                 types.String `tfsdk:"password"`
 	PrivateLinkId            types.String `tfsdk:"private_link_id"`

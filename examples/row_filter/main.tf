@@ -96,7 +96,7 @@ resource "galaxy_row_filter" "customer_filter" {
 # Data source to read row filter
 data "galaxy_row_filter" "region" {
   depends_on = [galaxy_row_filter.region_filter]
-  id         = galaxy_row_filter.region_filter.id
+  row_filter_id = galaxy_row_filter.region_filter.row_filter_id
 }
 
 output "region_filter_data" {
@@ -104,7 +104,7 @@ output "region_filter_data" {
 }
 
 output "region_filter_id" {
-  value = galaxy_row_filter.region_filter.id
+  value = galaxy_row_filter.region_filter.row_filter_id
 }
 
 output "region_filter_expression" {

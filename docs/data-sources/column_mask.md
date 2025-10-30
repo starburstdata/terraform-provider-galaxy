@@ -17,12 +17,11 @@ description: |-
 
 ### Required
 
-- `id` (String) - A column mask
+- `column_mask_id` (String) - A column mask
 - This parameter can be looked up using `name` instead of its Id. Use `name=value` instead of an Id to lookup/search using the `value`. `value` must be encoded ([see RFC](https://www.rfc-editor.org/rfc/rfc3986#section-2.2) including `=`)
 
 ### Read-Only
 
-- `column_mask_id` (String) Column Mask ID (read only)
 - `column_mask_type` (String) Column Mask type (read only)
 - `created` (String) Created on (read only)
 - `description` (String) Description (read only)

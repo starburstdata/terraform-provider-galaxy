@@ -35,7 +35,6 @@ description: |-
 - `glue_secret_key` (String)
 - `hive_metastore_host` (String) Hive metastore host url
 - `hive_metastore_port` (Number) Hive metastore host port. Defaults to 9083.
-- `id` (String) A catalog connecting to S3
 - `region` (String) AWS region
 - `role_arn` (String) AWS cross account role ARN
 - `secret_key` (String)

@@ -17,13 +17,12 @@ description: |-
 
 ### Required
 
-- `id` (String) A catalog connecting to Snowflake
+- `catalog_id` (String) A catalog connecting to Snowflake
 
 ### Read-Only
 
 - `account_identifier` (String) Snowflake account identifier
 - `authentication_type` (String) Snowflake authentication type
-- `catalog_id` (String) Snowflake catalog identifier (read only)
 - `cloud_kind` (String) Snowflake cloud kind. Defaults to AWS.
 - `database_name` (String) Snowflake database name
 - `description` (String) Catalog description

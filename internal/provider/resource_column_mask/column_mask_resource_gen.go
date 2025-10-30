@@ -56,12 +56,6 @@ func ColumnMaskResourceSchema(ctx context.Context) schema.Schema {
 				Description:         "Column mask expression (read only)",
 				MarkdownDescription: "Column mask expression (read only)",
 			},
-			"id": schema.StringAttribute{
-				Optional:            true,
-				Computed:            true,
-				Description:         "- A column mask\n- This parameter can be looked up using `name` instead of its Id. Use `name=value` instead of an Id to lookup/search using the `value`. `value` must be encoded ([see RFC](https://www.rfc-editor.org/rfc/rfc3986#section-2.2) including `=`)\n",
-				MarkdownDescription: "- A column mask\n- This parameter can be looked up using `name` instead of its Id. Use `name=value` instead of an Id to lookup/search using the `value`. `value` must be encoded ([see RFC](https://www.rfc-editor.org/rfc/rfc3986#section-2.2) including `=`)\n",
-			},
 			"modified": schema.StringAttribute{
 				Computed:            true,
 				Description:         "Modified on (read only)",
@@ -82,7 +76,6 @@ type ColumnMaskModel struct {
 	Created        types.String `tfsdk:"created"`
 	Description    types.String `tfsdk:"description"`
 	Expression     types.String `tfsdk:"expression"`
-	Id             types.String `tfsdk:"id"`
 	Modified       types.String `tfsdk:"modified"`
 	Name           types.String `tfsdk:"name"`
 }

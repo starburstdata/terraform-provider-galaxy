@@ -65,7 +65,7 @@ func (d *clusterDataSource) Read(ctx context.Context, req datasource.ReadRequest
 		return
 	}
 
-	id := config.Id.ValueString()
+	id := config.ClusterId.ValueString()
 	tflog.Debug(ctx, "Reading cluster", map[string]interface{}{"id": id})
 
 	response, err := d.client.GetCluster(ctx, id)
@@ -86,7 +86,6 @@ func (d *clusterDataSource) Read(ctx context.Context, req datasource.ReadRequest
 func (d *clusterDataSource) updateModelFromResponse(ctx context.Context, model *datasource_cluster.ClusterModel, response map[string]interface{}) {
 	// Map response fields to model based on actual API response structure
 	if clusterId, ok := response["clusterId"].(string); ok {
-		model.Id = types.StringValue(clusterId)
 		model.ClusterId = types.StringValue(clusterId)
 	}
 	if name, ok := response["name"].(string); ok {

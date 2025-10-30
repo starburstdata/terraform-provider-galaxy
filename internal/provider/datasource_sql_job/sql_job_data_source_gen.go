@@ -27,11 +27,6 @@ func SqlJobDataSourceSchema(ctx context.Context) schema.Schema {
 				Description:         "SQL job description",
 				MarkdownDescription: "SQL job description",
 			},
-			"id": schema.StringAttribute{
-				Required:            true,
-				Description:         "SQL query scheduled job",
-				MarkdownDescription: "SQL query scheduled job",
-			},
 			"name": schema.StringAttribute{
 				Computed:            true,
 				Description:         "SQL job name",
@@ -53,9 +48,9 @@ func SqlJobDataSourceSchema(ctx context.Context) schema.Schema {
 				MarkdownDescription: "Role used when SQL job is executed",
 			},
 			"sql_job_id": schema.StringAttribute{
-				Computed:            true,
-				Description:         "ID of a SQL job (read only)",
-				MarkdownDescription: "ID of a SQL job (read only)",
+				Required:            true,
+				Description:         "SQL query scheduled job",
+				MarkdownDescription: "SQL query scheduled job",
 			},
 			"timezone": schema.StringAttribute{
 				Computed:            true,
@@ -70,7 +65,6 @@ type SqlJobModel struct {
 	ClusterId      types.String `tfsdk:"cluster_id"`
 	CronExpression types.String `tfsdk:"cron_expression"`
 	Description    types.String `tfsdk:"description"`
-	Id             types.String `tfsdk:"id"`
 	Name           types.String `tfsdk:"name"`
 	NextExecution  types.String `tfsdk:"next_execution"`
 	Query          types.String `tfsdk:"query"`

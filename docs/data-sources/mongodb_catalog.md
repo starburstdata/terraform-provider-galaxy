@@ -17,11 +17,10 @@ description: |-
 
 ### Required
 
-- `id` (String) A catalog connecting to MongoDB
+- `catalog_id` (String) A catalog connecting to MongoDB
 
 ### Read-Only
 
-- `catalog_id` (String) MongoDB catalog identifier (read only)
 - `cloud_kind` (String) MongoDB cloud kind. Defaults to AWS.
 - `connection_type` (String)
 - `description` (String) Catalog description

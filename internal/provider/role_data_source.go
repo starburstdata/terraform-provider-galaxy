@@ -65,7 +65,7 @@ func (d *roleDataSource) Read(ctx context.Context, req datasource.ReadRequest, r
 		return
 	}
 
-	id := config.Id.ValueString()
+	id := config.RoleId.ValueString()
 	tflog.Debug(ctx, "Reading role", map[string]interface{}{"id": id})
 
 	response, err := d.client.GetRole(ctx, id)
@@ -86,7 +86,6 @@ func (d *roleDataSource) Read(ctx context.Context, req datasource.ReadRequest, r
 func (d *roleDataSource) updateModelFromResponse(ctx context.Context, model *datasource_role.RoleModel, response map[string]interface{}) {
 	// Map response fields to model based on actual API response structure
 	if roleId, ok := response["roleId"].(string); ok {
-		model.Id = types.StringValue(roleId)
 		model.RoleId = types.StringValue(roleId)
 	}
 	if roleName, ok := response["roleName"].(string); ok {

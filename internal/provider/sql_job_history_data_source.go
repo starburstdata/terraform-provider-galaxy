@@ -68,7 +68,7 @@ func (d *sqlJobHistoryDataSource) Read(ctx context.Context, req datasource.ReadR
 	}
 
 	// Get the SQL job ID from config
-	id := config.Id.ValueString()
+	id := config.SqlJobId.ValueString()
 
 	tflog.Debug(ctx, "Reading sql_job_history data source", map[string]interface{}{"id": id})
 	response, err := d.client.GetSqlJobHistory(ctx, id)
@@ -88,8 +88,8 @@ func (d *sqlJobHistoryDataSource) Read(ctx context.Context, req datasource.ReadR
 
 func (d *sqlJobHistoryDataSource) updateModelFromResponse(ctx context.Context, model *datasource_sql_job_history.SqlJobHistoryModel, response map[string]interface{}) {
 	// Set the ID field
-	if id, ok := response["id"].(string); ok {
-		model.Id = types.StringValue(id)
+	if sqlJobId, ok := response["sqlJobId"].(string); ok {
+		model.SqlJobId = types.StringValue(sqlJobId)
 	}
 
 	// Extract the result array from the API response

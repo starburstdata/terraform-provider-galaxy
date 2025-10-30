@@ -17,7 +17,7 @@ description: |-
 
 ### Required
 
-- `id` (String) - A role
+- `role_id` (String) - A role
 - This parameter can be looked up using `name` instead of its Id. Use `name=value` instead of an Id to lookup/search using the `value`. `value` must be encoded ([see RFC](https://www.rfc-editor.org/rfc/rfc3986#section-2.2) including `=`)
 
 ### Read-Only
@@ -28,7 +28,6 @@ description: |-
 - `modified_on` (String) Modified date (read only)
 - `owning_role_id` (String) Owning role (read only)
 - `role_description` (String) Role description (read only)
-- `role_id` (String) Role ID (read only)
 - `role_name` (String) Role name (read only)
 
 <a id="nestedatt--all_roles"></a>

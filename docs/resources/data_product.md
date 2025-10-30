@@ -27,7 +27,6 @@ description: |-
 
 - `default_cluster_id` (String) Default cluster ID for Data Product
 - `description` (String) Long form description of Data Product
-- `id` (String) A Galaxy Data Product
 - `links` (Attributes List) Any links for this Data Product (read only) (see [below for nested schema](#nestedatt--links))
 
 ### Read-Only

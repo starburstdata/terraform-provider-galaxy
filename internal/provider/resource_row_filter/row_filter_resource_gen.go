@@ -27,12 +27,6 @@ func RowFilterResourceSchema(ctx context.Context) schema.Schema {
 				Description:         "Row filter expression (read only)",
 				MarkdownDescription: "Row filter expression (read only)",
 			},
-			"id": schema.StringAttribute{
-				Optional:            true,
-				Computed:            true,
-				Description:         "- A row filter\n- This parameter can be looked up using `name` instead of its Id. Use `name=value` instead of an Id to lookup/search using the `value`. `value` must be encoded ([see RFC](https://www.rfc-editor.org/rfc/rfc3986#section-2.2) including `=`)\n",
-				MarkdownDescription: "- A row filter\n- This parameter can be looked up using `name` instead of its Id. Use `name=value` instead of an Id to lookup/search using the `value`. `value` must be encoded ([see RFC](https://www.rfc-editor.org/rfc/rfc3986#section-2.2) including `=`)\n",
-			},
 			"modified": schema.StringAttribute{
 				Computed:            true,
 				Description:         "Modified on (read only)",
@@ -56,7 +50,6 @@ type RowFilterModel struct {
 	Created     types.String `tfsdk:"created"`
 	Description types.String `tfsdk:"description"`
 	Expression  types.String `tfsdk:"expression"`
-	Id          types.String `tfsdk:"id"`
 	Modified    types.String `tfsdk:"modified"`
 	Name        types.String `tfsdk:"name"`
 	RowFilterId types.String `tfsdk:"row_filter_id"`

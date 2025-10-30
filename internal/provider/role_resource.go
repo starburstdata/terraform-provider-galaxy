@@ -101,7 +101,7 @@ func (r *roleResource) Create(ctx context.Context, req resource.CreateRequest, r
 		return
 	}
 
-	tflog.Debug(ctx, "Created role", map[string]interface{}{"id": plan.Id.ValueString()})
+	tflog.Debug(ctx, "Created role", map[string]interface{}{"id": plan.RoleId.ValueString()})
 	resp.Diagnostics.Append(resp.State.Set(ctx, &plan)...)
 }
 
@@ -113,7 +113,7 @@ func (r *roleResource) Read(ctx context.Context, req resource.ReadRequest, resp 
 		return
 	}
 
-	id := state.Id.ValueString()
+	id := state.RoleId.ValueString()
 	tflog.Debug(ctx, "Reading role", map[string]interface{}{"id": id})
 	response, err := r.client.GetRole(ctx, id)
 	if err != nil {
@@ -152,7 +152,7 @@ func (r *roleResource) Update(ctx context.Context, req resource.UpdateRequest, r
 		return
 	}
 
-	id := state.Id.ValueString()
+	id := state.RoleId.ValueString()
 	request := r.modelToUpdateRequest(ctx, &plan, &resp.Diagnostics)
 	if resp.Diagnostics.HasError() {
 		return
@@ -173,7 +173,7 @@ func (r *roleResource) Update(ctx context.Context, req resource.UpdateRequest, r
 		return
 	}
 
-	tflog.Debug(ctx, "Updated role", map[string]interface{}{"id": plan.Id.ValueString()})
+	tflog.Debug(ctx, "Updated role", map[string]interface{}{"id": plan.RoleId.ValueString()})
 	resp.Diagnostics.Append(resp.State.Set(ctx, &plan)...)
 }
 
@@ -185,7 +185,7 @@ func (r *roleResource) Delete(ctx context.Context, req resource.DeleteRequest, r
 		return
 	}
 
-	id := state.Id.ValueString()
+	id := state.RoleId.ValueString()
 	tflog.Debug(ctx, "Deleting role", map[string]interface{}{"id": id})
 	err := r.client.DeleteRole(ctx, id)
 	if err != nil {
@@ -226,7 +226,6 @@ func (r *roleResource) modelToUpdateRequest(ctx context.Context, model *resource
 	request := r.modelToCreateRequest(ctx, model, diags)
 
 	// Remove computed-only fields that should not be included in updates
-	delete(request, "id")
 	delete(request, "roleId")
 	delete(request, "createdOn")
 	delete(request, "modifiedOn")
@@ -239,10 +238,7 @@ func (r *roleResource) modelToUpdateRequest(ctx context.Context, model *resource
 
 func (r *roleResource) updateModelFromResponse(ctx context.Context, model *resource_role.RoleModel, response map[string]interface{}, diags *diag.Diagnostics) {
 	// Map response fields to model
-	if id, ok := response["id"].(string); ok {
-		model.Id = types.StringValue(id)
-	} else if id, ok := response["roleId"].(string); ok {
-		model.Id = types.StringValue(id)
+	if id, ok := response["roleId"].(string); ok {
 		model.RoleId = types.StringValue(id)
 	}
 

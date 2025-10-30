@@ -87,7 +87,7 @@ func (r *service_accountResource) Create(ctx context.Context, req resource.Creat
 		return
 	}
 
-	tflog.Debug(ctx, "Created service_account", map[string]interface{}{"id": plan.Id.ValueString()})
+	tflog.Debug(ctx, "Created service_account", map[string]interface{}{"id": plan.ServiceAccountId.ValueString()})
 	resp.Diagnostics.Append(resp.State.Set(ctx, &plan)...)
 }
 
@@ -99,7 +99,7 @@ func (r *service_accountResource) Read(ctx context.Context, req resource.ReadReq
 		return
 	}
 
-	id := state.Id.ValueString()
+	id := state.ServiceAccountId.ValueString()
 	tflog.Debug(ctx, "Reading service_account", map[string]interface{}{"id": id})
 	response, err := r.client.GetServiceAccount(ctx, id)
 	if err != nil {
@@ -138,7 +138,7 @@ func (r *service_accountResource) Update(ctx context.Context, req resource.Updat
 		return
 	}
 
-	id := state.Id.ValueString()
+	id := state.ServiceAccountId.ValueString()
 	request := r.modelToUpdateRequest(ctx, &plan, &resp.Diagnostics)
 	if resp.Diagnostics.HasError() {
 		return
@@ -159,7 +159,7 @@ func (r *service_accountResource) Update(ctx context.Context, req resource.Updat
 		return
 	}
 
-	tflog.Debug(ctx, "Updated service_account", map[string]interface{}{"id": plan.Id.ValueString()})
+	tflog.Debug(ctx, "Updated service_account", map[string]interface{}{"id": plan.ServiceAccountId.ValueString()})
 	resp.Diagnostics.Append(resp.State.Set(ctx, &plan)...)
 }
 
@@ -171,7 +171,7 @@ func (r *service_accountResource) Delete(ctx context.Context, req resource.Delet
 		return
 	}
 
-	id := state.Id.ValueString()
+	id := state.ServiceAccountId.ValueString()
 	tflog.Debug(ctx, "Deleting service_account", map[string]interface{}{"id": id})
 	err := r.client.DeleteServiceAccount(ctx, id)
 	if err != nil {
@@ -227,10 +227,7 @@ func (r *service_accountResource) modelToUpdateRequest(ctx context.Context, mode
 
 func (r *service_accountResource) updateModelFromResponse(ctx context.Context, model *resource_service_account.ServiceAccountModel, response map[string]interface{}, diags *diag.Diagnostics) {
 	// Map response fields to model
-	if id, ok := response["id"].(string); ok {
-		model.Id = types.StringValue(id)
-	} else if id, ok := response["serviceAccountId"].(string); ok {
-		model.Id = types.StringValue(id)
+	if id, ok := response["serviceAccountId"].(string); ok {
 		model.ServiceAccountId = types.StringValue(id)
 	}
 
@@ -324,6 +321,4 @@ func (r *service_accountResource) updateModelFromResponse(ctx context.Context, m
 	} else {
 		model.Passwords = types.ListNull(types.ObjectType{AttrTypes: passwordAttrTypes})
 	}
-
-	// Map other fields based on actual response structure
 }

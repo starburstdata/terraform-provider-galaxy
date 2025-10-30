@@ -89,7 +89,7 @@ func (r *sqlserver_catalogResource) Create(ctx context.Context, req resource.Cre
 		return
 	}
 
-	tflog.Debug(ctx, "Created sqlserver_catalog", map[string]interface{}{"id": plan.Id.ValueString()})
+	tflog.Debug(ctx, "Created sqlserver_catalog", map[string]interface{}{"id": plan.CatalogId.ValueString()})
 	resp.Diagnostics.Append(resp.State.Set(ctx, &plan)...)
 }
 
@@ -101,7 +101,7 @@ func (r *sqlserver_catalogResource) Read(ctx context.Context, req resource.ReadR
 		return
 	}
 
-	id := state.Id.ValueString()
+	id := state.CatalogId.ValueString()
 	tflog.Debug(ctx, "Reading sqlserver_catalog", map[string]interface{}{"id": id})
 	response, err := r.client.GetCatalog(ctx, "sqlserver", id)
 	if err != nil {
@@ -140,7 +140,7 @@ func (r *sqlserver_catalogResource) Update(ctx context.Context, req resource.Upd
 		return
 	}
 
-	id := state.Id.ValueString()
+	id := state.CatalogId.ValueString()
 	request := r.modelToUpdateRequest(ctx, &plan, &resp.Diagnostics)
 	if resp.Diagnostics.HasError() {
 		return
@@ -161,7 +161,7 @@ func (r *sqlserver_catalogResource) Update(ctx context.Context, req resource.Upd
 		return
 	}
 
-	tflog.Debug(ctx, "Updated sqlserver_catalog", map[string]interface{}{"id": plan.Id.ValueString()})
+	tflog.Debug(ctx, "Updated sqlserver_catalog", map[string]interface{}{"id": plan.CatalogId.ValueString()})
 	resp.Diagnostics.Append(resp.State.Set(ctx, &plan)...)
 }
 
@@ -173,7 +173,7 @@ func (r *sqlserver_catalogResource) Delete(ctx context.Context, req resource.Del
 		return
 	}
 
-	id := state.Id.ValueString()
+	id := state.CatalogId.ValueString()
 	tflog.Debug(ctx, "Deleting sqlserver_catalog", map[string]interface{}{"id": id})
 	err := r.client.DeleteCatalog(ctx, "sqlserver", id)
 	if err != nil {
@@ -235,12 +235,8 @@ func (r *sqlserver_catalogResource) modelToUpdateRequest(ctx context.Context, mo
 
 func (r *sqlserver_catalogResource) updateModelFromResponse(ctx context.Context, model *resource_sqlserver_catalog.SqlserverCatalogModel, response map[string]interface{}, diags *diag.Diagnostics) {
 	// Map response fields to model
-	if id, ok := response["id"].(string); ok {
-		model.Id = types.StringValue(id)
-		model.CatalogId = types.StringValue(id)
-	} else if id, ok := response["catalogId"].(string); ok {
-		model.Id = types.StringValue(id)
-		model.CatalogId = types.StringValue(id)
+	if catalogId, ok := response["catalogId"].(string); ok {
+		model.CatalogId = types.StringValue(catalogId)
 	}
 
 	if name, ok := response["name"].(string); ok {

@@ -17,7 +17,7 @@ description: |-
 
 ### Required
 
-- `id` (String) - A Trino cluster
+- `cluster_id` (String) - A Trino cluster
 - This parameter can be looked up using `name` instead of its Id. Use `name=value` instead of an Id to lookup/search using the `value`. `value` must be encoded ([see RFC](https://www.rfc-editor.org/rfc/rfc3986#section-2.2) including `=`)
 
 ### Read-Only
@@ -25,7 +25,6 @@ description: |-
 - `batch_cluster` (Boolean) Supports resource intensive query processing mode (read only)
 - `catalog_refs` (List of String) Cluster attached catalog IDs (read only)
 - `cloud_region_id` (String) Cloud region ID (read only)
-- `cluster_id` (String) Cluster ID (read only)
 - `cluster_state` (String) Cluster state (read only)
 - `idle_stop_minutes` (Number) Idle stop duration (in minutes) (read only)
 - `max_workers` (Number) Maximum worker count (read only)

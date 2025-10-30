@@ -54,12 +54,6 @@ func SnowflakeCatalogResourceSchema(ctx context.Context) schema.Schema {
 				Description:         "Catalog description",
 				MarkdownDescription: "Catalog description",
 			},
-			"id": schema.StringAttribute{
-				Optional:            true,
-				Computed:            true,
-				Description:         "A catalog connecting to Snowflake",
-				MarkdownDescription: "A catalog connecting to Snowflake",
-			},
 			"name": schema.StringAttribute{
 				Required:            true,
 				Description:         "Catalog name",
@@ -122,7 +116,6 @@ type SnowflakeCatalogModel struct {
 	CloudKind            types.String `tfsdk:"cloud_kind"`
 	DatabaseName         types.String `tfsdk:"database_name"`
 	Description          types.String `tfsdk:"description"`
-	Id                   types.String `tfsdk:"id"`
 	Name                 types.String `tfsdk:"name"`
 	Password             types.String `tfsdk:"password"`
 	PrivateKey           types.String `tfsdk:"private_key"`

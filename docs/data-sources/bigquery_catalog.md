@@ -17,11 +17,10 @@ description: |-
 
 ### Required
 
-- `id` (String) A catalog connecting to BigQuery
+- `catalog_id` (String) A catalog connecting to BigQuery
 
 ### Read-Only
 
-- `catalog_id` (String) BigQuery catalog identifier (read only)
 - `credentials_key` (String) Base64 encoded or plain text BigQuery JSON key
 - `description` (String) Catalog description
 - `name` (String) Catalog name

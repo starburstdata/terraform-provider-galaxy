@@ -26,7 +26,6 @@ description: |-
 ### Optional
 
 - `description` (String) SQL job description (read only)
-- `id` (String) SQL query scheduled job
 - `timezone` (String) Timezone in which CRON is evaluated. Defaults to UTC (read only)
 
 ### Read-Only

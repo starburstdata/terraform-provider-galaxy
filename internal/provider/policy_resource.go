@@ -88,7 +88,7 @@ func (r *policyResource) Create(ctx context.Context, req resource.CreateRequest,
 		return
 	}
 
-	tflog.Debug(ctx, "Created policy", map[string]interface{}{"id": plan.Id.ValueString()})
+	tflog.Debug(ctx, "Created policy", map[string]interface{}{"id": plan.PolicyId.ValueString()})
 	resp.Diagnostics.Append(resp.State.Set(ctx, &plan)...)
 }
 
@@ -100,7 +100,7 @@ func (r *policyResource) Read(ctx context.Context, req resource.ReadRequest, res
 		return
 	}
 
-	id := state.Id.ValueString()
+	id := state.PolicyId.ValueString()
 	tflog.Debug(ctx, "Reading policy", map[string]interface{}{"id": id})
 	response, err := r.client.GetPolicy(ctx, id)
 	if err != nil {
@@ -150,7 +150,7 @@ func (r *policyResource) Update(ctx context.Context, req resource.UpdateRequest,
 		return
 	}
 
-	id := state.Id.ValueString()
+	id := state.PolicyId.ValueString()
 	request := r.modelToUpdateRequest(ctx, &plan, &resp.Diagnostics)
 	if resp.Diagnostics.HasError() {
 		return
@@ -171,7 +171,7 @@ func (r *policyResource) Update(ctx context.Context, req resource.UpdateRequest,
 		return
 	}
 
-	tflog.Debug(ctx, "Updated policy", map[string]interface{}{"id": plan.Id.ValueString()})
+	tflog.Debug(ctx, "Updated policy", map[string]interface{}{"id": plan.PolicyId.ValueString()})
 	resp.Diagnostics.Append(resp.State.Set(ctx, &plan)...)
 }
 
@@ -183,7 +183,7 @@ func (r *policyResource) Delete(ctx context.Context, req resource.DeleteRequest,
 		return
 	}
 
-	id := state.Id.ValueString()
+	id := state.PolicyId.ValueString()
 	tflog.Debug(ctx, "Deleting policy", map[string]interface{}{"id": id})
 	err := r.client.DeletePolicy(ctx, id)
 	if err != nil {
@@ -363,10 +363,8 @@ func (r *policyResource) modelToUpdateRequest(ctx context.Context, model *resour
 
 func (r *policyResource) updateModelFromResponse(ctx context.Context, model *resource_policy.PolicyModel, response map[string]interface{}, diags *diag.Diagnostics) {
 	// Set ID - try both possible field names
-	if id, ok := response["id"].(string); ok {
-		model.Id = types.StringValue(id)
-	} else if id, ok := response["policyId"].(string); ok {
-		model.Id = types.StringValue(id)
+	if id, ok := response["policyId"].(string); ok {
+		model.PolicyId = types.StringValue(id)
 	}
 
 	// Set computed fields from API response

@@ -26,7 +26,6 @@ description: |-
 
 - `access_key` (String)
 - `description` (String) Catalog description
-- `id` (String) A catalog connecting to AWS Redshift
 - `password` (String)
 - `region` (String) AWS region
 - `role_arn` (String) AWS cross account role ARN

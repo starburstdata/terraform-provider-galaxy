@@ -121,7 +121,7 @@ resource "galaxy_policy" "read_all" {
   predicate = "true"
 
   # Role that this policy applies to
-  role_id = galaxy_role.data_engineer.id
+  role_id = galaxy_role.data_engineer.role_id
 
   scopes = [
     {
@@ -143,28 +143,28 @@ resource "galaxy_policy" "read_all" {
 # Data sources for governance objects
 data "galaxy_data_product" "customer_analytics" {
   depends_on = [galaxy_data_product.customer_analytics]
-  id         = galaxy_data_product.customer_analytics.id
+  data_product_id = galaxy_data_product.customer_analytics.data_product_id
 }
 
 data "galaxy_data_products" "all" {}
 
 data "galaxy_tag" "pii" {
   depends_on = [galaxy_tag.pii]
-  id         = galaxy_tag.pii.id
+  tag_id = galaxy_tag.pii.tag_id
 }
 
 data "galaxy_tags" "all" {}
 
 data "galaxy_row_filter" "region_filter" {
   depends_on = [galaxy_row_filter.customer_region_filter]
-  id         = galaxy_row_filter.customer_region_filter.id
+  row_filter_id = galaxy_row_filter.customer_region_filter.row_filter_id
 }
 
 data "galaxy_row_filters" "all" {}
 
 data "galaxy_column_mask" "ssn" {
   depends_on = [galaxy_column_mask.ssn_mask]
-  id         = galaxy_column_mask.ssn_mask.id
+  column_mask_id = galaxy_column_mask.ssn_mask.column_mask_id
 }
 
 data "galaxy_column_masks" "all" {}
@@ -172,17 +172,17 @@ data "galaxy_column_masks" "all" {}
 data "galaxy_policies" "all" {}
 
 output "data_product_id" {
-  value = galaxy_data_product.customer_analytics.id
+  value = galaxy_data_product.customer_analytics.data_product_id
 }
 
 output "pii_tag_id" {
-  value = galaxy_tag.pii.id
+  value = galaxy_tag.pii.tag_id
 }
 
 output "row_filter_id" {
-  value = galaxy_row_filter.customer_region_filter.id
+  value = galaxy_row_filter.customer_region_filter.row_filter_id
 }
 
 output "column_mask_id" {
-  value = galaxy_column_mask.ssn_mask.id
+  value = galaxy_column_mask.ssn_mask.column_mask_id
 }

@@ -17,12 +17,11 @@ description: |-
 
 ### Required
 
-- `id` (String) - A catalog
+- `catalog_id` (String) - A catalog
 - This parameter can be looked up using `name` instead of its Id. Use `name=value` instead of an Id to lookup/search using the `value`. `value` must be encoded ([see RFC](https://www.rfc-editor.org/rfc/rfc3986#section-2.2) including `=`)
 
 ### Read-Only
 
-- `catalog_id` (String) Catalog ID (read only)
 - `catalog_name` (String) Catalog name (read only)
 - `contacts` (Attributes List) Any contacts set for this catalog (read only) (see [below for nested schema](#nestedatt--contacts))
 - `description` (String) Any description set for this catalog (read only)

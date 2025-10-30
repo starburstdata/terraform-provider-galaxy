@@ -66,7 +66,7 @@ func (d *rolegrantDataSource) Read(ctx context.Context, req datasource.ReadReque
 		return
 	}
 
-	roleID := config.Id.ValueString()
+	roleID := config.RoleId.ValueString()
 	tflog.Debug(ctx, "Reading role grants", map[string]interface{}{"roleId": roleID})
 
 	response, err := d.client.ListRoleGrants(ctx, roleID)

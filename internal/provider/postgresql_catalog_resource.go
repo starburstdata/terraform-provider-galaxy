@@ -89,7 +89,7 @@ func (r *postgresql_catalogResource) Create(ctx context.Context, req resource.Cr
 		return
 	}
 
-	tflog.Debug(ctx, "Created postgresql_catalog", map[string]interface{}{"id": plan.Id.ValueString()})
+	tflog.Debug(ctx, "Created postgresql_catalog", map[string]interface{}{"id": plan.CatalogId.ValueString()})
 	resp.Diagnostics.Append(resp.State.Set(ctx, &plan)...)
 }
 
@@ -101,7 +101,7 @@ func (r *postgresql_catalogResource) Read(ctx context.Context, req resource.Read
 		return
 	}
 
-	id := state.Id.ValueString()
+	id := state.CatalogId.ValueString()
 	tflog.Debug(ctx, "Reading postgresql_catalog", map[string]interface{}{"id": id})
 	response, err := r.client.GetCatalog(ctx, "postgresql", id)
 	if err != nil {
@@ -140,7 +140,7 @@ func (r *postgresql_catalogResource) Update(ctx context.Context, req resource.Up
 		return
 	}
 
-	id := state.Id.ValueString()
+	id := state.CatalogId.ValueString()
 	request := r.modelToUpdateRequest(ctx, &plan, &resp.Diagnostics)
 	if resp.Diagnostics.HasError() {
 		return
@@ -161,7 +161,7 @@ func (r *postgresql_catalogResource) Update(ctx context.Context, req resource.Up
 		return
 	}
 
-	tflog.Debug(ctx, "Updated postgresql_catalog", map[string]interface{}{"id": plan.Id.ValueString()})
+	tflog.Debug(ctx, "Updated postgresql_catalog", map[string]interface{}{"id": plan.CatalogId.ValueString()})
 	resp.Diagnostics.Append(resp.State.Set(ctx, &plan)...)
 }
 
@@ -173,7 +173,7 @@ func (r *postgresql_catalogResource) Delete(ctx context.Context, req resource.De
 		return
 	}
 
-	id := state.Id.ValueString()
+	id := state.CatalogId.ValueString()
 	tflog.Debug(ctx, "Deleting postgresql_catalog", map[string]interface{}{"id": id})
 	err := r.client.DeleteCatalog(ctx, "postgresql", id)
 	if err != nil {
@@ -227,12 +227,8 @@ func (r *postgresql_catalogResource) modelToUpdateRequest(ctx context.Context, m
 
 func (r *postgresql_catalogResource) updateModelFromResponse(ctx context.Context, model *resource_postgresql_catalog.PostgresqlCatalogModel, response map[string]interface{}, diags *diag.Diagnostics) {
 	// Map response fields to model
-	if id, ok := response["id"].(string); ok {
-		model.Id = types.StringValue(id)
-		model.CatalogId = types.StringValue(id)
-	} else if id, ok := response["catalogId"].(string); ok {
-		model.Id = types.StringValue(id)
-		model.CatalogId = types.StringValue(id)
+	if catalogId, ok := response["catalogId"].(string); ok {
+		model.CatalogId = types.StringValue(catalogId)
 	}
 
 	if name, ok := response["name"].(string); ok {

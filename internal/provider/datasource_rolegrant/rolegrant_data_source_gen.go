@@ -18,11 +18,6 @@ import (
 func RolegrantDataSourceSchema(ctx context.Context) schema.Schema {
 	return schema.Schema{
 		Attributes: map[string]schema.Attribute{
-			"id": schema.StringAttribute{
-				Required:            true,
-				Description:         "- A role\n- This parameter can be looked up using `name` instead of its Id. Use `name=value` instead of an Id to lookup/search using the `value`. `value` must be encoded ([see RFC](https://www.rfc-editor.org/rfc/rfc3986#section-2.2) including `=`)\n",
-				MarkdownDescription: "- A role\n- This parameter can be looked up using `name` instead of its Id. Use `name=value` instead of an Id to lookup/search using the `value`. `value` must be encoded ([see RFC](https://www.rfc-editor.org/rfc/rfc3986#section-2.2) including `=`)\n",
-			},
 			"result": schema.ListNestedAttribute{
 				NestedObject: schema.NestedAttributeObject{
 					Attributes: map[string]schema.Attribute{
@@ -74,6 +69,11 @@ func RolegrantDataSourceSchema(ctx context.Context) schema.Schema {
 				Description:         "A page of results.",
 				MarkdownDescription: "A page of results.",
 			},
+			"role_id": schema.StringAttribute{
+				Required:            true,
+				Description:         "- A role\n- This parameter can be looked up using `name` instead of its Id. Use `name=value` instead of an Id to lookup/search using the `value`. `value` must be encoded ([see RFC](https://www.rfc-editor.org/rfc/rfc3986#section-2.2) including `=`)\n",
+				MarkdownDescription: "- A role\n- This parameter can be looked up using `name` instead of its Id. Use `name=value` instead of an Id to lookup/search using the `value`. `value` must be encoded ([see RFC](https://www.rfc-editor.org/rfc/rfc3986#section-2.2) including `=`)\n",
+			},
 			"type": schema.StringAttribute{
 				Optional:            true,
 				Computed:            true,
@@ -85,8 +85,8 @@ func RolegrantDataSourceSchema(ctx context.Context) schema.Schema {
 }
 
 type RolegrantModel struct {
-	Id     types.String `tfsdk:"id"`
 	Result types.List   `tfsdk:"result"`
+	RoleId types.String `tfsdk:"role_id"`
 	Type   types.String `tfsdk:"type"`
 }
 

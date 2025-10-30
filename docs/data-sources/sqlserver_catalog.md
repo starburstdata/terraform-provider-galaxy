@@ -17,11 +17,10 @@ description: |-
 
 ### Required
 
-- `id` (String) A catalog connecting to SQL Server
+- `catalog_id` (String) A catalog connecting to SQL Server
 
 ### Read-Only
 
-- `catalog_id` (String) SQL Server catalog identifier (read only)
 - `cloud_kind` (String) SQL Server cloud kind. Defaults to AWS.
 - `database_name` (String) SQL Server database name
 - `description` (String) Catalog description

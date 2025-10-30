@@ -17,7 +17,7 @@ description: |-
 
 ### Required
 
-- `id` (String) - A row filter
+- `row_filter_id` (String) - A row filter
 - This parameter can be looked up using `name` instead of its Id. Use `name=value` instead of an Id to lookup/search using the `value`. `value` must be encoded ([see RFC](https://www.rfc-editor.org/rfc/rfc3986#section-2.2) including `=`)
 
 ### Read-Only
@@ -27,4 +27,3 @@ description: |-
 - `expression` (String) Row Filter expression (read only)
 - `modified` (String) Modified on (read only)
 - `name` (String) Row Filter name (read only)
-- `row_filter_id` (String) Row Filter ID (read only)

@@ -28,9 +28,9 @@ resource "galaxy_gcs_catalog" "test" {
 # Data source to read the catalog
 data "galaxy_gcs_catalog" "test" {
   depends_on = [galaxy_gcs_catalog.test]
-  id         = galaxy_gcs_catalog.test.id
+  catalog_id = galaxy_gcs_catalog.test.catalog_id
 }
 
 output "gcs_catalog_id" {
-  value = galaxy_gcs_catalog.test.id
+  value = galaxy_gcs_catalog.test.catalog_id
 }

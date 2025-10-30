@@ -72,7 +72,7 @@ dev-setup: install docs
 
 # Complete testing workflow - build, generate docs, validate, test examples
 .PHONY: test-all
-test-all: build docs docs-validate test-examples
+test-all: install lint docs-validate test-examples
 
 .PHONY: help
 help:

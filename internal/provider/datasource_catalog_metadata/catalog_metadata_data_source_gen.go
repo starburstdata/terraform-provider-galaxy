@@ -19,9 +19,9 @@ func CatalogMetadataDataSourceSchema(ctx context.Context) schema.Schema {
 	return schema.Schema{
 		Attributes: map[string]schema.Attribute{
 			"catalog_id": schema.StringAttribute{
-				Computed:            true,
-				Description:         "Catalog ID (read only)",
-				MarkdownDescription: "Catalog ID (read only)",
+				Required:            true,
+				Description:         "- A catalog\n- This parameter can be looked up using `name` instead of its Id. Use `name=value` instead of an Id to lookup/search using the `value`. `value` must be encoded ([see RFC](https://www.rfc-editor.org/rfc/rfc3986#section-2.2) including `=`)\n",
+				MarkdownDescription: "- A catalog\n- This parameter can be looked up using `name` instead of its Id. Use `name=value` instead of an Id to lookup/search using the `value`. `value` must be encoded ([see RFC](https://www.rfc-editor.org/rfc/rfc3986#section-2.2) including `=`)\n",
 			},
 			"catalog_name": schema.StringAttribute{
 				Computed:            true,
@@ -56,11 +56,6 @@ func CatalogMetadataDataSourceSchema(ctx context.Context) schema.Schema {
 				Computed:            true,
 				Description:         "Any description set for this catalog (read only)",
 				MarkdownDescription: "Any description set for this catalog (read only)",
-			},
-			"id": schema.StringAttribute{
-				Required:            true,
-				Description:         "- A catalog\n- This parameter can be looked up using `name` instead of its Id. Use `name=value` instead of an Id to lookup/search using the `value`. `value` must be encoded ([see RFC](https://www.rfc-editor.org/rfc/rfc3986#section-2.2) including `=`)\n",
-				MarkdownDescription: "- A catalog\n- This parameter can be looked up using `name` instead of its Id. Use `name=value` instead of an Id to lookup/search using the `value`. `value` must be encoded ([see RFC](https://www.rfc-editor.org/rfc/rfc3986#section-2.2) including `=`)\n",
 			},
 			"owner": schema.SingleNestedAttribute{
 				Attributes: map[string]schema.Attribute{
@@ -117,7 +112,6 @@ type CatalogMetadataModel struct {
 	CatalogName types.String `tfsdk:"catalog_name"`
 	Contacts    types.List   `tfsdk:"contacts"`
 	Description types.String `tfsdk:"description"`
-	Id          types.String `tfsdk:"id"`
 	Owner       OwnerValue   `tfsdk:"owner"`
 	Tags        types.List   `tfsdk:"tags"`
 }
