@@ -21,6 +21,8 @@ import (
 	"strings"
 	"sync"
 	"time"
+
+	"github.com/hashicorp/terraform-plugin-log/tflog"
 )
 
 type GalaxyClient struct {
@@ -72,7 +74,9 @@ func (c *GalaxyClient) getAccessToken(ctx context.Context) error {
 	defer func() {
 		if closeErr := resp.Body.Close(); closeErr != nil {
 			// Log the close error but don't override the main error
-			fmt.Printf("Warning: failed to close response body: %v\n", closeErr)
+			tflog.Warn(ctx, "Failed to close response body", map[string]interface{}{
+				"error": closeErr.Error(),
+			})
 		}
 	}()
 
@@ -110,8 +114,6 @@ func (c *GalaxyClient) doRequest(ctx context.Context, method, path string, body 
 }
 
 func (c *GalaxyClient) doRequestWithRetry(ctx context.Context, method, path string, body interface{}, result interface{}, retries int) error {
-	fmt.Printf("DEBUG: Making request %s %s\n", method, path)
-
 	if err := c.ensureValidToken(ctx); err != nil {
 		return err
 	}
@@ -122,13 +124,6 @@ func (c *GalaxyClient) doRequestWithRetry(ctx context.Context, method, path stri
 		if err != nil {
 			return fmt.Errorf("failed to marshal request body: %w", err)
 		}
-
-		// Debug logging for all catalog requests
-		if strings.Contains(path, "catalog") {
-			fmt.Printf("DEBUG: Catalog request URL: %s %s\n", method, path)
-			fmt.Printf("DEBUG: Catalog request body: %s\n", string(jsonBody))
-		}
-
 		bodyReader = bytes.NewReader(jsonBody)
 	}
 
@@ -154,7 +149,9 @@ func (c *GalaxyClient) doRequestWithRetry(ctx context.Context, method, path stri
 	defer func() {
 		if closeErr := resp.Body.Close(); closeErr != nil {
 			// Log the close error but don't override the main error
-			fmt.Printf("Warning: failed to close response body: %v\n", closeErr)
+			tflog.Warn(ctx, "Failed to close response body", map[string]interface{}{
+				"error": closeErr.Error(),
+			})
 		}
 	}()
 
@@ -173,7 +170,12 @@ func (c *GalaxyClient) doRequestWithRetry(ctx context.Context, method, path stri
 	if resp.StatusCode == http.StatusTooManyRequests && retries > 0 {
 		// Extract wait time from response body or use exponential backoff
 		waitTime := time.Duration(4-retries) * 15 * time.Second // More aggressive backoff for rate limits
-		fmt.Printf("Rate limit encountered, waiting %v before retry (retries left: %d)\n", waitTime, retries-1)
+		tflog.Info(ctx, "Rate limit encountered, retrying after backoff", map[string]interface{}{
+			"wait_time":    waitTime.String(),
+			"retries_left": retries - 1,
+			"endpoint":     path,
+			"method":       method,
+		})
 		time.Sleep(waitTime)
 		return c.doRequestWithRetry(ctx, method, path, body, result, retries-1)
 	}
@@ -252,11 +254,6 @@ func (c *GalaxyClient) GetAllPaginatedResults(ctx context.Context, path string) 
 // Resource-specific methods
 
 func (c *GalaxyClient) CreateCluster(ctx context.Context, cluster interface{}) (map[string]interface{}, error) {
-	// Debug: log the request body
-	if debugBody, err := json.Marshal(cluster); err == nil {
-		fmt.Printf("DEBUG: CreateCluster request body: %s\n", string(debugBody))
-	}
-
 	var result map[string]interface{}
 	err := c.doRequest(ctx, "POST", "/public/api/v1/cluster", cluster, &result)
 	return result, err
