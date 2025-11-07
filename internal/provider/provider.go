@@ -144,11 +144,6 @@ func (p *galaxyProvider) DataSources(ctx context.Context) []func() datasource.Da
 		NewTagDataSource,
 		NewCatalogMetadataDataSource,
 
-		// SQL Job data sources
-		NewSqlJobDataSource,
-		NewSqlJobStatusDataSource,
-		NewSqlJobHistoryDataSource,
-
 		// New data sources from OpenAPI changes - implemented
 		NewPrivatelinkDataSource,
 		NewCrossAccountIamRoleMetadatasDataSource,
@@ -173,7 +168,6 @@ func (p *galaxyProvider) DataSources(ctx context.Context) []func() datasource.Da
 		NewCrossAccountIamRolesDataSource,
 
 		// New list data sources from OpenAPI changes - implemented
-		NewSqlJobsDataSource,
 		NewPrivatelinksDataSource,
 		// Newly implemented list data source
 		NewDataQualitySummariesDataSource,
@@ -235,9 +229,6 @@ func (p *galaxyProvider) Resources(ctx context.Context) []func() resource.Resour
 		NewDataProductResource,
 		NewTagResource,
 		NewCrossAccountIamRoleResource,
-
-		// SQL Job resources
-		NewSqlJobResource,
 
 		// Catalog resources
 		NewS3CatalogResource,

@@ -12,22 +12,22 @@ import (
 func GcsCatalogValidationDataSourceSchema(ctx context.Context) schema.Schema {
 	return schema.Schema{
 		Attributes: map[string]schema.Attribute{
-			"error_messages": schema.ListAttribute{
-				ElementType:         types.StringType,
-				Computed:            true,
-				Description:         "Errors found in the validation process",
-				MarkdownDescription: "Errors found in the validation process",
-			},
-			"id": schema.StringAttribute{
+			"catalog_id": schema.StringAttribute{
 				Required:            true,
 				Description:         "A catalog connecting to GCS",
 				MarkdownDescription: "A catalog connecting to GCS",
 			},
+			"error_messages": schema.ListAttribute{
+				ElementType:         types.StringType,
+				Computed:            true,
+				Description:         "Errors found in the validation process (read only)",
+				MarkdownDescription: "Errors found in the validation process (read only)",
+			},
 			"info_messages": schema.ListAttribute{
 				ElementType:         types.StringType,
 				Computed:            true,
-				Description:         "Additional information found in the validation process",
-				MarkdownDescription: "Additional information found in the validation process",
+				Description:         "Additional information found in the validation process (read only)",
+				MarkdownDescription: "Additional information found in the validation process (read only)",
 			},
 			"validation_successful": schema.BoolAttribute{
 				Computed:            true,
@@ -37,16 +37,16 @@ func GcsCatalogValidationDataSourceSchema(ctx context.Context) schema.Schema {
 			"warning_messages": schema.ListAttribute{
 				ElementType:         types.StringType,
 				Computed:            true,
-				Description:         "Warnings found in the validation process",
-				MarkdownDescription: "Warnings found in the validation process",
+				Description:         "Warnings found in the validation process (read only)",
+				MarkdownDescription: "Warnings found in the validation process (read only)",
 			},
 		},
 	}
 }
 
 type GcsCatalogValidationModel struct {
+	CatalogId            types.String `tfsdk:"catalog_id"`
 	ErrorMessages        types.List   `tfsdk:"error_messages"`
-	Id                   types.String `tfsdk:"id"`
 	InfoMessages         types.List   `tfsdk:"info_messages"`
 	ValidationSuccessful types.Bool   `tfsdk:"validation_successful"`
 	WarningMessages      types.List   `tfsdk:"warning_messages"`

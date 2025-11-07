@@ -98,28 +98,23 @@ func (r *role_privilege_grantResource) Read(ctx context.Context, req resource.Re
 		return
 	}
 
-	id := state.EntityId.ValueString()
-	tflog.Debug(ctx, "Reading role_privilege_grant", map[string]interface{}{"id": id})
-	response, err := r.client.GetRolePrivilegeGrant(ctx, id)
-	if err != nil {
-		if client.IsNotFound(err) {
-			tflog.Warn(ctx, "RolePrivilegeGrant not found, removing from state", map[string]interface{}{"id": id})
-			resp.State.RemoveResource(ctx)
-			return
-		}
+	// Role privilege grants are uniquely identified by (roleId, entityId, privilege, grantKind)
+	// The API doesn't provide a way to read individual grants, so we assume it exists if it's in state
+	// The grant will be validated during the next Update or when it's explicitly deleted
+	roleId := state.RoleId.ValueString()
+	entityId := state.EntityId.ValueString()
+	privilege := state.Privilege.ValueString()
+	grantKind := state.GrantKind.ValueString()
 
-		resp.Diagnostics.AddError(
-			"Error reading role_privilege_grant",
-			"Could not read role_privilege_grant "+id+": "+err.Error(),
-		)
-		return
-	}
+	tflog.Debug(ctx, "Reading role_privilege_grant (no-op - assumes grant exists)", map[string]interface{}{
+		"roleId":    roleId,
+		"entityId":  entityId,
+		"privilege": privilege,
+		"grantKind": grantKind,
+	})
 
-	r.updateModelFromResponse(ctx, &state, response, &resp.Diagnostics)
-	if resp.Diagnostics.HasError() {
-		return
-	}
-
+	// No API call needed - the grant is managed through Create/Update/Delete operations
+	// The state remains unchanged
 	resp.Diagnostics.Append(resp.State.Set(ctx, &state)...)
 }
 
@@ -137,18 +132,65 @@ func (r *role_privilege_grantResource) Update(ctx context.Context, req resource.
 		return
 	}
 
-	id := state.EntityId.ValueString()
-	request := r.modelToUpdateRequest(ctx, &plan, &resp.Diagnostics)
+	// Role privilege grants don't support direct updates (API returns 405)
+	// Instead, we delete the old grant and create a new one
+	// First, delete the existing grant using the composite key
+	roleId := state.RoleId.ValueString()
+	entityId := state.EntityId.ValueString()
+	privilege := state.Privilege.ValueString()
+	grantKind := state.GrantKind.ValueString()
+
+	tflog.Debug(ctx, "Updating role_privilege_grant via delete+create", map[string]interface{}{
+		"roleId":    roleId,
+		"entityId":  entityId,
+		"privilege": privilege,
+		"grantKind": grantKind,
+	})
+
+	// Create the revoke request with the unique identifying fields
+	// Grants are uniquely identified by (roleId, entityId, privilege, grantKind)
+	entityKind := state.EntityKind.ValueString()
+	deleteRequest := make(map[string]interface{})
+	deleteRequest["entityId"] = entityId
+	deleteRequest["entityKind"] = entityKind
+	deleteRequest["privilege"] = privilege
+	// Use RemoveRoleGrant to completely remove the grant (not just the grant option)
+	deleteRequest["revokeAction"] = "RemoveRoleGrant"
+
+	// Include optional scope fields if set
+	if !state.ColumnName.IsNull() && state.ColumnName.ValueString() != "" {
+		deleteRequest["columnName"] = state.ColumnName.ValueString()
+	}
+	if !state.SchemaName.IsNull() && state.SchemaName.ValueString() != "" {
+		deleteRequest["schemaName"] = state.SchemaName.ValueString()
+	}
+	if !state.TableName.IsNull() && state.TableName.ValueString() != "" {
+		deleteRequest["tableName"] = state.TableName.ValueString()
+	}
+
+	// Delete the old grant
+	tflog.Debug(ctx, "Deleting existing role_privilege_grant before update")
+	err := r.client.RevokeRolePrivilege(ctx, roleId, deleteRequest)
+	if err != nil && !client.IsNotFound(err) {
+		resp.Diagnostics.AddError(
+			"Error deleting role_privilege_grant during update",
+			"Could not delete existing grant: "+err.Error(),
+		)
+		return
+	}
+
+	// Create the new grant with updated values
+	createRequest := r.modelToCreateRequest(ctx, &plan, &resp.Diagnostics)
 	if resp.Diagnostics.HasError() {
 		return
 	}
 
-	tflog.Debug(ctx, "Updating role_privilege_grant", map[string]interface{}{"id": id})
-	response, err := r.client.UpdateRolePrivilegeGrant(ctx, id, request)
+	tflog.Debug(ctx, "Creating new role_privilege_grant with updated values")
+	response, err := r.client.CreateRolePrivilegeGrant(ctx, createRequest)
 	if err != nil {
 		resp.Diagnostics.AddError(
-			"Error updating role_privilege_grant",
-			"Could not update role_privilege_grant "+id+": "+err.Error(),
+			"Error creating role_privilege_grant during update",
+			"Could not create grant with new values: "+err.Error(),
 		)
 		return
 	}
@@ -158,7 +200,7 @@ func (r *role_privilege_grantResource) Update(ctx context.Context, req resource.
 		return
 	}
 
-	tflog.Debug(ctx, "Updated role_privilege_grant", map[string]interface{}{"id": plan.EntityId.ValueString()})
+	tflog.Debug(ctx, "Updated role_privilege_grant via delete+create")
 	resp.Diagnostics.Append(resp.State.Set(ctx, &plan)...)
 }
 
@@ -225,14 +267,6 @@ func (r *role_privilege_grantResource) modelToCreateRequest(ctx context.Context,
 	if !model.ListAllPrivileges.IsNull() {
 		request["listAllPrivileges"] = model.ListAllPrivileges.ValueBool()
 	}
-
-	return request
-}
-
-func (r *role_privilege_grantResource) modelToUpdateRequest(ctx context.Context, model *resource_role_privilege_grant.RolePrivilegeGrantModel, diags *diag.Diagnostics) map[string]interface{} {
-	request := r.modelToCreateRequest(ctx, model, diags)
-
-	// Note: SyncToken not available in this model
 
 	return request
 }

@@ -189,7 +189,6 @@ TF_ACC=1 go test ./internal/provider -v -timeout 30m
 - `galaxy_service_account` - Service accounts for automation
 - `galaxy_service_account_password` - Service account credentials
 - `galaxy_snowflake_catalog` - Snowflake data warehouse catalog
-- `galaxy_sql_job` - SQL job definitions
 - `galaxy_sqlserver_catalog` - Microsoft SQL Server catalog
 - `galaxy_tag` - Data classification tags
 
@@ -219,9 +218,6 @@ TF_ACC=1 go test ./internal/provider -v -timeout 30m
 - `galaxy_schema` - Read a schema
 - `galaxy_service_account` - Read a service account
 - `galaxy_snowflake_catalog` - Read a Snowflake catalog
-- `galaxy_sql_job` - Read a SQL job
-- `galaxy_sql_job_history` - Read SQL job history
-- `galaxy_sql_job_status` - Read SQL job status
 - `galaxy_sqlserver_catalog` - Read a SQL Server catalog
 - `galaxy_table` - Read a table
 - `galaxy_tag` - Read a tag
@@ -250,7 +246,6 @@ TF_ACC=1 go test ./internal/provider -v -timeout 30m
 - `galaxy_s3_catalogs` - List all S3 catalogs
 - `galaxy_service_accounts` - List all service accounts
 - `galaxy_snowflake_catalogs` - List all Snowflake catalogs
-- `galaxy_sql_jobs` - List all SQL jobs
 - `galaxy_sqlserver_catalogs` - List all SQL Server catalogs
 - `galaxy_tags` - List all tags
 - `galaxy_users` - List all users

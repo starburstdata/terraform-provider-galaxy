@@ -40,7 +40,7 @@ data "galaxy_postgresql_catalog" "test" {
 
 data "galaxy_postgresql_catalog_validation" "test" {
   depends_on = [galaxy_postgresql_catalog.test]
-  id = galaxy_postgresql_catalog.test.catalog_id
+  catalog_id = galaxy_postgresql_catalog.test.catalog_id
 }
 
 output "postgresql_catalog_id" {

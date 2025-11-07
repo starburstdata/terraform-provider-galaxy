@@ -87,6 +87,13 @@ func (d *rolegrantDataSource) Read(ctx context.Context, req datasource.ReadReque
 func (d *rolegrantDataSource) updateModelFromResponse(ctx context.Context, model *datasource_rolegrant.RolegrantModel, response map[string]interface{}) {
 	// The id (role ID) is already set from the configuration
 
+	// Define element type for custom type
+	resultElementType := datasource_rolegrant.ResultType{
+		ObjectType: types.ObjectType{
+			AttrTypes: datasource_rolegrant.ResultValue{}.AttributeTypes(ctx),
+		},
+	}
+
 	// Map the result array - role grants have AdminOption, Principal, RoleId, RoleName
 	if resultArray, ok := response["result"].([]interface{}); ok {
 		resultList := make([]datasource_rolegrant.ResultValue, 0, len(resultArray))
@@ -119,10 +126,10 @@ func (d *rolegrantDataSource) updateModelFromResponse(ctx context.Context, model
 				resultList = append(resultList, resultItem)
 			}
 		}
-		resultListValue, _ := types.ListValueFrom(ctx, datasource_rolegrant.ResultType{}, resultList)
+		resultListValue, _ := types.ListValueFrom(ctx, resultElementType, resultList)
 		model.Result = resultListValue
 	} else {
-		model.Result = types.ListNull(datasource_rolegrant.ResultType{})
+		model.Result = types.ListNull(resultElementType)
 	}
 }
 

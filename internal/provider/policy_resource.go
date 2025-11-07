@@ -318,7 +318,7 @@ func (r *policyResource) modelToCreateRequest(ctx context.Context, model *resour
 
 					// Check privilege list
 					if privilegeAttr, exists := privilegeAttrs["privilege"]; exists {
-						if privilegeListVal, ok := privilegeAttr.(basetypes.ListValue); ok && !privilegeListVal.IsNull() && !privilegeListVal.IsUnknown() && len(privilegeListVal.Elements()) > 0 {
+						if privilegeListVal, ok := privilegeAttr.(basetypes.ListValue); ok && !privilegeListVal.IsNull() && !privilegeListVal.IsUnknown() {
 							privElements := make([]types.String, 0, len(privilegeListVal.Elements()))
 							if elemDiags := privilegeListVal.ElementsAs(ctx, &privElements, false); !elemDiags.HasError() {
 								privileges := []string{}
@@ -327,23 +327,22 @@ func (r *policyResource) modelToCreateRequest(ctx context.Context, model *resour
 										privileges = append(privileges, privElem.ValueString())
 									}
 								}
-								if len(privileges) > 0 {
-									privilegeMap["privilege"] = privileges
-									hasPrivileges = true
-								}
+								// Always include privilege list, even if empty
+								privilegeMap["privilege"] = privileges
+								hasPrivileges = true
 							} else {
 								diags.Append(elemDiags...)
 							}
 						}
 					}
 
-					// Only include privileges if both grantKind and privilege list are explicitly set with valid values
+					// Include privileges if grant_kind is set (privilege list can be empty)
 					tflog.Debug(ctx, "Privilege validation", map[string]interface{}{
 						"hasGrantKind":  hasGrantKind,
 						"hasPrivileges": hasPrivileges,
 						"privilegeMap":  privilegeMap,
 					})
-					if hasGrantKind && hasPrivileges {
+					if hasGrantKind {
 						scope["privileges"] = privilegeMap
 					}
 				}
@@ -410,25 +409,25 @@ func (r *policyResource) updateModelFromResponse(ctx context.Context, model *res
 
 func (r *policyResource) updateScopesFromResponse(ctx context.Context, model *resource_policy.PolicyModel, scopesData []interface{}, diags *diag.Diagnostics) {
 	// Convert API response scopes to model format
-	scopesList := make([]attr.Value, 0, len(scopesData))
+	scopesList := make([]resource_policy.ScopesValue, 0, len(scopesData))
 
 	for _, scopeData := range scopesData {
 		if scope, ok := scopeData.(map[string]interface{}); ok {
 			scopeValue := r.mapAPIResponseScopeToModelValue(ctx, scope, diags)
 			if !diags.HasError() {
-				objVal, objDiags := scopeValue.ToObjectValue(ctx)
-				diags.Append(objDiags...)
-				if !objDiags.HasError() {
-					scopesList = append(scopesList, objVal)
-				}
+				scopesList = append(scopesList, scopeValue)
 			}
 		}
 	}
 
-	scopesListValue, listDiags := types.ListValue(
-		types.ObjectType{AttrTypes: resource_policy.ScopesValue{}.AttributeTypes(ctx)},
-		scopesList,
-	)
+	// Use proper custom type initialization
+	scopesElementType := resource_policy.ScopesType{
+		ObjectType: types.ObjectType{
+			AttrTypes: resource_policy.ScopesValue{}.AttributeTypes(ctx),
+		},
+	}
+
+	scopesListValue, listDiags := types.ListValueFrom(ctx, scopesElementType, scopesList)
 	diags.Append(listDiags...)
 	if !listDiags.HasError() {
 		model.Scopes = scopesListValue
@@ -490,30 +489,35 @@ func (r *policyResource) mapAPIResponseScopeToModelValue(ctx context.Context, sc
 	rowFilterIdsList, _ := types.ListValue(types.StringType, rowFilterIds)
 	attributes["row_filter_ids"] = rowFilterIdsList
 
-	// Handle privileges object - ensure consistency with configuration
-	privAttrs := make(map[string]attr.Value)
-	privAttrs["grant_kind"] = types.StringValue("Allow") // Default value
-	privAttrs["privilege"] = types.ListValueMust(types.StringType, []attr.Value{})
-
+	// Handle privileges object - only include if present in API response
 	if privData, ok := scope["privileges"].(map[string]interface{}); ok {
+		privAttrs := make(map[string]attr.Value)
+		privAttrs["grant_kind"] = types.StringValue("Allow") // Default value
+		privAttrs["privilege"] = types.ListValueMust(types.StringType, []attr.Value{})
+
 		if grantKind, ok := privData["grantKind"].(string); ok {
 			privAttrs["grant_kind"] = types.StringValue(grantKind)
 		}
 
-		if privilegeList, ok := privData["privilege"].([]interface{}); ok && len(privilegeList) > 0 {
+		if privilegeList, ok := privData["privilege"].([]interface{}); ok {
 			privs := make([]attr.Value, 0, len(privilegeList))
 			for _, priv := range privilegeList {
 				if privStr, ok := priv.(string); ok {
 					privs = append(privs, types.StringValue(privStr))
 				}
 			}
-			privListVal, _ := types.ListValue(types.StringType, privs)
-			privAttrs["privilege"] = privListVal
+			if len(privs) > 0 {
+				privListVal, _ := types.ListValue(types.StringType, privs)
+				privAttrs["privilege"] = privListVal
+			}
 		}
-	}
 
-	privObj, _ := types.ObjectValue(resource_policy.PrivilegesValue{}.AttributeTypes(ctx), privAttrs)
-	attributes["privileges"] = privObj
+		privObj, _ := types.ObjectValue(resource_policy.PrivilegesValue{}.AttributeTypes(ctx), privAttrs)
+		attributes["privileges"] = privObj
+	} else {
+		// If privileges are not in API response, set to null
+		attributes["privileges"] = types.ObjectNull(resource_policy.PrivilegesValue{}.AttributeTypes(ctx))
+	}
 
 	// Create the scope value object
 	scopeValue, scopeDiags := resource_policy.NewScopesValue(attributeTypes, attributes)

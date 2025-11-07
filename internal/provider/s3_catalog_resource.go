@@ -14,6 +14,7 @@ import (
 	"fmt"
 
 	"github.com/hashicorp/terraform-plugin-framework/diag"
+	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
@@ -25,6 +26,7 @@ import (
 var _ resource.Resource = (*s3_catalogResource)(nil)
 var _ resource.ResourceWithConfigure = (*s3_catalogResource)(nil)
 var _ resource.ResourceWithModifyPlan = (*s3_catalogResource)(nil)
+var _ resource.ResourceWithImportState = (*s3_catalogResource)(nil)
 
 func NewS3CatalogResource() resource.Resource {
 	return &s3_catalogResource{}
@@ -202,6 +204,11 @@ func (r *s3_catalogResource) Delete(ctx context.Context, req resource.DeleteRequ
 	}
 
 	tflog.Debug(ctx, "Deleted s3_catalog", map[string]interface{}{"id": id})
+}
+
+func (r *s3_catalogResource) ImportState(ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse) {
+	// Import using catalog_id
+	resource.ImportStatePassthroughID(ctx, path.Root("catalog_id"), req, resp)
 }
 
 // ModifyPlan ensures mutually exclusive credentials are enforced at plan time.

@@ -65,14 +65,14 @@ func (d *s3_catalog_validationDataSource) Read(ctx context.Context, req datasour
 		return
 	}
 
-	id := config.Id.ValueString()
-	tflog.Debug(ctx, "Reading s3_catalog_validation", map[string]interface{}{"id": id})
+	catalogId := config.CatalogId.ValueString()
+	tflog.Debug(ctx, "Reading s3_catalog_validation", map[string]interface{}{"catalog_id": catalogId})
 
-	response, err := d.client.ValidateCatalog(ctx, "s3", id)
+	response, err := d.client.ValidateCatalog(ctx, "s3", catalogId)
 	if err != nil {
 		resp.Diagnostics.AddError(
 			"Error reading s3_catalog_validation",
-			"Could not read s3_catalog_validation "+id+": "+err.Error(),
+			"Could not read s3_catalog_validation "+catalogId+": "+err.Error(),
 		)
 		return
 	}

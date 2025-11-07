@@ -65,14 +65,14 @@ func (d *mysql_catalog_validationDataSource) Read(ctx context.Context, req datas
 		return
 	}
 
-	id := config.Id.ValueString()
-	tflog.Debug(ctx, "Reading mysql_catalog_validation", map[string]interface{}{"id": id})
+	id := config.CatalogId.ValueString()
+	tflog.Debug(ctx, "Reading mysql_catalog_validation", map[string]interface{}{"catalog_id": id})
 
 	response, err := d.client.ValidateCatalog(ctx, "mysql", id)
 	if err != nil {
 		resp.Diagnostics.AddError(
 			"Error reading mysql_catalog_validation",
-			"Could not read mysql_catalog_validation "+id+": "+err.Error(),
+			"Could not read mysql_catalog_validation catalogId: "+err.Error(),
 		)
 		return
 	}
@@ -85,8 +85,8 @@ func (d *mysql_catalog_validationDataSource) Read(ctx context.Context, req datas
 
 func (d *mysql_catalog_validationDataSource) updateModelFromResponse(ctx context.Context, model *datasource_mysql_catalog_validation.MysqlCatalogValidationModel, response map[string]interface{}) {
 	// Map response fields to model
-	if id, ok := response["id"].(string); ok {
-		model.Id = types.StringValue(id)
+	if id, ok := response["catalog_id"].(string); ok {
+		model.CatalogId = types.StringValue(id)
 	}
 
 	// Map validation_successful

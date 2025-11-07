@@ -65,14 +65,14 @@ func (d *mongodb_catalog_validationDataSource) Read(ctx context.Context, req dat
 		return
 	}
 
-	id := config.Id.ValueString()
-	tflog.Debug(ctx, "Reading mongodb_catalog_validation", map[string]interface{}{"id": id})
+	id := config.CatalogId.ValueString()
+	tflog.Debug(ctx, "Reading mongodb_catalog_validation", map[string]interface{}{"catalog_id": id})
 
-	response, err := d.client.GetCatalog(ctx, "mongodb", id)
+	response, err := d.client.ValidateCatalog(ctx, "mongodb", id)
 	if err != nil {
 		resp.Diagnostics.AddError(
 			"Error reading mongodb_catalog_validation",
-			"Could not read mongodb_catalog_validation "+id+": "+err.Error(),
+			"Could not read mongodb_catalog_validation catalogId: "+err.Error(),
 		)
 		return
 	}
@@ -85,8 +85,8 @@ func (d *mongodb_catalog_validationDataSource) Read(ctx context.Context, req dat
 
 func (d *mongodb_catalog_validationDataSource) updateModelFromResponse(ctx context.Context, model *datasource_mongodb_catalog_validation.MongodbCatalogValidationModel, response map[string]interface{}) {
 	// Map response fields to model
-	if id, ok := response["id"].(string); ok {
-		model.Id = types.StringValue(id)
+	if id, ok := response["catalog_id"].(string); ok {
+		model.CatalogId = types.StringValue(id)
 	}
 
 	if validationSuccessful, ok := response["validationSuccessful"].(bool); ok {
