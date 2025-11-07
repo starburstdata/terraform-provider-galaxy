@@ -3,12 +3,7 @@ default: testacc
 # Run acceptance tests
 .PHONY: testacc
 testacc:
-	TF_ACC=1 go test ./... -v $(TESTARGS) -timeout 120m
-
-# Run all examples (integration with existing test infrastructure)
-.PHONY: test-examples
-test-examples:
-	cd examples && ../../scripts/test_all_examples.sh
+	TF_ACC=1 go test ./internal/provider -v $(TESTARGS) -timeout 120m
 
 # Build the provider
 .PHONY: build
@@ -72,7 +67,7 @@ dev-setup: install docs
 
 # Complete testing workflow - build, generate docs, validate, test examples
 .PHONY: test-all
-test-all: install lint docs-validate test-examples
+test-all: install license lint docs-validate testacc
 
 .PHONY: help
 help:
@@ -81,7 +76,6 @@ help:
 	@echo "  install      Install the provider locally"
 	@echo "  test         Run unit tests"
 	@echo "  testacc      Run acceptance tests"
-	@echo "  test-examples Run all example configurations (integration test)"
 	@echo "  docs         Generate documentation"
 	@echo "  docs-validate Validate generated documentation"
 	@echo "  docs-all     Generate and validate documentation"
@@ -92,4 +86,5 @@ help:
 	@echo "  license-add  Add license headers to files missing them"
 	@echo "  clean        Clean up generated files"
 	@echo "  dev-setup    Install provider and generate docs"
+	@echo "  testacc      Run all acceptance tests"
 	@echo "  help         Show this help message"

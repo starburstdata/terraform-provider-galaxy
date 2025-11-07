@@ -525,6 +525,10 @@ func (c *GalaxyClient) DeleteRolePrivilegeGrant(ctx context.Context, grantID str
 	return c.doRequest(ctx, "DELETE", "/public/api/v1/rolePrivilegeGrant/"+grantID, nil, nil)
 }
 
+func (c *GalaxyClient) RevokeRolePrivilege(ctx context.Context, roleID string, request interface{}) error {
+	return c.doRequest(ctx, "POST", "/public/api/v1/role/"+roleID+"/privilege:revoke", request, nil)
+}
+
 // Column Mask methods
 func (c *GalaxyClient) CreateColumnMask(ctx context.Context, mask interface{}) (map[string]interface{}, error) {
 	var result map[string]interface{}

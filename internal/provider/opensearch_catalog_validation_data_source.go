@@ -65,14 +65,14 @@ func (d *opensearch_catalog_validationDataSource) Read(ctx context.Context, req 
 		return
 	}
 
-	id := config.Id.ValueString()
-	tflog.Debug(ctx, "Reading opensearch_catalog_validation", map[string]interface{}{"id": id})
+	id := config.CatalogId.ValueString()
+	tflog.Debug(ctx, "Reading opensearch_catalog_validation", map[string]interface{}{"catalog_id": id})
 
-	response, err := d.client.GetCatalog(ctx, "opensearch", id)
+	response, err := d.client.ValidateCatalog(ctx, "opensearch", id)
 	if err != nil {
 		resp.Diagnostics.AddError(
 			"Error reading opensearch_catalog_validation",
-			"Could not read opensearch_catalog_validation "+id+": "+err.Error(),
+			"Could not read opensearch_catalog_validation catalogId: "+err.Error(),
 		)
 		return
 	}
@@ -85,8 +85,8 @@ func (d *opensearch_catalog_validationDataSource) Read(ctx context.Context, req 
 
 func (d *opensearch_catalog_validationDataSource) updateModelFromResponse(ctx context.Context, model *datasource_opensearch_catalog_validation.OpensearchCatalogValidationModel, response map[string]interface{}) {
 	// Map response fields to model
-	if id, ok := response["id"].(string); ok {
-		model.Id = types.StringValue(id)
+	if id, ok := response["catalog_id"].(string); ok {
+		model.CatalogId = types.StringValue(id)
 	}
 
 	if validationSuccessful, ok := response["validationSuccessful"].(bool); ok {

@@ -15,6 +15,7 @@ import (
 
 	"github.com/hashicorp/terraform-plugin-framework/attr"
 	"github.com/hashicorp/terraform-plugin-framework/datasource"
+	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
 
@@ -80,6 +81,14 @@ func (d *columnDataSource) Read(ctx context.Context, req datasource.ReadRequest,
 		return
 	}
 
+	// Debug: Log the raw response to help diagnose issues
+	tflog.Info(ctx, "ListColumns API response", map[string]interface{}{
+		"catalogId": catalogID,
+		"schemaId":  schemaID,
+		"tableId":   tableID,
+		"response":  fmt.Sprintf("%+v", response),
+	})
+
 	// Map response to model
 	d.updateModelFromResponse(ctx, &config, response)
 
@@ -90,85 +99,94 @@ func (d *columnDataSource) updateModelFromResponse(ctx context.Context, model *d
 	// The catalogId, schemaId, and tableId are already set from the configuration
 	// Ensure they remain in known state (they should already be set from config)
 
+	// Define element types for custom types
+	tagElementType := datasource_column.TagsType{
+		ObjectType: types.ObjectType{
+			AttrTypes: datasource_column.TagsValue{}.AttributeTypes(ctx),
+		},
+	}
+
+	resultElementType := datasource_column.ResultType{
+		ObjectType: types.ObjectType{
+			AttrTypes: datasource_column.ResultValue{}.AttributeTypes(ctx),
+		},
+	}
+
 	// Map the result array
 	if resultArray, ok := response["result"].([]interface{}); ok {
-		resultList := make([]attr.Value, 0, len(resultArray))
+		resultList := make([]datasource_column.ResultValue, 0, len(resultArray))
 		for _, item := range resultArray {
 			if itemMap, ok := item.(map[string]interface{}); ok {
-				resultItem := datasource_column.ResultValue{
-					ColumnId:      types.StringValue(getStringFromMap(itemMap, "columnId")),
-					ColumnDefault: types.StringValue(getStringFromMap(itemMap, "columnDefault")),
-					DataType:      types.StringValue(getStringFromMap(itemMap, "dataType")),
-					Description:   types.StringValue(getStringFromMap(itemMap, "description")),
-					Nullable:      types.BoolValue(getBoolFromMap(itemMap, "nullable")),
-				}
-
-				// Map tags with proper error handling
+				// Build tags list first
+				var tagListValue types.List
 				if tags, ok := itemMap["tags"].([]interface{}); ok && len(tags) > 0 {
-					tagList := make([]attr.Value, 0, len(tags))
+					tagList := make([]datasource_column.TagsValue, 0, len(tags))
 					for _, tag := range tags {
 						if tagMap, ok := tag.(map[string]interface{}); ok {
-							tagItem := datasource_column.TagsValue{
-								TagId: types.StringValue(getStringFromMap(tagMap, "tagId")),
-								Name:  types.StringValue(getStringFromMap(tagMap, "name")),
+							tagAttrs := map[string]attr.Value{
+								"tag_id": types.StringValue(getStringFromMap(tagMap, "tagId")),
+								"name":   types.StringValue(getStringFromMap(tagMap, "name")),
 							}
-							objValue, diags := tagItem.ToObjectValue(ctx)
-							if diags.HasError() {
-								tflog.Error(ctx, "Error converting tag to object value", map[string]interface{}{"errors": diags})
+							tagItem, tagDiags := datasource_column.NewTagsValue(
+								datasource_column.TagsValue{}.AttributeTypes(ctx),
+								tagAttrs,
+							)
+							if tagDiags.HasError() {
+								tflog.Error(ctx, "Error creating tag value", map[string]interface{}{"errors": tagDiags})
 								continue
 							}
-							tagList = append(tagList, objValue)
+							tagList = append(tagList, tagItem)
 						}
 					}
-					tagListValue, diags := types.ListValue(
-						datasource_column.TagsType{}.ValueType(ctx).Type(ctx),
-						tagList,
-					)
+					var diags diag.Diagnostics
+					tagListValue, diags = types.ListValueFrom(ctx, tagElementType, tagList)
 					if diags.HasError() {
 						tflog.Error(ctx, "Error creating tags list", map[string]interface{}{"errors": diags})
-						resultItem.Tags = types.ListNull(
-							datasource_column.TagsType{}.ValueType(ctx).Type(ctx),
-						)
-					} else {
-						resultItem.Tags = tagListValue
+						tagListValue = types.ListNull(tagElementType)
 					}
 				} else {
-					resultItem.Tags = types.ListNull(
-						datasource_column.TagsType{}.ValueType(ctx).Type(ctx),
-					)
+					// Set to empty list instead of null
+					var diags diag.Diagnostics
+					tagListValue, diags = types.ListValueFrom(ctx, tagElementType, []datasource_column.TagsValue{})
+					if diags.HasError() {
+						tagListValue = types.ListNull(tagElementType)
+					}
 				}
 
-				objValue, diags := resultItem.ToObjectValue(ctx)
-				if diags.HasError() {
-					tflog.Error(ctx, "Error converting column result to object value", map[string]interface{}{"errors": diags})
+				// Create ResultValue using the proper constructor
+				resultAttrs := map[string]attr.Value{
+					"column_id":      types.StringValue(getStringFromMap(itemMap, "columnId")),
+					"column_default": types.StringValue(getStringFromMap(itemMap, "columnDefault")),
+					"data_type":      types.StringValue(getStringFromMap(itemMap, "dataType")),
+					"description":    types.StringValue(getStringFromMap(itemMap, "description")),
+					"nullable":       types.BoolValue(getBoolFromMap(itemMap, "nullable")),
+					"tags":           tagListValue,
+				}
+
+				resultItem, resultDiags := datasource_column.NewResultValue(
+					datasource_column.ResultValue{}.AttributeTypes(ctx),
+					resultAttrs,
+				)
+				if resultDiags.HasError() {
+					tflog.Error(ctx, "Error creating result value", map[string]interface{}{"errors": resultDiags})
 					continue
 				}
-				resultList = append(resultList, objValue)
+				resultList = append(resultList, resultItem)
 			}
 		}
-		resultListValue, diags := types.ListValue(
-			datasource_column.ResultType{}.ValueType(ctx).Type(ctx),
-			resultList,
-		)
+		resultListValue, diags := types.ListValueFrom(ctx, resultElementType, resultList)
 		if diags.HasError() {
 			tflog.Error(ctx, "Error creating result list", map[string]interface{}{"errors": diags})
-			model.Result = types.ListNull(
-				datasource_column.ResultType{}.ValueType(ctx).Type(ctx),
-			)
+			model.Result = types.ListNull(resultElementType)
 		} else {
 			model.Result = resultListValue
 		}
 	} else {
 		// No results or result is not an array - set to empty list instead of null
-		emptyList, diags := types.ListValue(
-			datasource_column.ResultType{}.ValueType(ctx).Type(ctx),
-			[]attr.Value{},
-		)
+		emptyList, diags := types.ListValueFrom(ctx, resultElementType, []datasource_column.ResultValue{})
 		if diags.HasError() {
 			tflog.Error(ctx, "Error creating empty result list", map[string]interface{}{"errors": diags})
-			model.Result = types.ListNull(
-				datasource_column.ResultType{}.ValueType(ctx).Type(ctx),
-			)
+			model.Result = types.ListNull(resultElementType)
 		} else {
 			model.Result = emptyList
 		}

@@ -62,11 +62,11 @@ resource "galaxy_s3_catalog" "galaxy_example" {
 
 # Validate S3 catalog configurations
 data "galaxy_s3_catalog_validation" "example" {
-  id = galaxy_s3_catalog.example.catalog_id
+  catalog_id = galaxy_s3_catalog.example.catalog_id
 }
 
 data "galaxy_s3_catalog_validation" "galaxy_example" {
-  id = galaxy_s3_catalog.galaxy_example.catalog_id
+  catalog_id = galaxy_s3_catalog.galaxy_example.catalog_id
 }
 
 # Read S3 catalogs by ID

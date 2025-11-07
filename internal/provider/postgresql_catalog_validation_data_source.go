@@ -65,14 +65,14 @@ func (d *postgresql_catalog_validationDataSource) Read(ctx context.Context, req 
 		return
 	}
 
-	id := config.Id.ValueString()
-	tflog.Debug(ctx, "Reading postgresql_catalog_validation", map[string]interface{}{"id": id})
+	id := config.CatalogId.ValueString()
+	tflog.Debug(ctx, "Reading postgresql_catalog_validation", map[string]interface{}{"catalog_id": id})
 
 	response, err := d.client.ValidateCatalog(ctx, "postgresql", id)
 	if err != nil {
 		resp.Diagnostics.AddError(
 			"Error reading postgresql_catalog_validation",
-			"Could not read postgresql_catalog_validation "+id+": "+err.Error(),
+			"Could not read postgresql_catalog_validation catalogId: "+err.Error(),
 		)
 		return
 	}
@@ -85,8 +85,8 @@ func (d *postgresql_catalog_validationDataSource) Read(ctx context.Context, req 
 
 func (d *postgresql_catalog_validationDataSource) updateModelFromResponse(ctx context.Context, model *datasource_postgresql_catalog_validation.PostgresqlCatalogValidationModel, response map[string]interface{}) {
 	// Map response fields to model
-	if id, ok := response["id"].(string); ok {
-		model.Id = types.StringValue(id)
+	if id, ok := response["catalog_id"].(string); ok {
+		model.CatalogId = types.StringValue(id)
 	}
 
 	// Map validation_successful

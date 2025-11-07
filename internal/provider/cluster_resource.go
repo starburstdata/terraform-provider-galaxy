@@ -396,8 +396,12 @@ func (r *clusterResource) updateModelFromResponse(ctx context.Context, model *re
 	if processingMode, ok := response["processingMode"].(string); ok {
 		model.ProcessingMode = types.StringValue(processingMode)
 	} else {
-		// If processingMode is not in response, set to null to avoid unknown state
-		model.ProcessingMode = types.StringNull()
+		// If processingMode is not in response, check if we have a known value in the model
+		if model.ProcessingMode.IsUnknown() {
+			// Set to null if it was unknown (not specified by user)
+			model.ProcessingMode = types.StringNull()
+		}
+		// Otherwise keep the current plan value (e.g., "WarpSpeed" specified by user)
 	}
 
 	if resultCacheEnabled, ok := response["resultCacheEnabled"].(bool); ok {

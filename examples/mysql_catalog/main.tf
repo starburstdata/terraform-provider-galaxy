@@ -33,7 +33,7 @@ data "galaxy_mysql_catalog" "test" {
 
 data "galaxy_mysql_catalog_validation" "test" {
   depends_on = [galaxy_mysql_catalog.test]
-  id = galaxy_mysql_catalog.test.catalog_id
+  catalog_id = galaxy_mysql_catalog.test.catalog_id
 }
 
 output "mysql_catalog_id" {
