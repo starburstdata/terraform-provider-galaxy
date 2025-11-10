@@ -266,21 +266,18 @@ TF_ACC=1 go test ./internal/provider -v -timeout 30m
 ## Examples
 
 See the [examples](./examples) directory for complete configuration examples:
-- [Cluster management](./examples/cluster.tf)
-- [S3 catalog setup](./examples/s3_catalog.tf)
-- [User and role management](./examples/roles_and_permissions.tf)
-- [Data governance](./examples/data_governance.tf)
-- [Multiple catalog types](./examples/other_catalogs.tf)
+- [Cluster management](./examples/cluster/)
+- [S3 catalog setup](./examples/s3_catalog/)
+- [Data governance](./examples/data_governance/)
+- [Role management](./examples/role/)
+- [Service accounts](./examples/service_account/)
+- [Comprehensive example](./examples/comprehensive/)
 
 ## Support
 
 - **Documentation**: [Starburst Galaxy Documentation](https://docs.starburst.io/starburst-galaxy/)
 - **Issues**: [GitHub Issues](https://github.com/starburstdata/terraform-provider-galaxy/issues)
 - **Community**: [Starburst Community](https://www.starburst.io/community/)
-
-## License
-
-TBD
 
 ## Acknowledgments
 
