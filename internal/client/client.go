@@ -42,6 +42,13 @@ type TokenResponse struct {
 	ExpiresIn   int    `json:"expires_in"`
 }
 
+// isRetryable500Endpoint checks if the endpoint path is known to have transient 500 errors
+// Catalog and tag operations can experience conflicting transactions
+func isRetryable500Endpoint(path string) bool {
+	return strings.HasPrefix(path, "/public/api/v1/tag/") ||
+		strings.HasPrefix(path, "/public/api/v1/catalog")
+}
+
 func NewGalaxyClient(baseURL, clientID, clientSecret string) *GalaxyClient {
 	return &GalaxyClient{
 		BaseURL:      strings.TrimSuffix(baseURL, "/"),
@@ -166,16 +173,23 @@ func (c *GalaxyClient) doRequestWithRetry(ctx context.Context, method, path stri
 		return c.doRequestWithRetry(ctx, method, path, body, result, retries-1)
 	}
 
-	// Handle rate limiting (429 Too Many Requests)
-	if resp.StatusCode == http.StatusTooManyRequests && retries > 0 {
-		// Extract wait time from response body or use exponential backoff
-		waitTime := time.Duration(4-retries) * 15 * time.Second // More aggressive backoff for rate limits
-		tflog.Info(ctx, "Rate limit encountered, retrying after backoff", map[string]interface{}{
+	// Handle retryable errors with exponential backoff
+	// - 429 Too Many Requests (rate limiting) - all endpoints
+	// - 500 Internal Server Error (conflicting transactions) - specific endpoints only
+	shouldRetry := resp.StatusCode == http.StatusTooManyRequests ||
+		(resp.StatusCode == http.StatusInternalServerError && isRetryable500Endpoint(path))
+
+	if retries > 0 && shouldRetry {
+		waitTime := time.Duration(4-retries) * 15 * time.Second
+
+		tflog.Warn(ctx, "Encountered retriable error, retrying after backoff", map[string]interface{}{
+			"status_code":  resp.StatusCode,
 			"wait_time":    waitTime.String(),
 			"retries_left": retries - 1,
 			"endpoint":     path,
 			"method":       method,
 		})
+
 		time.Sleep(waitTime)
 		return c.doRequestWithRetry(ctx, method, path, body, result, retries-1)
 	}
