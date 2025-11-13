@@ -77,13 +77,18 @@ func (d *privatelinksDataSource) Read(ctx context.Context, req datasource.ReadRe
 		return
 	}
 
-	d.updateModelFromResponse(ctx, &config, response)
+	d.updateModelFromResponse(ctx, resp, &config, response)
+
+	// Check for any errors before updating state
+	if resp.Diagnostics.HasError() {
+		return
+	}
 
 	// Save data into Terraform state
 	resp.Diagnostics.Append(resp.State.Set(ctx, &config)...)
 }
 
-func (d *privatelinksDataSource) updateModelFromResponse(ctx context.Context, model *datasource_privatelinks.PrivatelinksModel, response map[string]interface{}) {
+func (d *privatelinksDataSource) updateModelFromResponse(ctx context.Context, resp *datasource.ReadResponse, model *datasource_privatelinks.PrivatelinksModel, response map[string]interface{}) {
 	// Extract the result array from the API response
 	resultInterface, ok := response["result"]
 	if !ok {
@@ -93,7 +98,11 @@ func (d *privatelinksDataSource) updateModelFromResponse(ctx context.Context, mo
 				AttrTypes: datasource_privatelinks.ResultValue{}.AttributeTypes(ctx),
 			},
 		}
-		emptyList, _ := types.ListValueFrom(ctx, elementType, []datasource_privatelinks.ResultValue{})
+		emptyList, diags := types.ListValueFrom(ctx, elementType, []datasource_privatelinks.ResultValue{})
+		if diags.HasError() {
+			resp.Diagnostics.Append(diags...)
+			return
+		}
 		model.Result = emptyList
 		return
 	}
@@ -106,14 +115,19 @@ func (d *privatelinksDataSource) updateModelFromResponse(ctx context.Context, mo
 				AttrTypes: datasource_privatelinks.ResultValue{}.AttributeTypes(ctx),
 			},
 		}
-		emptyList, _ := types.ListValueFrom(ctx, elementType, []datasource_privatelinks.ResultValue{})
+		emptyList, diags := types.ListValueFrom(ctx, elementType, []datasource_privatelinks.ResultValue{})
+		if diags.HasError() {
+			resp.Diagnostics.Append(diags...)
+			return
+		}
 		model.Result = emptyList
 		return
 	}
 
 	// Convert to list of ResultValue objects using the proper constructor
 	attributeTypes := datasource_privatelinks.ResultValue{}.AttributeTypes(ctx)
-	var resultList []datasource_privatelinks.ResultValue
+	// Use make() to create empty slice, not nil - nil slice converts to null list
+	resultList := make([]datasource_privatelinks.ResultValue, 0, len(resultArray))
 
 	for _, item := range resultArray {
 		itemMap, ok := item.(map[string]interface{})
@@ -160,11 +174,8 @@ func (d *privatelinksDataSource) updateModelFromResponse(ctx context.Context, mo
 	}
 	resultListValue, diags := types.ListValueFrom(ctx, elementType, resultList)
 	if diags.HasError() {
-		tflog.Error(ctx, "Error creating privatelinks result list", map[string]interface{}{"errors": diags})
-		// Still set an empty list instead of null
-		emptyList, _ := types.ListValueFrom(ctx, elementType, []datasource_privatelinks.ResultValue{})
-		model.Result = emptyList
-	} else {
-		model.Result = resultListValue
+		resp.Diagnostics.Append(diags...)
+		return
 	}
+	model.Result = resultListValue
 }
