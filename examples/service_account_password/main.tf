@@ -1,7 +1,7 @@
 terraform {
   required_providers {
     galaxy = {
-      source = "hashicorp.com/starburstdata/galaxy"
+      source = "starburstdata/galaxy"
     }
   }
 }

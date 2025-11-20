@@ -18,8 +18,7 @@ The provider is available in the Terraform Registry. Add the following to your T
 terraform {
   required_providers {
     galaxy = {
-      source  = "hashicorp.com/starburstdata/galaxy"
-      version = "~> 1.0"
+      source  = "starburstdata/galaxy"
     }
   }
 }
@@ -117,9 +116,9 @@ To use your locally-built provider instead of downloading from the registry, con
 ```hcl
 provider_installation {
   dev_overrides {
-    "hashicorp.com/starburstdata/galaxy" = "/Users/yourusername/go/bin"  # Replace with your GOBIN path
+    "registry.terraform.io/starburstdata/galaxy" = "/Users/yourusername/go/bin"  # Replace with your GOBIN path
   }
-  
+
   # For all other providers, install normally from the registry
   direct {}
 }

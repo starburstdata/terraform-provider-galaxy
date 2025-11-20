@@ -18,7 +18,7 @@ The Terraform Provider for Starburst Galaxy enables Infrastructure-as-Code manag
 terraform {
   required_providers {
     galaxy = {
-      source = "hashicorp.com/starburstdata/galaxy"
+      source = "starburstdata/galaxy"
     }
   }
 }
