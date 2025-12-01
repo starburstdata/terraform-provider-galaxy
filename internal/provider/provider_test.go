@@ -16,7 +16,7 @@ import (
 // CLI command executed to create a provider server to which the CLI can
 // reattach.
 var testAccProtoV6ProviderFactories = map[string]func() (tfprotov6.ProviderServer, error){
-	"galaxy": providerserver.NewProtocol6WithError(New()()),
+	"galaxy": providerserver.NewProtocol6WithError(New("test")()),
 }
 
 // testAccPreCheck validates that the required environment variables are set for

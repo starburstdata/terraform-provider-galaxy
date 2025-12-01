@@ -25,13 +25,17 @@ import (
 
 var _ provider.Provider = (*galaxyProvider)(nil)
 
-func New() func() provider.Provider {
+func New(version string) func() provider.Provider {
 	return func() provider.Provider {
-		return &galaxyProvider{}
+		return &galaxyProvider{
+			version: version,
+		}
 	}
 }
 
-type galaxyProvider struct{}
+type galaxyProvider struct {
+	version string
+}
 
 type galaxyProviderModel struct {
 	ClientID     types.String `tfsdk:"client_id"`
@@ -114,11 +118,12 @@ func (p *galaxyProvider) Configure(ctx context.Context, req provider.ConfigureRe
 	}
 
 	// Create the Galaxy client
-	client := client.NewGalaxyClient(domain, clientID, clientSecret)
+	client := client.NewGalaxyClient(domain, clientID, clientSecret, p.version)
 
 	// Log the successful configuration
 	tflog.Info(ctx, "Configured Galaxy client", map[string]interface{}{
-		"domain": domain,
+		"domain":  domain,
+		"version": p.version,
 	})
 
 	// Store the client in the provider data for use by resources and data sources
