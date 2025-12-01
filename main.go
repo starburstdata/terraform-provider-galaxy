@@ -13,6 +13,7 @@ import (
 	"context"
 	"flag"
 	"log"
+	"runtime/debug"
 
 	"github.com/hashicorp/terraform-plugin-framework/providerserver"
 	"github.com/starburstdata/terraform-provider-galaxy/internal/provider"
@@ -24,13 +25,24 @@ func main() {
 	flag.BoolVar(&debug, "debug", false, "set to true to run the provider with support for debuggers like delve")
 	flag.Parse()
 
+	// Get version from build info
+	version := getVersion()
+
 	opts := providerserver.ServeOpts{
 		Address: "registry.terraform.io/starburstdata/galaxy",
 		Debug:   debug,
 	}
 
-	err := providerserver.Serve(context.Background(), provider.New(), opts)
+	err := providerserver.Serve(context.Background(), provider.New(version), opts)
 	if err != nil {
 		log.Fatal(err.Error())
 	}
+}
+
+// getVersion returns the version from build info
+func getVersion() string {
+	if info, ok := debug.ReadBuildInfo(); ok {
+		return info.Main.Version
+	}
+	return "dev"
 }

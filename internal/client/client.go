@@ -26,10 +26,11 @@ import (
 )
 
 type GalaxyClient struct {
-	BaseURL      string
-	ClientID     string
-	ClientSecret string
-	HTTPClient   *http.Client
+	BaseURL         string
+	ClientID        string
+	ClientSecret    string
+	HTTPClient      *http.Client
+	ProviderVersion string
 
 	tokenMu     sync.RWMutex
 	accessToken string
@@ -49,11 +50,12 @@ func isRetryable500Endpoint(path string) bool {
 		strings.HasPrefix(path, "/public/api/v1/catalog")
 }
 
-func NewGalaxyClient(baseURL, clientID, clientSecret string) *GalaxyClient {
+func NewGalaxyClient(baseURL, clientID, clientSecret, providerVersion string) *GalaxyClient {
 	return &GalaxyClient{
-		BaseURL:      strings.TrimSuffix(baseURL, "/"),
-		ClientID:     clientID,
-		ClientSecret: clientSecret,
+		BaseURL:         strings.TrimSuffix(baseURL, "/"),
+		ClientID:        clientID,
+		ClientSecret:    clientSecret,
+		ProviderVersion: providerVersion,
 		HTTPClient: &http.Client{
 			Timeout: 30 * time.Second,
 		},
@@ -148,6 +150,10 @@ func (c *GalaxyClient) doRequestWithRetry(ctx context.Context, method, path stri
 		req.Header.Set("Content-Type", "application/json")
 	}
 	req.Header.Set("Accept", "application/json")
+
+	// Set User-Agent with provider version for tracking in APM
+	userAgent := fmt.Sprintf("terraform-provider-galaxy/%s", c.ProviderVersion)
+	req.Header.Set("User-Agent", userAgent)
 
 	resp, err := c.HTTPClient.Do(req)
 	if err != nil {
