@@ -7,6 +7,7 @@ import (
 	"fmt"
 	"testing"
 
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/knownvalue"
 	"github.com/hashicorp/terraform-plugin-testing/statecheck"
@@ -14,18 +15,24 @@ import (
 )
 
 func TestAccResourceMongoDBCatalog_Basic(t *testing.T) {
+	// Generate a short random suffix to avoid conflicts with leftover resources
+	uniqueId := id.UniqueId()
+	if len(uniqueId) > 8 {
+		uniqueId = uniqueId[len(uniqueId)-8:]
+	}
+	suffix := uniqueId
 	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { testAccPreCheck(t) },
 		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
 		Steps: []resource.TestStep{
 			// Create and Read testing
 			{
-				Config: testAccMongoDBCatalogConfigBasic("tfacc"),
+				Config: testAccMongoDBCatalogConfigBasic(suffix),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(
 						"galaxy_mongodb_catalog.test",
 						tfjsonpath.New("name"),
-						knownvalue.StringExact("mongocattfacc"),
+						knownvalue.StringExact(fmt.Sprintf("mongocat%s", suffix)),
 					),
 					statecheck.ExpectKnownValue(
 						"galaxy_mongodb_catalog.test",
@@ -46,7 +53,7 @@ func TestAccResourceMongoDBCatalog_Basic(t *testing.T) {
 			},
 			// Update and Read testing
 			{
-				Config: testAccMongoDBCatalogConfigUpdated("tfacc"),
+				Config: testAccMongoDBCatalogConfigUpdated(suffix),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(
 						"galaxy_mongodb_catalog.test",

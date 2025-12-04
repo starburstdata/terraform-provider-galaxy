@@ -7,6 +7,7 @@ import (
 	"fmt"
 	"testing"
 
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/knownvalue"
 	"github.com/hashicorp/terraform-plugin-testing/statecheck"
@@ -14,18 +15,24 @@ import (
 )
 
 func TestAccResourceRowFilter_Basic(t *testing.T) {
+	// Generate a short random suffix to avoid conflicts with leftover resources
+	uniqueId := id.UniqueId()
+	if len(uniqueId) > 8 {
+		uniqueId = uniqueId[len(uniqueId)-8:]
+	}
+	suffix := uniqueId
 	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { testAccPreCheck(t) },
 		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
 		Steps: []resource.TestStep{
 			// Create and Read testing
 			{
-				Config: testAccRowFilterConfigBasic("tfacc"),
+				Config: testAccRowFilterConfigBasic(suffix),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(
 						"galaxy_row_filter.test",
 						tfjsonpath.New("name"),
-						knownvalue.StringExact("regionfilter_tfacc"),
+						knownvalue.StringExact(fmt.Sprintf("regionfilter_%s", suffix)),
 					),
 					statecheck.ExpectKnownValue(
 						"galaxy_row_filter.test",
@@ -41,7 +48,7 @@ func TestAccResourceRowFilter_Basic(t *testing.T) {
 			},
 			// Update and Read testing
 			{
-				Config: testAccRowFilterConfigUpdate("tfacc"),
+				Config: testAccRowFilterConfigUpdate(suffix),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(
 						"galaxy_row_filter.test",
@@ -60,18 +67,24 @@ func TestAccResourceRowFilter_Basic(t *testing.T) {
 }
 
 func TestAccResourceRowFilter_TimeFilter(t *testing.T) {
+	// Generate a short random suffix to avoid conflicts with leftover resources
+	uniqueId := id.UniqueId()
+	if len(uniqueId) > 8 {
+		uniqueId = uniqueId[len(uniqueId)-8:]
+	}
+	suffix := uniqueId
 	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { testAccPreCheck(t) },
 		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
 		Steps: []resource.TestStep{
 			// Create and Read testing with time-based filter
 			{
-				Config: testAccRowFilterConfigTime("tfacc_time"),
+				Config: testAccRowFilterConfigTime(suffix),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(
 						"galaxy_row_filter.time",
 						tfjsonpath.New("name"),
-						knownvalue.StringExact("timefilter_tfacc_time"),
+						knownvalue.StringExact(fmt.Sprintf("timefilter_%s", suffix)),
 					),
 					statecheck.ExpectKnownValue(
 						"galaxy_row_filter.time",

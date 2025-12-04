@@ -7,6 +7,7 @@ import (
 	"fmt"
 	"testing"
 
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/knownvalue"
 	"github.com/hashicorp/terraform-plugin-testing/statecheck"
@@ -14,18 +15,24 @@ import (
 )
 
 func TestAccResourceTag_Basic(t *testing.T) {
+	// Generate a short random suffix to avoid conflicts with leftover resources
+	uniqueId := id.UniqueId()
+	if len(uniqueId) > 8 {
+		uniqueId = uniqueId[len(uniqueId)-8:]
+	}
+	suffix := uniqueId
 	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { testAccPreCheck(t) },
 		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
 		Steps: []resource.TestStep{
 			// Create and Read testing
 			{
-				Config: testAccTagConfigBasic("tfacc"),
+				Config: testAccTagConfigBasic(suffix),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(
 						"galaxy_tag.test",
 						tfjsonpath.New("name"),
-						knownvalue.StringExact("pii_tfacc"),
+						knownvalue.StringExact(fmt.Sprintf("pii_%s", suffix)),
 					),
 					statecheck.ExpectKnownValue(
 						"galaxy_tag.test",
@@ -46,7 +53,7 @@ func TestAccResourceTag_Basic(t *testing.T) {
 			},
 			// Update and Read testing
 			{
-				Config: testAccTagConfigUpdate("tfacc"),
+				Config: testAccTagConfigUpdate(suffix),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(
 						"galaxy_tag.test",
@@ -65,28 +72,34 @@ func TestAccResourceTag_Basic(t *testing.T) {
 }
 
 func TestAccResourceTag_MultipleTags(t *testing.T) {
+	// Generate a short random suffix to avoid conflicts with leftover resources
+	uniqueId := id.UniqueId()
+	if len(uniqueId) > 8 {
+		uniqueId = uniqueId[len(uniqueId)-8:]
+	}
+	suffix := uniqueId
 	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { testAccPreCheck(t) },
 		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
 		Steps: []resource.TestStep{
 			// Create multiple tags
 			{
-				Config: testAccTagConfigMultiple("tfacc_multi"),
+				Config: testAccTagConfigMultiple(suffix),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(
 						"galaxy_tag.pii",
 						tfjsonpath.New("name"),
-						knownvalue.StringExact("pii_tfacc_multi"),
+						knownvalue.StringExact(fmt.Sprintf("pii_%s", suffix)),
 					),
 					statecheck.ExpectKnownValue(
 						"galaxy_tag.public",
 						tfjsonpath.New("name"),
-						knownvalue.StringExact("public_tfacc_multi"),
+						knownvalue.StringExact(fmt.Sprintf("public_%s", suffix)),
 					),
 					statecheck.ExpectKnownValue(
 						"galaxy_tag.confidential",
 						tfjsonpath.New("name"),
-						knownvalue.StringExact("confidential_tfacc_multi"),
+						knownvalue.StringExact(fmt.Sprintf("confidential_%s", suffix)),
 					),
 					statecheck.ExpectKnownValue(
 						"galaxy_tag.pii",
