@@ -4,8 +4,10 @@
 package provider
 
 import (
+	"fmt"
 	"testing"
 
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/knownvalue"
 	"github.com/hashicorp/terraform-plugin-testing/statecheck"
@@ -13,12 +15,18 @@ import (
 )
 
 func TestAccDataSourceRoleGrant_Basic(t *testing.T) {
+	// Generate a short random suffix to avoid conflicts with leftover resources
+	uniqueId := id.UniqueId()
+	if len(uniqueId) > 8 {
+		uniqueId = uniqueId[len(uniqueId)-8:]
+	}
+	suffix := uniqueId
 	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { testAccPreCheck(t) },
 		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccDataSourceRoleGrantConfig(),
+				Config: testAccDataSourceRoleGrantConfig(suffix),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(
 						"data.galaxy_rolegrant.test",
@@ -32,11 +40,11 @@ func TestAccDataSourceRoleGrant_Basic(t *testing.T) {
 	})
 }
 
-func testAccDataSourceRoleGrantConfig() string {
-	return `
+func testAccDataSourceRoleGrantConfig(suffix string) string {
+	return fmt.Sprintf(`
 # Create a test role
 resource "galaxy_role" "test" {
-  role_name              = "test_rolegrant_ds"
+  role_name              = "rolegrantds%[1]s"
   grant_to_creating_role = true
 }
 
@@ -44,5 +52,5 @@ resource "galaxy_role" "test" {
 data "galaxy_rolegrant" "test" {
   role_id = galaxy_role.test.role_id
 }
-`
+`, suffix)
 }
