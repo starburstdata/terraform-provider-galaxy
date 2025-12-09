@@ -67,7 +67,7 @@ dev-setup: install docs
 
 # Complete testing workflow - build, generate docs, validate, test examples
 .PHONY: test-all
-test-all: install license lint docs-validate testacc
+test-all: install license lint docs docs-validate testacc
 
 .PHONY: help
 help:
