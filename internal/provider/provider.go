@@ -213,6 +213,10 @@ func (p *galaxyProvider) DataSources(ctx context.Context) []func() datasource.Da
 		NewSqlserverCatalogValidationDataSource,
 		NewGcsCatalogValidationDataSource,
 		NewSnowflakeCatalogValidationDataSource,
+
+		// Ingest sources data sources
+		NewKafkaIngestSourcesDataSource,
+		NewFileIngestSourcesDataSource,
 	}
 }
 
