@@ -17,11 +17,11 @@ description: |-
 
 ### Required
 
-- `id` (String) A catalog connecting to OpenSearch
+- `catalog_id` (String) A catalog connecting to OpenSearch
 
 ### Read-Only
 
-- `error_messages` (List of String) Errors found in the validation process
-- `info_messages` (List of String) Additional information found in the validation process
+- `error_messages` (List of String) Errors found in the validation process (read only)
+- `info_messages` (List of String) Additional information found in the validation process (read only)
 - `validation_successful` (Boolean) Is the catalog readable (read only)
-- `warning_messages` (List of String) Warnings found in the validation process
+- `warning_messages` (List of String) Warnings found in the validation process (read only)
