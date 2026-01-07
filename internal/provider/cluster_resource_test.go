@@ -208,3 +208,53 @@ resource "galaxy_cluster" "test_warp" {
 }
 `, suffix)
 }
+
+// TestAccResourceCluster_MinimalConfig tests creating a cluster with only required fields,
+// omitting all optional parameters like processing_mode, result_cache_default_visibility_seconds, etc.
+func TestAccResourceCluster_MinimalConfig(t *testing.T) {
+	uniqueId := id.UniqueId()
+	if len(uniqueId) > 8 {
+		uniqueId = uniqueId[len(uniqueId)-8:]
+	}
+	suffix := uniqueId
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccClusterConfigMinimal(suffix),
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(
+						"galaxy_cluster.test",
+						tfjsonpath.New("name"),
+						knownvalue.StringExact(fmt.Sprintf("cluster-min-%s", suffix)),
+					),
+					statecheck.ExpectKnownValue(
+						"galaxy_cluster.test",
+						tfjsonpath.New("cluster_id"),
+						knownvalue.NotNull(),
+					),
+				},
+			},
+		},
+	})
+}
+
+// testAccClusterConfigMinimal returns a minimal cluster configuration
+func testAccClusterConfigMinimal(suffix string) string {
+	return fmt.Sprintf(`
+resource "galaxy_cluster" "test" {
+  name                    = "cluster-min-%[1]s"
+  cloud_region_id         = "aws-us-east1"
+  min_workers             = 1
+  max_workers             = 1
+  idle_stop_minutes       = 15
+  private_link_cluster    = false
+  result_cache_enabled    = false
+  warp_resiliency_enabled = false
+  catalog_refs            = []
+  # No optional fields - testing that omitting them doesn't cause API errors
+  # Specifically: processing_mode, result_cache_default_visibility_seconds, notes, auto_stop_idle_cluster, etc.
+}
+`, suffix)
+}

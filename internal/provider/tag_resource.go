@@ -199,7 +199,7 @@ func (r *tagResource) modelToCreateRequest(ctx context.Context, model *resource_
 	}
 
 	// Optional fields
-	if !model.Description.IsNull() {
+	if !model.Description.IsNull() && !model.Description.IsUnknown() && model.Description.ValueString() != "" {
 		request["description"] = model.Description.ValueString()
 	}
 

@@ -248,7 +248,7 @@ func (r *service_account_passwordResource) modelToCreateRequest(ctx context.Cont
 	request := make(map[string]interface{})
 
 	// Map description if provided
-	if !model.Description.IsNull() && !model.Description.IsUnknown() {
+	if !model.Description.IsNull() && !model.Description.IsUnknown() && model.Description.ValueString() != "" {
 		request["description"] = model.Description.ValueString()
 	}
 

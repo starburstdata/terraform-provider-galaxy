@@ -199,18 +199,18 @@ func (r *cassandra_catalogResource) modelToCreateRequest(ctx context.Context, mo
 	request["deploymentType"] = model.DeploymentType.ValueString()
 
 	// Optional authentication fields
-	if !model.Username.IsNull() && !model.Username.IsUnknown() {
+	if !model.Username.IsNull() && !model.Username.IsUnknown() && model.Username.ValueString() != "" {
 		request["username"] = model.Username.ValueString()
 	}
-	if !model.Password.IsNull() && !model.Password.IsUnknown() {
+	if !model.Password.IsNull() && !model.Password.IsUnknown() && model.Password.ValueString() != "" {
 		request["password"] = model.Password.ValueString()
 	}
 
 	// Connection details
-	if !model.ContactPoints.IsNull() && !model.ContactPoints.IsUnknown() {
+	if !model.ContactPoints.IsNull() && !model.ContactPoints.IsUnknown() && model.ContactPoints.ValueString() != "" {
 		request["contactPoints"] = model.ContactPoints.ValueString()
 	}
-	if !model.LocalDatacenter.IsNull() && !model.LocalDatacenter.IsUnknown() {
+	if !model.LocalDatacenter.IsNull() && !model.LocalDatacenter.IsUnknown() && model.LocalDatacenter.ValueString() != "" {
 		request["localDatacenter"] = model.LocalDatacenter.ValueString()
 	}
 
@@ -219,27 +219,27 @@ func (r *cassandra_catalogResource) modelToCreateRequest(ctx context.Context, mo
 		request["port"] = model.Port.ValueInt64()
 	}
 
-	if !model.Description.IsNull() && !model.Description.IsUnknown() {
+	if !model.Description.IsNull() && !model.Description.IsUnknown() && model.Description.ValueString() != "" {
 		request["description"] = model.Description.ValueString()
 	}
 
-	if !model.CloudKind.IsNull() && !model.CloudKind.IsUnknown() {
+	if !model.CloudKind.IsNull() && !model.CloudKind.IsUnknown() && model.CloudKind.ValueString() != "" {
 		request["cloudKind"] = model.CloudKind.ValueString()
 	}
 
-	if !model.DatabaseId.IsNull() && !model.DatabaseId.IsUnknown() {
+	if !model.DatabaseId.IsNull() && !model.DatabaseId.IsUnknown() && model.DatabaseId.ValueString() != "" {
 		request["databaseId"] = model.DatabaseId.ValueString()
 	}
 
-	if !model.Region.IsNull() && !model.Region.IsUnknown() {
+	if !model.Region.IsNull() && !model.Region.IsUnknown() && model.Region.ValueString() != "" {
 		request["region"] = model.Region.ValueString()
 	}
 
-	if !model.SshTunnelId.IsNull() && !model.SshTunnelId.IsUnknown() {
+	if !model.SshTunnelId.IsNull() && !model.SshTunnelId.IsUnknown() && model.SshTunnelId.ValueString() != "" {
 		request["sshTunnelId"] = model.SshTunnelId.ValueString()
 	}
 
-	if !model.Token.IsNull() && !model.Token.IsUnknown() {
+	if !model.Token.IsNull() && !model.Token.IsUnknown() && model.Token.ValueString() != "" {
 		request["token"] = model.Token.ValueString()
 	}
 

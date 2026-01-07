@@ -255,7 +255,7 @@ func (r *clusterResource) applyEdgeCaseLogic(model *resource_cluster.ClusterMode
 
 	// Edge case: result_cache_default_visibility_seconds should only be set if result_cache_enabled is true
 	if !model.ResultCacheEnabled.IsNull() && !model.ResultCacheEnabled.ValueBool() {
-		if !model.ResultCacheDefaultVisibilitySeconds.IsNull() {
+		if !model.ResultCacheDefaultVisibilitySeconds.IsNull() && !model.ResultCacheDefaultVisibilitySeconds.IsUnknown() {
 			// Reset the value if result cache is disabled
 			model.ResultCacheDefaultVisibilitySeconds = types.Int64Null()
 		}
@@ -290,7 +290,7 @@ func (r *clusterResource) modelToCreateRequest(ctx context.Context, model *resou
 	}
 
 	// Optional fields
-	if !model.IdleStopMinutes.IsNull() {
+	if !model.IdleStopMinutes.IsNull() && !model.IdleStopMinutes.IsUnknown() {
 		request["idleStopMinutes"] = model.IdleStopMinutes.ValueInt64()
 	}
 	if !model.ProcessingMode.IsNull() && !model.ProcessingMode.IsUnknown() && model.ProcessingMode.ValueString() != "" {
@@ -299,7 +299,7 @@ func (r *clusterResource) modelToCreateRequest(ctx context.Context, model *resou
 	if !model.Replicas.IsNull() && !model.Replicas.IsUnknown() && model.Replicas.ValueInt64() > 0 {
 		request["replicas"] = model.Replicas.ValueInt64()
 	}
-	if !model.ResultCacheDefaultVisibilitySeconds.IsNull() {
+	if !model.ResultCacheDefaultVisibilitySeconds.IsNull() && !model.ResultCacheDefaultVisibilitySeconds.IsUnknown() {
 		request["resultCacheDefaultVisibilitySeconds"] = model.ResultCacheDefaultVisibilitySeconds.ValueInt64()
 	}
 
@@ -410,6 +410,14 @@ func (r *clusterResource) updateModelFromResponse(ctx context.Context, model *re
 
 	if resultCacheDefaultVisibilitySeconds, ok := response["resultCacheDefaultVisibilitySeconds"].(float64); ok {
 		model.ResultCacheDefaultVisibilitySeconds = types.Int64Value(int64(resultCacheDefaultVisibilitySeconds))
+	} else {
+		// Preserve the configured value if the API doesn't return this field
+		// This handles the case where the user specifies the value but the API
+		// doesn't echo it back in the response
+		if model.ResultCacheDefaultVisibilitySeconds.IsUnknown() {
+			model.ResultCacheDefaultVisibilitySeconds = types.Int64Null()
+		}
+		// Otherwise keep the existing model value (user's configured value)
 	}
 
 	if warpResiliencyEnabled, ok := response["warpResiliencyEnabled"].(bool); ok {

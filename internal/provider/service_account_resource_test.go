@@ -110,3 +110,46 @@ resource "galaxy_service_account" "test_with_role" {
 }
 `, suffix)
 }
+
+// TestAccResourceServiceAccount_MinimalConfig tests creating a service account with only required fields,
+// omitting all optional parameters like additional_role_ids.
+func TestAccResourceServiceAccount_MinimalConfig(t *testing.T) {
+	uniqueId := id.UniqueId()
+	if len(uniqueId) > 8 {
+		uniqueId = uniqueId[len(uniqueId)-8:]
+	}
+	suffix := uniqueId
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccServiceAccountConfigMinimal(suffix),
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(
+						"galaxy_service_account.test",
+						tfjsonpath.New("username"),
+						knownvalue.StringExact(fmt.Sprintf("tfaccsamin_%s", suffix)),
+					),
+					statecheck.ExpectKnownValue(
+						"galaxy_service_account.test",
+						tfjsonpath.New("service_account_id"),
+						knownvalue.NotNull(),
+					),
+				},
+			},
+		},
+	})
+}
+
+// testAccServiceAccountConfigMinimal returns a minimal service account configuration
+func testAccServiceAccountConfigMinimal(suffix string) string {
+	return fmt.Sprintf(`
+resource "galaxy_service_account" "test" {
+  username              = "tfaccsamin_%[1]s"
+  with_initial_password = false
+  additional_role_ids   = []
+  # additional_role_ids is required but can be empty
+}
+`, suffix)
+}

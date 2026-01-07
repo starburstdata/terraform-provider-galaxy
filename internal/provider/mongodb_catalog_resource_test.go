@@ -99,3 +99,51 @@ resource "galaxy_mongodb_catalog" "test" {
 }
 `, suffix)
 }
+
+// TestAccResourceMongoDBCatalog_MinimalConfig tests creating a MongoDB catalog with only required fields
+func TestAccResourceMongoDBCatalog_MinimalConfig(t *testing.T) {
+	uniqueId := id.UniqueId()
+	if len(uniqueId) > 8 {
+		uniqueId = uniqueId[len(uniqueId)-8:]
+	}
+	suffix := uniqueId
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccMongoDBCatalogConfigMinimal(suffix),
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(
+						"galaxy_mongodb_catalog.test",
+						tfjsonpath.New("name"),
+						knownvalue.StringExact(fmt.Sprintf("mongomin%s", suffix)),
+					),
+					statecheck.ExpectKnownValue(
+						"galaxy_mongodb_catalog.test",
+						tfjsonpath.New("catalog_id"),
+						knownvalue.NotNull(),
+					),
+				},
+			},
+		},
+	})
+}
+
+// testAccMongoDBCatalogConfigMinimal returns a minimal MongoDB catalog configuration
+func testAccMongoDBCatalogConfigMinimal(suffix string) string {
+	return fmt.Sprintf(`
+resource "galaxy_mongodb_catalog" "test" {
+  name            = "mongomin%[1]s"
+  host            = "184.72.111.164:57017/admin"
+  database        = "admin"
+  username        = "galaxy-test"
+  password        = "9bfn9v39chkmysgq"
+  read_only       = false
+  connection_type = "direct"
+  regions         = []
+  # No optional fields - testing that omitting them doesn't cause API errors
+  # Specifically: description, cloud_kind
+}
+`, suffix)
+}

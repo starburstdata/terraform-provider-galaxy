@@ -166,3 +166,50 @@ resource "galaxy_tag" "confidential" {
 }
 `, suffix)
 }
+
+// TestAccResourceTag_MinimalConfig tests creating a tag with only required fields,
+// omitting the optional description parameter to ensure it doesn't cause API errors.
+func TestAccResourceTag_MinimalConfig(t *testing.T) {
+	uniqueId := id.UniqueId()
+	if len(uniqueId) > 8 {
+		uniqueId = uniqueId[len(uniqueId)-8:]
+	}
+	suffix := uniqueId
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccTagConfigMinimal(suffix),
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(
+						"galaxy_tag.test",
+						tfjsonpath.New("name"),
+						knownvalue.StringExact(fmt.Sprintf("min_%s", suffix)),
+					),
+					statecheck.ExpectKnownValue(
+						"galaxy_tag.test",
+						tfjsonpath.New("tag_id"),
+						knownvalue.NotNull(),
+					),
+					statecheck.ExpectKnownValue(
+						"galaxy_tag.test",
+						tfjsonpath.New("color"),
+						knownvalue.StringExact("#0000FF"),
+					),
+				},
+			},
+		},
+	})
+}
+
+// testAccTagConfigMinimal returns a minimal tag configuration with only required fields
+func testAccTagConfigMinimal(suffix string) string {
+	return fmt.Sprintf(`
+resource "galaxy_tag" "test" {
+  name  = "min_%[1]s"
+  color = "#0000FF"
+  # No description - testing that omitting optional fields doesn't cause API errors
+}
+`, suffix)
+}

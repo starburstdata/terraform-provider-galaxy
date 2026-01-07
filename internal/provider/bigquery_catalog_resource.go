@@ -214,15 +214,15 @@ func (r *bigquery_catalogResource) modelToCreateRequest(ctx context.Context, mod
 	request["credentialsKey"] = credentialsKey
 
 	// Optional fields
-	if !model.Description.IsNull() && !model.Description.IsUnknown() {
+	if !model.Description.IsNull() && !model.Description.IsUnknown() && model.Description.ValueString() != "" {
 		request["description"] = model.Description.ValueString()
 	}
 
-	if !model.ParentProjectId.IsNull() && !model.ParentProjectId.IsUnknown() {
+	if !model.ParentProjectId.IsNull() && !model.ParentProjectId.IsUnknown() && model.ParentProjectId.ValueString() != "" {
 		request["parentProjectId"] = model.ParentProjectId.ValueString()
 	}
 
-	if !model.ProjectId.IsNull() && !model.ProjectId.IsUnknown() {
+	if !model.ProjectId.IsNull() && !model.ProjectId.IsUnknown() && model.ProjectId.ValueString() != "" {
 		request["projectId"] = model.ProjectId.ValueString()
 	}
 

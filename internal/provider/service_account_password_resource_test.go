@@ -138,3 +138,56 @@ resource "galaxy_service_account_password" "rotation" {
 }
 `, suffix)
 }
+
+// TestAccResourceServiceAccountPassword_MinimalConfig tests creating a service account password with only required fields,
+// omitting all optional parameters like description.
+func TestAccResourceServiceAccountPassword_MinimalConfig(t *testing.T) {
+	uniqueId := id.UniqueId()
+	if len(uniqueId) > 8 {
+		uniqueId = uniqueId[len(uniqueId)-8:]
+	}
+	suffix := uniqueId
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccServiceAccountPasswordConfigMinimal(suffix),
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(
+						"galaxy_service_account_password.test",
+						tfjsonpath.New("service_account_id"),
+						knownvalue.NotNull(),
+					),
+					statecheck.ExpectKnownValue(
+						"galaxy_service_account_password.test",
+						tfjsonpath.New("service_account_password_id"),
+						knownvalue.NotNull(),
+					),
+					statecheck.ExpectKnownValue(
+						"galaxy_service_account_password.test",
+						tfjsonpath.New("password"),
+						knownvalue.NotNull(),
+					),
+				},
+			},
+		},
+	})
+}
+
+// testAccServiceAccountPasswordConfigMinimal returns a minimal service account password configuration
+func testAccServiceAccountPasswordConfigMinimal(suffix string) string {
+	return fmt.Sprintf(`
+resource "galaxy_service_account" "test" {
+  username              = "tfaccpwmin_%[1]s"
+  with_initial_password = false
+  additional_role_ids   = []
+}
+
+resource "galaxy_service_account_password" "test" {
+  service_account_id = galaxy_service_account.test.service_account_id
+  # No optional fields - testing that omitting them doesn't cause API errors
+  # Specifically: description
+}
+`, suffix)
+}

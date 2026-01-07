@@ -216,11 +216,11 @@ func (r *mysql_catalogResource) modelToCreateRequest(ctx context.Context, model 
 		request["port"] = 3306 // Default MySQL port
 	}
 
-	if !model.Description.IsNull() && !model.Description.IsUnknown() {
+	if !model.Description.IsNull() && !model.Description.IsUnknown() && model.Description.ValueString() != "" {
 		request["description"] = model.Description.ValueString()
 	}
 
-	if !model.CloudKind.IsNull() && !model.CloudKind.IsUnknown() {
+	if !model.CloudKind.IsNull() && !model.CloudKind.IsUnknown() && model.CloudKind.ValueString() != "" {
 		request["cloudKind"] = model.CloudKind.ValueString()
 	}
 

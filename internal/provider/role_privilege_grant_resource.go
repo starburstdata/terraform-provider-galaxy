@@ -233,7 +233,7 @@ func (r *role_privilege_grantResource) modelToCreateRequest(ctx context.Context,
 	request := make(map[string]interface{})
 
 	// Required fields
-	if !model.RoleId.IsNull() {
+	if !model.RoleId.IsNull() && !model.RoleId.IsUnknown() && model.RoleId.ValueString() != "" {
 		request["roleId"] = model.RoleId.ValueString()
 	}
 	if !model.EntityId.IsNull() {
@@ -253,18 +253,18 @@ func (r *role_privilege_grantResource) modelToCreateRequest(ctx context.Context,
 	}
 
 	// Optional fields
-	if !model.ColumnName.IsNull() {
+	if !model.ColumnName.IsNull() && !model.ColumnName.IsUnknown() && model.ColumnName.ValueString() != "" {
 		request["columnName"] = model.ColumnName.ValueString()
 	}
-	if !model.SchemaName.IsNull() {
+	if !model.SchemaName.IsNull() && !model.SchemaName.IsUnknown() && model.SchemaName.ValueString() != "" {
 		request["schemaName"] = model.SchemaName.ValueString()
 	}
-	if !model.TableName.IsNull() {
+	if !model.TableName.IsNull() && !model.TableName.IsUnknown() && model.TableName.ValueString() != "" {
 		request["tableName"] = model.TableName.ValueString()
 	}
 
 	// Note: Pagination fields are handled at the framework level and not part of the model
-	if !model.ListAllPrivileges.IsNull() {
+	if !model.ListAllPrivileges.IsNull() && !model.ListAllPrivileges.IsUnknown() {
 		request["listAllPrivileges"] = model.ListAllPrivileges.ValueBool()
 	}
 
