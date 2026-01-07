@@ -206,11 +206,11 @@ func (r *roleResource) modelToCreateRequest(ctx context.Context, model *resource
 	request := make(map[string]interface{})
 
 	// Map required fields
-	if !model.RoleName.IsNull() && !model.RoleName.IsUnknown() {
+	if !model.RoleName.IsNull() && !model.RoleName.IsUnknown() && model.RoleName.ValueString() != "" {
 		request["roleName"] = model.RoleName.ValueString()
 	}
 
-	if !model.RoleDescription.IsNull() && !model.RoleDescription.IsUnknown() {
+	if !model.RoleDescription.IsNull() && !model.RoleDescription.IsUnknown() && model.RoleDescription.ValueString() != "" {
 		request["roleDescription"] = model.RoleDescription.ValueString()
 	}
 

@@ -192,7 +192,7 @@ func (r *service_accountResource) modelToCreateRequest(ctx context.Context, mode
 	request := make(map[string]interface{})
 
 	// Map username
-	if !model.Username.IsNull() && !model.Username.IsUnknown() {
+	if !model.Username.IsNull() && !model.Username.IsUnknown() && model.Username.ValueString() != "" {
 		request["username"] = model.Username.ValueString()
 	}
 
@@ -212,7 +212,7 @@ func (r *service_accountResource) modelToCreateRequest(ctx context.Context, mode
 	}
 
 	// Map roleId if provided
-	if !model.RoleId.IsNull() && !model.RoleId.IsUnknown() {
+	if !model.RoleId.IsNull() && !model.RoleId.IsUnknown() && model.RoleId.ValueString() != "" {
 		request["roleId"] = model.RoleId.ValueString()
 	}
 

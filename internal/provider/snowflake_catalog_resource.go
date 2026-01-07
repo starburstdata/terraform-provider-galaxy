@@ -230,7 +230,7 @@ func (r *snowflake_catalogResource) modelToCreateRequest(ctx context.Context, mo
 	if !model.Username.IsNull() {
 		request["username"] = model.Username.ValueString()
 	}
-	if !model.Password.IsNull() {
+	if !model.Password.IsNull() && !model.Password.IsUnknown() && model.Password.ValueString() != "" {
 		request["password"] = model.Password.ValueString()
 	}
 	if !model.ReadOnly.IsNull() {
@@ -238,7 +238,7 @@ func (r *snowflake_catalogResource) modelToCreateRequest(ctx context.Context, mo
 	}
 
 	// Only include description if provided (like curl script)
-	if !model.Description.IsNull() {
+	if !model.Description.IsNull() && !model.Description.IsUnknown() && model.Description.ValueString() != "" {
 		request["description"] = model.Description.ValueString()
 	}
 
@@ -247,16 +247,20 @@ func (r *snowflake_catalogResource) modelToCreateRequest(ctx context.Context, mo
 	// - role (not needed for basic authentication)
 	// - warehouse (not needed for basic authentication)
 
-	// Optional authentication fields
-	if !model.AuthenticationType.IsNull() && !model.AuthenticationType.IsUnknown() {
+	// Authentication: auto-set type to "key" when private_key is provided
+	privateKeySet := !model.PrivateKey.IsNull() && !model.PrivateKey.IsUnknown() && model.PrivateKey.ValueString() != ""
+
+	if !model.AuthenticationType.IsNull() && !model.AuthenticationType.IsUnknown() && model.AuthenticationType.ValueString() != "" {
 		request["authenticationType"] = model.AuthenticationType.ValueString()
+	} else if privateKeySet {
+		request["authenticationType"] = "key"
 	}
 
-	if !model.PrivateKey.IsNull() && !model.PrivateKey.IsUnknown() {
+	if privateKeySet {
 		request["privateKey"] = model.PrivateKey.ValueString()
 	}
 
-	if !model.PrivateKeyPassphrase.IsNull() && !model.PrivateKeyPassphrase.IsUnknown() {
+	if !model.PrivateKeyPassphrase.IsNull() && !model.PrivateKeyPassphrase.IsUnknown() && model.PrivateKeyPassphrase.ValueString() != "" {
 		request["privateKeyPassphrase"] = model.PrivateKeyPassphrase.ValueString()
 	}
 
@@ -327,7 +331,10 @@ func (r *snowflake_catalogResource) updateModelFromResponse(ctx context.Context,
 		model.Warehouse = types.StringNull()
 	}
 
-	// Note: password is not returned in responses for security reasons
+	// Sensitive fields not returned by API - clear if unset, preserve if user-provided
+	if model.Password.IsUnknown() {
+		model.Password = types.StringNull()
+	}
 
 	// Handle validate field
 	if validate, ok := response["validate"].(bool); ok {
@@ -343,17 +350,10 @@ func (r *snowflake_catalogResource) updateModelFromResponse(ctx context.Context,
 		model.AuthenticationType = types.StringNull()
 	}
 
-	// Handle private_key field (typically not returned for security reasons)
-	if privateKey, ok := response["privateKey"].(string); ok {
-		model.PrivateKey = types.StringValue(privateKey)
-	} else if model.PrivateKey.IsUnknown() {
+	if model.PrivateKey.IsUnknown() {
 		model.PrivateKey = types.StringNull()
 	}
-
-	// Handle private_key_passphrase field (typically not returned for security reasons)
-	if privateKeyPassphrase, ok := response["privateKeyPassphrase"].(string); ok {
-		model.PrivateKeyPassphrase = types.StringValue(privateKeyPassphrase)
-	} else if model.PrivateKeyPassphrase.IsUnknown() {
+	if model.PrivateKeyPassphrase.IsUnknown() {
 		model.PrivateKeyPassphrase = types.StringNull()
 	}
 

@@ -226,6 +226,8 @@ func (r *row_filterResource) updateModelFromResponse(ctx context.Context, model 
 
 	if description, ok := response["description"].(string); ok {
 		model.Description = types.StringValue(description)
+	} else {
+		model.Description = types.StringNull()
 	}
 
 	if expression, ok := response["expression"].(string); ok {

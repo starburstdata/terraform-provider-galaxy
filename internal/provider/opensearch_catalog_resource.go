@@ -222,21 +222,21 @@ func (r *opensearch_catalogResource) modelToCreateRequest(ctx context.Context, m
 		request["port"] = 443 // Default OpenSearch port
 	}
 
-	if !model.Description.IsNull() && !model.Description.IsUnknown() {
+	if !model.Description.IsNull() && !model.Description.IsUnknown() && model.Description.ValueString() != "" {
 		request["description"] = model.Description.ValueString()
 	}
 
 	// Handle authentication based on authType
 	if model.AuthType.ValueString() == "basic" {
-		if !model.Username.IsNull() && !model.Username.IsUnknown() {
+		if !model.Username.IsNull() && !model.Username.IsUnknown() && model.Username.ValueString() != "" {
 			request["username"] = model.Username.ValueString()
 		}
-		if !model.Password.IsNull() && !model.Password.IsUnknown() {
+		if !model.Password.IsNull() && !model.Password.IsUnknown() && model.Password.ValueString() != "" {
 			request["password"] = model.Password.ValueString()
 		}
 	}
 
-	if !model.SshTunnelId.IsNull() && !model.SshTunnelId.IsUnknown() {
+	if !model.SshTunnelId.IsNull() && !model.SshTunnelId.IsUnknown() && model.SshTunnelId.ValueString() != "" {
 		request["sshTunnelId"] = model.SshTunnelId.ValueString()
 	}
 

@@ -215,10 +215,10 @@ func (r *data_productResource) modelToCreateRequest(ctx context.Context, model *
 	}
 
 	// Optional fields
-	if !model.Description.IsNull() && model.Description.ValueString() != "" {
+	if !model.Description.IsNull() && !model.Description.IsUnknown() && model.Description.ValueString() != "" {
 		request["description"] = model.Description.ValueString()
 	}
-	if !model.DefaultClusterId.IsNull() && model.DefaultClusterId.ValueString() != "" {
+	if !model.DefaultClusterId.IsNull() && !model.DefaultClusterId.IsUnknown() && model.DefaultClusterId.ValueString() != "" {
 		request["defaultClusterId"] = model.DefaultClusterId.ValueString()
 	}
 

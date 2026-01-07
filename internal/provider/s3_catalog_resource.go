@@ -251,37 +251,37 @@ func (r *s3_catalogResource) modelToCreateRequest(ctx context.Context, model *re
 	metastoreType := model.MetastoreType.ValueString()
 
 	// Optional fields
-	if !model.Description.IsNull() {
+	if !model.Description.IsNull() && !model.Description.IsUnknown() && model.Description.ValueString() != "" {
 		request["description"] = model.Description.ValueString()
 	}
 
 	// Handle metastore type specific fields
 	if metastoreType == "galaxy" || metastoreType == "glue" {
 		// Fields for galaxy and glue metastores
-		if !model.DefaultBucket.IsNull() {
+		if !model.DefaultBucket.IsNull() && !model.DefaultBucket.IsUnknown() && model.DefaultBucket.ValueString() != "" {
 			request["defaultBucket"] = model.DefaultBucket.ValueString()
 		}
-		if !model.DefaultDataLocation.IsNull() {
+		if !model.DefaultDataLocation.IsNull() && !model.DefaultDataLocation.IsUnknown() && model.DefaultDataLocation.ValueString() != "" {
 			request["defaultDataLocation"] = model.DefaultDataLocation.ValueString()
 		}
 	}
 
 	// Region field for glue metastores
 	if metastoreType == "glue" {
-		if !model.Region.IsNull() {
+		if !model.Region.IsNull() && !model.Region.IsUnknown() && model.Region.ValueString() != "" {
 			request["region"] = model.Region.ValueString()
 		}
 	}
 
 	// Fields for hive metastores
 	if metastoreType == "hive" {
-		if !model.HiveMetastoreHost.IsNull() {
+		if !model.HiveMetastoreHost.IsNull() && !model.HiveMetastoreHost.IsUnknown() && model.HiveMetastoreHost.ValueString() != "" {
 			request["hiveMetastoreHost"] = model.HiveMetastoreHost.ValueString()
 		}
-		if !model.HiveMetastorePort.IsNull() {
+		if !model.HiveMetastorePort.IsNull() && !model.HiveMetastorePort.IsUnknown() {
 			request["hiveMetastorePort"] = model.HiveMetastorePort.ValueInt64()
 		}
-		if !model.SshTunnelId.IsNull() {
+		if !model.SshTunnelId.IsNull() && !model.SshTunnelId.IsUnknown() && model.SshTunnelId.ValueString() != "" {
 			request["sshTunnelId"] = model.SshTunnelId.ValueString()
 		}
 
@@ -302,21 +302,21 @@ func (r *s3_catalogResource) modelToCreateRequest(ctx context.Context, model *re
 		delete(request, "accessKey")
 		delete(request, "secretKey")
 	} else {
-		if !model.AccessKey.IsNull() {
+		if !model.AccessKey.IsNull() && !model.AccessKey.IsUnknown() && model.AccessKey.ValueString() != "" {
 			request["accessKey"] = model.AccessKey.ValueString()
 		}
-		if !model.SecretKey.IsNull() {
+		if !model.SecretKey.IsNull() && !model.SecretKey.IsUnknown() && model.SecretKey.ValueString() != "" {
 			request["secretKey"] = model.SecretKey.ValueString()
 		}
 	}
 
-	if !model.DefaultTableFormat.IsNull() {
+	if !model.DefaultTableFormat.IsNull() && !model.DefaultTableFormat.IsUnknown() && model.DefaultTableFormat.ValueString() != "" {
 		request["defaultTableFormat"] = model.DefaultTableFormat.ValueString()
 	}
-	if !model.ExternalTableCreationEnabled.IsNull() {
+	if !model.ExternalTableCreationEnabled.IsNull() && !model.ExternalTableCreationEnabled.IsUnknown() {
 		request["externalTableCreationEnabled"] = model.ExternalTableCreationEnabled.ValueBool()
 	}
-	if !model.ExternalTableWritesEnabled.IsNull() {
+	if !model.ExternalTableWritesEnabled.IsNull() && !model.ExternalTableWritesEnabled.IsUnknown() {
 		request["externalTableWritesEnabled"] = model.ExternalTableWritesEnabled.ValueBool()
 	}
 
@@ -351,6 +351,8 @@ func (r *s3_catalogResource) updateModelFromResponse(ctx context.Context, model 
 	}
 	if description, ok := response["description"].(string); ok {
 		model.Description = types.StringValue(description)
+	} else {
+		model.Description = types.StringNull()
 	}
 
 	// Get metastore type for field handling

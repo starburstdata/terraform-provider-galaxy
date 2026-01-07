@@ -233,22 +233,22 @@ func (r *mongodb_catalogResource) modelToCreateRequest(ctx context.Context, mode
 	// MongoDB uses "hosts" field for connection (can include port)
 	// Format: host:port/database
 	hostWithDb := model.Host.ValueString()
-	if !model.Database.IsNull() && !model.Database.IsUnknown() {
+	if !model.Database.IsNull() && !model.Database.IsUnknown() && model.Database.ValueString() != "" {
 		hostWithDb = fmt.Sprintf("%s/%s", hostWithDb, model.Database.ValueString())
 	}
 	request["hosts"] = hostWithDb
 
 	// MongoDB connection string includes port in host field
 
-	if !model.Description.IsNull() && !model.Description.IsUnknown() {
+	if !model.Description.IsNull() && !model.Description.IsUnknown() && model.Description.ValueString() != "" {
 		request["description"] = model.Description.ValueString()
 	}
 
-	if !model.CloudKind.IsNull() && !model.CloudKind.IsUnknown() {
+	if !model.CloudKind.IsNull() && !model.CloudKind.IsUnknown() && model.CloudKind.ValueString() != "" {
 		request["cloudKind"] = model.CloudKind.ValueString()
 	}
 
-	if !model.ConnectionType.IsNull() && !model.ConnectionType.IsUnknown() {
+	if !model.ConnectionType.IsNull() && !model.ConnectionType.IsUnknown() && model.ConnectionType.ValueString() != "" {
 		request["connectionType"] = model.ConnectionType.ValueString()
 	} else {
 		request["connectionType"] = "direct"

@@ -211,20 +211,20 @@ func (r *gcs_catalogResource) modelToCreateRequest(ctx context.Context, model *r
 
 	// Fields required for galaxy metastore
 	if model.MetastoreType.ValueString() == "galaxy" {
-		if !model.DefaultBucket.IsNull() && !model.DefaultBucket.IsUnknown() {
+		if !model.DefaultBucket.IsNull() && !model.DefaultBucket.IsUnknown() && model.DefaultBucket.ValueString() != "" {
 			request["defaultBucket"] = model.DefaultBucket.ValueString()
 		}
-		if !model.DefaultDataLocation.IsNull() && !model.DefaultDataLocation.IsUnknown() {
+		if !model.DefaultDataLocation.IsNull() && !model.DefaultDataLocation.IsUnknown() && model.DefaultDataLocation.ValueString() != "" {
 			request["defaultDataLocation"] = model.DefaultDataLocation.ValueString()
 		}
 	}
 
 	// Optional fields
-	if !model.Description.IsNull() && !model.Description.IsUnknown() {
+	if !model.Description.IsNull() && !model.Description.IsUnknown() && model.Description.ValueString() != "" {
 		request["description"] = model.Description.ValueString()
 	}
 
-	if !model.DefaultTableFormat.IsNull() && !model.DefaultTableFormat.IsUnknown() {
+	if !model.DefaultTableFormat.IsNull() && !model.DefaultTableFormat.IsUnknown() && model.DefaultTableFormat.ValueString() != "" {
 		request["defaultTableFormat"] = model.DefaultTableFormat.ValueString()
 	}
 

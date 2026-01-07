@@ -221,11 +221,11 @@ func (r *redshift_catalogResource) modelToCreateRequest(ctx context.Context, mod
 	request["password"] = model.Password.ValueString()
 
 	// Optional fields
-	if !model.Description.IsNull() && !model.Description.IsUnknown() {
+	if !model.Description.IsNull() && !model.Description.IsUnknown() && model.Description.ValueString() != "" {
 		request["description"] = model.Description.ValueString()
 	}
 
-	if !model.SshTunnelId.IsNull() && !model.SshTunnelId.IsUnknown() {
+	if !model.SshTunnelId.IsNull() && !model.SshTunnelId.IsUnknown() && model.SshTunnelId.ValueString() != "" {
 		request["sshTunnelId"] = model.SshTunnelId.ValueString()
 	}
 

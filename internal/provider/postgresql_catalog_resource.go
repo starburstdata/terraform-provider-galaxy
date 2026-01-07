@@ -208,7 +208,7 @@ func (r *postgresql_catalogResource) modelToCreateRequest(ctx context.Context, m
 		request["port"] = 5432 // Default PostgreSQL port
 	}
 
-	if !model.Description.IsNull() && !model.Description.IsUnknown() {
+	if !model.Description.IsNull() && !model.Description.IsUnknown() && model.Description.ValueString() != "" {
 		request["description"] = model.Description.ValueString()
 	}
 

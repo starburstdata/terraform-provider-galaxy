@@ -218,7 +218,7 @@ func (r *policyResource) modelToCreateRequest(ctx context.Context, model *resour
 	}
 
 	// Optional fields
-	if !model.Expiration.IsNull() && model.Expiration.ValueString() != "" {
+	if !model.Expiration.IsNull() && !model.Expiration.IsUnknown() && model.Expiration.ValueString() != "" {
 		request["expiration"] = model.Expiration.ValueString()
 	}
 
@@ -377,6 +377,8 @@ func (r *policyResource) updateModelFromResponse(ctx context.Context, model *res
 
 	if description, ok := response["description"].(string); ok {
 		model.Description = types.StringValue(description)
+	} else {
+		model.Description = types.StringNull()
 	}
 
 	if predicate, ok := response["predicate"].(string); ok {
@@ -390,7 +392,7 @@ func (r *policyResource) updateModelFromResponse(ctx context.Context, model *res
 	if expiration, ok := response["expiration"].(string); ok {
 		model.Expiration = types.StringValue(expiration)
 	} else {
-		model.Expiration = types.StringValue("")
+		model.Expiration = types.StringNull()
 	}
 
 	if created, ok := response["created"].(string); ok {

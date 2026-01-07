@@ -208,15 +208,15 @@ func (r *sqlserver_catalogResource) modelToCreateRequest(ctx context.Context, mo
 		request["port"] = 1433 // Default SQL Server port
 	}
 
-	if !model.Description.IsNull() && !model.Description.IsUnknown() {
+	if !model.Description.IsNull() && !model.Description.IsUnknown() && model.Description.ValueString() != "" {
 		request["description"] = model.Description.ValueString()
 	}
 
-	if !model.CloudKind.IsNull() && !model.CloudKind.IsUnknown() {
+	if !model.CloudKind.IsNull() && !model.CloudKind.IsUnknown() && model.CloudKind.ValueString() != "" {
 		request["cloudKind"] = model.CloudKind.ValueString()
 	}
 
-	if !model.SshTunnelId.IsNull() && !model.SshTunnelId.IsUnknown() {
+	if !model.SshTunnelId.IsNull() && !model.SshTunnelId.IsUnknown() && model.SshTunnelId.ValueString() != "" {
 		request["sshTunnelId"] = model.SshTunnelId.ValueString()
 	}
 
