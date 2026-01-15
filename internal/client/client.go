@@ -201,6 +201,10 @@ func (c *GalaxyClient) doRequestWithRetry(ctx context.Context, method, path stri
 	}
 
 	if resp.StatusCode == http.StatusNotFound {
+		bodyBytes, _ := io.ReadAll(resp.Body)
+		if len(bodyBytes) > 0 {
+			return &NotFoundError{Message: string(bodyBytes)}
+		}
 		return &NotFoundError{Message: fmt.Sprintf("resource not found: %s", path)}
 	}
 
@@ -516,7 +520,6 @@ func (c *GalaxyClient) ListDataProducts(ctx context.Context) ([]map[string]inter
 
 // Role Privilege Grant methods
 func (c *GalaxyClient) CreateRolePrivilegeGrant(ctx context.Context, grant interface{}) (map[string]interface{}, error) {
-	// Extract roleId from the grant request
 	grantMap, ok := grant.(map[string]interface{})
 	if !ok {
 		return nil, fmt.Errorf("grant must be a map")
@@ -527,11 +530,16 @@ func (c *GalaxyClient) CreateRolePrivilegeGrant(ctx context.Context, grant inter
 		return nil, fmt.Errorf("roleId is required")
 	}
 
-	// Remove roleId from request body as it's in the URL
-	delete(grantMap, "roleId")
+	// Copy map excluding roleId (which goes in URL path, not request body)
+	requestBody := make(map[string]interface{})
+	for k, v := range grantMap {
+		if k != "roleId" {
+			requestBody[k] = v
+		}
+	}
 
 	var result map[string]interface{}
-	err := c.doRequest(ctx, "POST", "/public/api/v1/role/"+roleId+"/privilege:grant", grantMap, &result)
+	err := c.doRequest(ctx, "POST", "/public/api/v1/role/"+roleId+"/privilege:grant", requestBody, &result)
 	return result, err
 }
 
