@@ -212,20 +212,52 @@ func (r *role_privilege_grantResource) Delete(ctx context.Context, req resource.
 		return
 	}
 
-	id := state.EntityId.ValueString()
-	tflog.Debug(ctx, "Deleting role_privilege_grant", map[string]interface{}{"id": id})
-	err := r.client.DeleteRolePrivilegeGrant(ctx, id)
+	// Build the revoke request using the same approach as Update
+	roleId := state.RoleId.ValueString()
+	entityId := state.EntityId.ValueString()
+	entityKind := state.EntityKind.ValueString()
+	privilege := state.Privilege.ValueString()
+
+	tflog.Debug(ctx, "Deleting role_privilege_grant", map[string]interface{}{
+		"roleId":    roleId,
+		"entityId":  entityId,
+		"privilege": privilege,
+	})
+
+	// Create the revoke request
+	revokeRequest := make(map[string]interface{})
+	revokeRequest["entityId"] = entityId
+	revokeRequest["entityKind"] = entityKind
+	revokeRequest["privilege"] = privilege
+	revokeRequest["revokeAction"] = "RemoveRoleGrant"
+
+	// Include optional scope fields if set
+	if !state.ColumnName.IsNull() && state.ColumnName.ValueString() != "" {
+		revokeRequest["columnName"] = state.ColumnName.ValueString()
+	}
+	if !state.SchemaName.IsNull() && state.SchemaName.ValueString() != "" {
+		revokeRequest["schemaName"] = state.SchemaName.ValueString()
+	}
+	if !state.TableName.IsNull() && state.TableName.ValueString() != "" {
+		revokeRequest["tableName"] = state.TableName.ValueString()
+	}
+
+	err := r.client.RevokeRolePrivilege(ctx, roleId, revokeRequest)
 	if err != nil {
 		if !client.IsNotFound(err) {
 			resp.Diagnostics.AddError(
 				"Error deleting role_privilege_grant",
-				"Could not delete role_privilege_grant "+id+": "+err.Error(),
+				"Could not delete role_privilege_grant: "+err.Error(),
 			)
 			return
 		}
 	}
 
-	tflog.Debug(ctx, "Deleted role_privilege_grant", map[string]interface{}{"id": id})
+	tflog.Debug(ctx, "Deleted role_privilege_grant", map[string]interface{}{
+		"roleId":    roleId,
+		"entityId":  entityId,
+		"privilege": privilege,
+	})
 }
 
 // Helper methods
@@ -300,31 +332,39 @@ func (r *role_privilege_grantResource) updateModelFromResponse(ctx context.Conte
 		model.GrantOption = types.BoolValue(grantOption)
 	}
 
+	// For optional scope fields (columnName, schemaName, tableName), preserve plan values
+	// when the API doesn't return them. This handles the case where users specify wildcard
+	// values like "*" that the API accepts but doesn't echo back in the response.
+	// If the plan value is null/unknown, set to null (must be known after apply).
 	if columnName, ok := response["columnName"].(string); ok {
 		model.ColumnName = types.StringValue(columnName)
-	} else {
+	} else if model.ColumnName.IsNull() || model.ColumnName.IsUnknown() {
 		model.ColumnName = types.StringNull()
 	}
+	// Otherwise keep existing model value (user-specified value like "*")
 
 	if schemaName, ok := response["schemaName"].(string); ok {
 		model.SchemaName = types.StringValue(schemaName)
-	} else {
+	} else if model.SchemaName.IsNull() || model.SchemaName.IsUnknown() {
 		model.SchemaName = types.StringNull()
 	}
+	// Otherwise keep existing model value (user-specified value like "*")
 
 	if tableName, ok := response["tableName"].(string); ok {
 		model.TableName = types.StringValue(tableName)
-	} else {
+	} else if model.TableName.IsNull() || model.TableName.IsUnknown() {
 		model.TableName = types.StringNull()
 	}
+	// Otherwise keep existing model value (user-specified value like "*")
 
 	// Note: Pagination fields are not part of the model as they are handled at the framework level
 
 	if listAllPrivileges, ok := response["listAllPrivileges"].(bool); ok {
 		model.ListAllPrivileges = types.BoolValue(listAllPrivileges)
-	} else {
+	} else if model.ListAllPrivileges.IsNull() || model.ListAllPrivileges.IsUnknown() {
 		model.ListAllPrivileges = types.BoolNull()
 	}
+	// Otherwise keep existing model value
 
 	// Note: Role privilege grants are individual operations, not list operations
 }
