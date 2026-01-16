@@ -61,6 +61,13 @@ func (r *mongodb_catalogResource) Schema(ctx context.Context, req resource.Schem
 		MarkdownDescription: "Mongodb database",
 	}
 
+	// Fix: validate is a request-only parameter, not returned by API.
+	// Setting Computed=false ensures it's sent with update requests.
+	if attr, ok := baseSchema.Attributes["validate"].(schema.BoolAttribute); ok {
+		attr.Computed = false
+		baseSchema.Attributes["validate"] = attr
+	}
+
 	resp.Schema = baseSchema
 }
 
