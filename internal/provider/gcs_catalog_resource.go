@@ -15,6 +15,7 @@ import (
 
 	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
 
@@ -40,7 +41,16 @@ func (r *gcs_catalogResource) Metadata(ctx context.Context, req resource.Metadat
 }
 
 func (r *gcs_catalogResource) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
-	resp.Schema = resource_gcs_catalog.GcsCatalogResourceSchema(ctx)
+	s := resource_gcs_catalog.GcsCatalogResourceSchema(ctx)
+
+	// Fix: validate is a request-only parameter, not returned by API.
+	// Setting Computed=false ensures it's sent with update requests.
+	if attr, ok := s.Attributes["validate"].(schema.BoolAttribute); ok {
+		attr.Computed = false
+		s.Attributes["validate"] = attr
+	}
+
+	resp.Schema = s
 }
 
 func (r *gcs_catalogResource) Configure(ctx context.Context, req resource.ConfigureRequest, resp *resource.ConfigureResponse) {
