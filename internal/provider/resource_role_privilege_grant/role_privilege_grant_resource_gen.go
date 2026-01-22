@@ -92,6 +92,7 @@ func RolePrivilegeGrantResourceSchema(ctx context.Context) schema.Schema {
 						"UseCluster",
 						"EnableDisableCluster",
 						"MonitorCluster",
+						"TroubleshootQuery",
 						"CreateSchema",
 						"CreateTable",
 						"Insert",

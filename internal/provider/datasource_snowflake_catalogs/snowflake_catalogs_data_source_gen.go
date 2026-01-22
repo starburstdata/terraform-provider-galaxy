@@ -63,8 +63,8 @@ func SnowflakeCatalogsDataSourceSchema(ctx context.Context) schema.Schema {
 						},
 						"private_key": schema.StringAttribute{
 							Computed:            true,
-							Description:         "Snowflake private key",
-							MarkdownDescription: "Snowflake private key",
+							Description:         "Base64 encoded or plain text PEM Snowflake private key",
+							MarkdownDescription: "Base64 encoded or plain text PEM Snowflake private key",
 						},
 						"private_key_passphrase": schema.StringAttribute{
 							Computed:            true,

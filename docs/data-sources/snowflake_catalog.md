@@ -28,7 +28,7 @@ description: |-
 - `description` (String) Catalog description
 - `name` (String) Catalog name
 - `password` (String) Snowflake password
-- `private_key` (String) Snowflake private key
+- `private_key` (String) Base64 encoded or plain text PEM Snowflake private key
 - `private_key_passphrase` (String) Snowflake private key passphrase
 - `read_only` (Boolean) Is catalog read only
 - `role` (String) Snowflake role
