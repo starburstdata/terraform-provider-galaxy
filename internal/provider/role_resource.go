@@ -13,6 +13,7 @@ import (
 	"context"
 	"fmt"
 
+	"github.com/hashicorp/terraform-plugin-framework/attr"
 	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/types"
@@ -280,28 +281,36 @@ func (r *roleResource) updateModelFromResponse(ctx context.Context, model *resou
 		rolesList := make([]resource_role.AllRolesValue, 0, len(allRoles))
 		for _, role := range allRoles {
 			if roleMap, ok := role.(map[string]interface{}); ok {
-				roleValue := resource_role.AllRolesValue{}
+				attrs := map[string]attr.Value{
+					"principal": types.ObjectNull(resource_role.PrincipalValue{}.AttributeTypes(ctx)),
+				}
 
 				if adminOption, ok := roleMap["adminOption"].(bool); ok {
-					roleValue.AdminOption = types.BoolValue(adminOption)
+					attrs["admin_option"] = types.BoolValue(adminOption)
 				} else {
-					roleValue.AdminOption = types.BoolNull()
+					attrs["admin_option"] = types.BoolNull()
 				}
 
 				if roleId, ok := roleMap["roleId"].(string); ok {
-					roleValue.RoleId = types.StringValue(roleId)
+					attrs["role_id"] = types.StringValue(roleId)
 				} else {
-					roleValue.RoleId = types.StringNull()
+					attrs["role_id"] = types.StringNull()
 				}
 
 				if roleName, ok := roleMap["roleName"].(string); ok {
-					roleValue.RoleName = types.StringValue(roleName)
+					attrs["role_name"] = types.StringValue(roleName)
 				} else {
-					roleValue.RoleName = types.StringNull()
+					attrs["role_name"] = types.StringNull()
 				}
 
-				// Set principal as null for now (complex nested object)
-				roleValue.Principal = types.ObjectNull(resource_role.PrincipalValue{}.AttributeTypes(ctx))
+				roleValue, d := resource_role.NewAllRolesValue(
+					resource_role.AllRolesValue{}.AttributeTypes(ctx),
+					attrs,
+				)
+				diags.Append(d...)
+				if diags.HasError() {
+					return
+				}
 
 				rolesList = append(rolesList, roleValue)
 			}
@@ -329,28 +338,36 @@ func (r *roleResource) updateModelFromResponse(ctx context.Context, model *resou
 		rolesList := make([]resource_role.DirectlyGrantedRolesValue, 0, len(directlyGrantedRoles))
 		for _, role := range directlyGrantedRoles {
 			if roleMap, ok := role.(map[string]interface{}); ok {
-				roleValue := resource_role.DirectlyGrantedRolesValue{}
+				attrs := map[string]attr.Value{
+					"principal": types.ObjectNull(resource_role.PrincipalValue{}.AttributeTypes(ctx)),
+				}
 
 				if adminOption, ok := roleMap["adminOption"].(bool); ok {
-					roleValue.AdminOption = types.BoolValue(adminOption)
+					attrs["admin_option"] = types.BoolValue(adminOption)
 				} else {
-					roleValue.AdminOption = types.BoolNull()
+					attrs["admin_option"] = types.BoolNull()
 				}
 
 				if roleId, ok := roleMap["roleId"].(string); ok {
-					roleValue.RoleId = types.StringValue(roleId)
+					attrs["role_id"] = types.StringValue(roleId)
 				} else {
-					roleValue.RoleId = types.StringNull()
+					attrs["role_id"] = types.StringNull()
 				}
 
 				if roleName, ok := roleMap["roleName"].(string); ok {
-					roleValue.RoleName = types.StringValue(roleName)
+					attrs["role_name"] = types.StringValue(roleName)
 				} else {
-					roleValue.RoleName = types.StringNull()
+					attrs["role_name"] = types.StringNull()
 				}
 
-				// Set principal as null for now (complex nested object)
-				roleValue.Principal = types.ObjectNull(resource_role.PrincipalValue{}.AttributeTypes(ctx))
+				roleValue, d := resource_role.NewDirectlyGrantedRolesValue(
+					resource_role.DirectlyGrantedRolesValue{}.AttributeTypes(ctx),
+					attrs,
+				)
+				diags.Append(d...)
+				if diags.HasError() {
+					return
+				}
 
 				rolesList = append(rolesList, roleValue)
 			}

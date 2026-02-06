@@ -233,6 +233,7 @@ func (p *galaxyProvider) Resources(ctx context.Context) []func() resource.Resour
 		NewRowFilterResource,
 		NewPolicyResource,
 		NewRolePrivilegeGrantResource,
+		NewRoleGrantResource,
 
 		// Data resources
 		NewDataProductResource,

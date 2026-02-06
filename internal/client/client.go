@@ -873,6 +873,52 @@ func (c *GalaxyClient) UpdateRole(ctx context.Context, roleID string, role inter
 	return result, err
 }
 
+// GetRoleGrants returns the directlyGrantedRoles array from a role
+func (c *GalaxyClient) GetRoleGrants(ctx context.Context, roleID string) ([]map[string]interface{}, error) {
+	role, err := c.GetRole(ctx, roleID)
+	if err != nil {
+		return nil, err
+	}
+
+	grantsRaw, ok := role["directlyGrantedRoles"].([]interface{})
+	if !ok {
+		return []map[string]interface{}{}, nil
+	}
+
+	grants := make([]map[string]interface{}, 0, len(grantsRaw))
+	for _, g := range grantsRaw {
+		if gMap, ok := g.(map[string]interface{}); ok {
+			grants = append(grants, gMap)
+		}
+	}
+	return grants, nil
+}
+
+// UpdateRoleGrants sets the directlyGrantedRoles on a role via PATCH.
+// It sanitizes grant objects to only include fields accepted by the UpdateRoleGrantPatch schema.
+func (c *GalaxyClient) UpdateRoleGrants(ctx context.Context, roleID string, grants []map[string]interface{}) (map[string]interface{}, error) {
+	// Sanitize grants to only include fields from UpdateRoleGrantPatch schema
+	sanitized := make([]map[string]interface{}, 0, len(grants))
+	for _, g := range grants {
+		clean := make(map[string]interface{})
+		if v, ok := g["roleId"]; ok {
+			clean["roleId"] = v
+		}
+		if v, ok := g["roleName"]; ok {
+			clean["roleName"] = v
+		}
+		if v, ok := g["adminOption"]; ok {
+			clean["adminOption"] = v
+		}
+		sanitized = append(sanitized, clean)
+	}
+	body := map[string]interface{}{
+		"directlyGrantedRoles": sanitized,
+	}
+
+	return c.UpdateRole(ctx, roleID, body)
+}
+
 // UpdateServiceAccountPassword updates a service account password
 func (c *GalaxyClient) UpdateServiceAccountPassword(ctx context.Context, passwordID string, password interface{}) (map[string]interface{}, error) {
 	var result map[string]interface{}
