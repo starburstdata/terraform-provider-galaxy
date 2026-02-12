@@ -46,6 +46,14 @@ func TestAccResourceRowFilter_Basic(t *testing.T) {
 					),
 				},
 			},
+			// Import testing
+			{
+				ResourceName:                         "galaxy_row_filter.test",
+				ImportState:                          true,
+				ImportStateVerify:                    true,
+				ImportStateIdFunc:                    importStateIdFunc("galaxy_row_filter.test", "row_filter_id"),
+				ImportStateVerifyIdentifierAttribute: "row_filter_id",
+			},
 			// Update and Read testing
 			{
 				Config: testAccRowFilterConfigUpdate(suffix),
@@ -92,6 +100,14 @@ func TestAccResourceRowFilter_TimeFilter(t *testing.T) {
 						knownvalue.StringExact("Only show data from last 30 days"),
 					),
 				},
+			},
+			// Import testing
+			{
+				ResourceName:                         "galaxy_row_filter.time",
+				ImportState:                          true,
+				ImportStateVerify:                    true,
+				ImportStateIdFunc:                    importStateIdFunc("galaxy_row_filter.time", "row_filter_id"),
+				ImportStateVerifyIdentifierAttribute: "row_filter_id",
 			},
 		},
 	})

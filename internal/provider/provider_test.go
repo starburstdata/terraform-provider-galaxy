@@ -4,11 +4,14 @@
 package provider
 
 import (
+	"fmt"
 	"os"
 	"testing"
 
 	"github.com/hashicorp/terraform-plugin-framework/providerserver"
 	"github.com/hashicorp/terraform-plugin-go/tfprotov6"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/terraform"
 )
 
 // testAccProtoV6ProviderFactories are used to instantiate a provider during
@@ -17,6 +20,22 @@ import (
 // reattach.
 var testAccProtoV6ProviderFactories = map[string]func() (tfprotov6.ProviderServer, error){
 	"galaxy": providerserver.NewProtocol6WithError(New("test")()),
+}
+
+// importStateIdFunc returns a function that extracts a single attribute from state
+// to use as the import ID. Use this for resources with simple single-value IDs.
+func importStateIdFunc(resourceName, attrName string) resource.ImportStateIdFunc {
+	return func(s *terraform.State) (string, error) {
+		rs, ok := s.RootModule().Resources[resourceName]
+		if !ok {
+			return "", fmt.Errorf("resource not found: %s", resourceName)
+		}
+		id := rs.Primary.Attributes[attrName]
+		if id == "" {
+			return "", fmt.Errorf("attribute %s not set", attrName)
+		}
+		return id, nil
+	}
 }
 
 // testAccPreCheck validates that the required environment variables are set for

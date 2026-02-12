@@ -14,6 +14,7 @@ import (
 	"fmt"
 
 	"github.com/hashicorp/terraform-plugin-framework/diag"
+	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
@@ -24,6 +25,7 @@ import (
 
 var _ resource.Resource = (*tagResource)(nil)
 var _ resource.ResourceWithConfigure = (*tagResource)(nil)
+var _ resource.ResourceWithImportState = (*tagResource)(nil)
 
 func NewTagResource() resource.Resource {
 	return &tagResource{}
@@ -184,6 +186,10 @@ func (r *tagResource) Delete(ctx context.Context, req resource.DeleteRequest, re
 	}
 
 	tflog.Debug(ctx, "Deleted tag", map[string]interface{}{"id": id})
+}
+
+func (r *tagResource) ImportState(ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse) {
+	resource.ImportStatePassthroughID(ctx, path.Root("tag_id"), req, resp)
 }
 
 // Helper methods

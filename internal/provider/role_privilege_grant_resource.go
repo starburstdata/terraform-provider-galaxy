@@ -12,9 +12,14 @@ package provider
 import (
 	"context"
 	"fmt"
+	"strings"
 
 	"github.com/hashicorp/terraform-plugin-framework/diag"
+	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/boolplanmodifier"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
 
@@ -24,6 +29,7 @@ import (
 
 var _ resource.Resource = (*role_privilege_grantResource)(nil)
 var _ resource.ResourceWithConfigure = (*role_privilege_grantResource)(nil)
+var _ resource.ResourceWithImportState = (*role_privilege_grantResource)(nil)
 
 func NewRolePrivilegeGrantResource() resource.Resource {
 	return &role_privilege_grantResource{}
@@ -38,7 +44,39 @@ func (r *role_privilege_grantResource) Metadata(ctx context.Context, req resourc
 }
 
 func (r *role_privilege_grantResource) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
-	resp.Schema = resource_role_privilege_grant.RolePrivilegeGrantResourceSchema(ctx)
+	s := resource_role_privilege_grant.RolePrivilegeGrantResourceSchema(ctx)
+
+	// list_all_privileges is a query parameter for the list API, not a resource property.
+	// Override to Computed-only so users cannot set it.
+	if attr, ok := s.Attributes["list_all_privileges"].(schema.BoolAttribute); ok {
+		attr.Optional = false
+		attr.Computed = true
+		s.Attributes["list_all_privileges"] = attr
+	}
+
+	// Add RequiresReplace to identifying and required attributes since the API
+	// does not support in-place updates. Terraform will destroy and recreate on any change.
+	for _, name := range []string{"role_id", "entity_id", "entity_kind", "privilege", "grant_kind"} {
+		if attr, ok := s.Attributes[name].(schema.StringAttribute); ok {
+			attr.PlanModifiers = append(attr.PlanModifiers, stringplanmodifier.RequiresReplace())
+			s.Attributes[name] = attr
+		}
+	}
+	if attr, ok := s.Attributes["grant_option"].(schema.BoolAttribute); ok {
+		attr.PlanModifiers = append(attr.PlanModifiers, boolplanmodifier.RequiresReplace())
+		s.Attributes["grant_option"] = attr
+	}
+
+	// Optional+Computed scope fields use RequiresReplaceIfConfigured so they only
+	// trigger replacement when the user explicitly sets them, not when computed.
+	for _, name := range []string{"column_name", "schema_name", "table_name"} {
+		if attr, ok := s.Attributes[name].(schema.StringAttribute); ok {
+			attr.PlanModifiers = append(attr.PlanModifiers, stringplanmodifier.RequiresReplaceIfConfigured())
+			s.Attributes[name] = attr
+		}
+	}
+
+	resp.Schema = s
 }
 
 func (r *role_privilege_grantResource) Configure(ctx context.Context, req resource.ConfigureRequest, resp *resource.ConfigureResponse) {
@@ -98,109 +136,56 @@ func (r *role_privilege_grantResource) Read(ctx context.Context, req resource.Re
 		return
 	}
 
-	// Role privilege grants are uniquely identified by (roleId, entityId, privilege, grantKind)
-	// The API doesn't provide a way to read individual grants, so we assume it exists if it's in state
-	// The grant will be validated during the next Update or when it's explicitly deleted
 	roleId := state.RoleId.ValueString()
 	entityId := state.EntityId.ValueString()
 	privilege := state.Privilege.ValueString()
 	grantKind := state.GrantKind.ValueString()
 
-	tflog.Debug(ctx, "Reading role_privilege_grant (no-op - assumes grant exists)", map[string]interface{}{
+	tflog.Debug(ctx, "Reading role_privilege_grant", map[string]interface{}{
 		"roleId":    roleId,
 		"entityId":  entityId,
 		"privilege": privilege,
 		"grantKind": grantKind,
 	})
 
-	// No API call needed - the grant is managed through Create/Update/Delete operations
-	// The state remains unchanged
+	grant, err := r.client.FindRolePrivilegeGrant(ctx, roleId, entityId, privilege, grantKind)
+	if err != nil {
+		if client.IsNotFound(err) {
+			resp.State.RemoveResource(ctx)
+			return
+		}
+		resp.Diagnostics.AddError("Error reading role privileges", err.Error())
+		return
+	}
+
+	if grant == nil {
+		tflog.Warn(ctx, "Role privilege grant not found, removing from state", map[string]interface{}{
+			"roleId":    roleId,
+			"entityId":  entityId,
+			"privilege": privilege,
+			"grantKind": grantKind,
+		})
+		resp.State.RemoveResource(ctx)
+		return
+	}
+
+	r.updateModelFromResponse(ctx, &state, grant, &resp.Diagnostics)
+	if resp.Diagnostics.HasError() {
+		return
+	}
+
 	resp.Diagnostics.Append(resp.State.Set(ctx, &state)...)
 }
 
 func (r *role_privilege_grantResource) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
+	// All attributes use RequiresReplace, so Update should never be called.
+	// If it is, just persist the plan to state.
 	var plan resource_role_privilege_grant.RolePrivilegeGrantModel
-	var state resource_role_privilege_grant.RolePrivilegeGrantModel
-
 	resp.Diagnostics.Append(req.Plan.Get(ctx, &plan)...)
 	if resp.Diagnostics.HasError() {
 		return
 	}
 
-	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
-	if resp.Diagnostics.HasError() {
-		return
-	}
-
-	// Role privilege grants don't support direct updates (API returns 405)
-	// Instead, we delete the old grant and create a new one
-	// First, delete the existing grant using the composite key
-	roleId := state.RoleId.ValueString()
-	entityId := state.EntityId.ValueString()
-	privilege := state.Privilege.ValueString()
-	grantKind := state.GrantKind.ValueString()
-
-	tflog.Debug(ctx, "Updating role_privilege_grant via delete+create", map[string]interface{}{
-		"roleId":    roleId,
-		"entityId":  entityId,
-		"privilege": privilege,
-		"grantKind": grantKind,
-	})
-
-	// Create the revoke request with the unique identifying fields
-	// Grants are uniquely identified by (roleId, entityId, privilege, grantKind)
-	entityKind := state.EntityKind.ValueString()
-	deleteRequest := make(map[string]interface{})
-	deleteRequest["entityId"] = entityId
-	deleteRequest["entityKind"] = entityKind
-	deleteRequest["privilege"] = privilege
-	// Use RemoveRoleGrant to completely remove the grant (not just the grant option)
-	deleteRequest["revokeAction"] = "RemoveRoleGrant"
-
-	// Include optional scope fields if set
-	if !state.ColumnName.IsNull() && state.ColumnName.ValueString() != "" {
-		deleteRequest["columnName"] = state.ColumnName.ValueString()
-	}
-	if !state.SchemaName.IsNull() && state.SchemaName.ValueString() != "" {
-		deleteRequest["schemaName"] = state.SchemaName.ValueString()
-	}
-	if !state.TableName.IsNull() && state.TableName.ValueString() != "" {
-		deleteRequest["tableName"] = state.TableName.ValueString()
-	}
-
-	// Delete the old grant
-	tflog.Debug(ctx, "Deleting existing role_privilege_grant before update")
-	err := r.client.RevokeRolePrivilege(ctx, roleId, deleteRequest)
-	if err != nil && !client.IsNotFound(err) {
-		resp.Diagnostics.AddError(
-			"Error deleting role_privilege_grant during update",
-			"Could not delete existing grant: "+err.Error(),
-		)
-		return
-	}
-
-	// Create the new grant with updated values
-	createRequest := r.modelToCreateRequest(ctx, &plan, &resp.Diagnostics)
-	if resp.Diagnostics.HasError() {
-		return
-	}
-
-	tflog.Debug(ctx, "Creating new role_privilege_grant with updated values")
-	response, err := r.client.CreateRolePrivilegeGrant(ctx, createRequest)
-	if err != nil {
-		resp.Diagnostics.AddError(
-			"Error creating role_privilege_grant during update",
-			"Could not create grant with new values: "+err.Error(),
-		)
-		return
-	}
-
-	r.updateModelFromResponse(ctx, &plan, response, &resp.Diagnostics)
-	if resp.Diagnostics.HasError() {
-		return
-	}
-
-	tflog.Debug(ctx, "Updated role_privilege_grant via delete+create")
 	resp.Diagnostics.Append(resp.State.Set(ctx, &plan)...)
 }
 
@@ -260,6 +245,25 @@ func (r *role_privilege_grantResource) Delete(ctx context.Context, req resource.
 	})
 }
 
+func (r *role_privilege_grantResource) ImportState(ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse) {
+	// Import format: role_id/entity_id/entity_kind/privilege/grant_kind
+	// Example: abc123/catalog456/Catalog/SELECT/AllowGrant
+	parts := strings.Split(req.ID, "/")
+	if len(parts) != 5 {
+		resp.Diagnostics.AddError(
+			"Invalid Import ID",
+			fmt.Sprintf("Expected import ID format: role_id/entity_id/entity_kind/privilege/grant_kind, got: %s", req.ID),
+		)
+		return
+	}
+
+	resp.Diagnostics.Append(resp.State.SetAttribute(ctx, path.Root("role_id"), parts[0])...)
+	resp.Diagnostics.Append(resp.State.SetAttribute(ctx, path.Root("entity_id"), parts[1])...)
+	resp.Diagnostics.Append(resp.State.SetAttribute(ctx, path.Root("entity_kind"), parts[2])...)
+	resp.Diagnostics.Append(resp.State.SetAttribute(ctx, path.Root("privilege"), parts[3])...)
+	resp.Diagnostics.Append(resp.State.SetAttribute(ctx, path.Root("grant_kind"), parts[4])...)
+}
+
 // Helper methods
 func (r *role_privilege_grantResource) modelToCreateRequest(ctx context.Context, model *resource_role_privilege_grant.RolePrivilegeGrantModel, diags *diag.Diagnostics) map[string]interface{} {
 	request := make(map[string]interface{})
@@ -295,11 +299,6 @@ func (r *role_privilege_grantResource) modelToCreateRequest(ctx context.Context,
 		request["tableName"] = model.TableName.ValueString()
 	}
 
-	// Note: Pagination fields are handled at the framework level and not part of the model
-	if !model.ListAllPrivileges.IsNull() && !model.ListAllPrivileges.IsUnknown() {
-		request["listAllPrivileges"] = model.ListAllPrivileges.ValueBool()
-	}
-
 	return request
 }
 
@@ -328,8 +327,14 @@ func (r *role_privilege_grantResource) updateModelFromResponse(ctx context.Conte
 		model.Privilege = types.StringValue(privilege)
 	}
 
-	if grantOption, ok := response["grantOption"].(bool); ok {
-		model.GrantOption = types.BoolValue(grantOption)
+	// grant_option is Required — the user's config is always authoritative.
+	// The list API may return stale values during eventual consistency windows,
+	// so we only set it from the API during import (when it's null because
+	// ImportState doesn't populate it).
+	if model.GrantOption.IsNull() {
+		if grantOption, ok := response["grantOption"].(bool); ok {
+			model.GrantOption = types.BoolValue(grantOption)
+		}
 	}
 
 	// For optional scope fields (columnName, schemaName, tableName), preserve plan values
@@ -357,14 +362,6 @@ func (r *role_privilege_grantResource) updateModelFromResponse(ctx context.Conte
 	}
 	// Otherwise keep existing model value (user-specified value like "*")
 
-	// Note: Pagination fields are not part of the model as they are handled at the framework level
-
-	if listAllPrivileges, ok := response["listAllPrivileges"].(bool); ok {
-		model.ListAllPrivileges = types.BoolValue(listAllPrivileges)
-	} else if model.ListAllPrivileges.IsNull() || model.ListAllPrivileges.IsUnknown() {
-		model.ListAllPrivileges = types.BoolNull()
-	}
-	// Otherwise keep existing model value
-
-	// Note: Role privilege grants are individual operations, not list operations
+	// list_all_privileges is not a resource property; always null
+	model.ListAllPrivileges = types.BoolNull()
 }

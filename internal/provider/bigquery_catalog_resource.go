@@ -14,6 +14,7 @@ import (
 	"fmt"
 
 	"github.com/hashicorp/terraform-plugin-framework/diag"
+	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/types"
@@ -25,6 +26,7 @@ import (
 
 var _ resource.Resource = (*bigquery_catalogResource)(nil)
 var _ resource.ResourceWithConfigure = (*bigquery_catalogResource)(nil)
+var _ resource.ResourceWithImportState = (*bigquery_catalogResource)(nil)
 
 func NewBigqueryCatalogResource() resource.Resource {
 	return &bigquery_catalogResource{}
@@ -194,6 +196,10 @@ func (r *bigquery_catalogResource) Delete(ctx context.Context, req resource.Dele
 	}
 
 	tflog.Debug(ctx, "Deleted bigquery_catalog", map[string]interface{}{"id": id})
+}
+
+func (r *bigquery_catalogResource) ImportState(ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse) {
+	resource.ImportStatePassthroughID(ctx, path.Root("catalog_id"), req, resp)
 }
 
 // Helper methods

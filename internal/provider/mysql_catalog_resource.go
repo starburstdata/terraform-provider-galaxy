@@ -14,6 +14,7 @@ import (
 	"fmt"
 
 	"github.com/hashicorp/terraform-plugin-framework/diag"
+	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/types"
@@ -25,6 +26,7 @@ import (
 
 var _ resource.Resource = (*mysql_catalogResource)(nil)
 var _ resource.ResourceWithConfigure = (*mysql_catalogResource)(nil)
+var _ resource.ResourceWithImportState = (*mysql_catalogResource)(nil)
 
 func NewMysqlCatalogResource() resource.Resource {
 	return &mysql_catalogResource{}
@@ -204,6 +206,10 @@ func (r *mysql_catalogResource) Delete(ctx context.Context, req resource.DeleteR
 	}
 
 	tflog.Debug(ctx, "Deleted mysql_catalog", map[string]interface{}{"id": id})
+}
+
+func (r *mysql_catalogResource) ImportState(ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse) {
+	resource.ImportStatePassthroughID(ctx, path.Root("catalog_id"), req, resp)
 }
 
 // Helper methods

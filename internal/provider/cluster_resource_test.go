@@ -52,6 +52,21 @@ func TestAccResourceCluster_Basic(t *testing.T) {
 					),
 				},
 			},
+			// Import testing
+			{
+				ResourceName:                         "galaxy_cluster.test",
+				ImportState:                          true,
+				ImportStateVerify:                    true,
+				ImportStateIdFunc:                    importStateIdFunc("galaxy_cluster.test", "cluster_id"),
+				ImportStateVerifyIdentifierAttribute: "cluster_id",
+				ImportStateVerifyIgnore: []string{
+					// These fields are not returned by the Galaxy API
+					"private_link_cluster",
+					"result_cache_enabled",
+					"warp_resiliency_enabled",
+					"trino_uri", // computed, only available when cluster is ENABLED
+				},
+			},
 			// Update and Read testing
 			{
 				Config: testAccClusterConfigUpdate(suffix),
@@ -100,6 +115,22 @@ func TestAccResourceCluster_ResultCache(t *testing.T) {
 					),
 				},
 			},
+			// Import testing
+			{
+				ResourceName:                         "galaxy_cluster.test_cache",
+				ImportState:                          true,
+				ImportStateVerify:                    true,
+				ImportStateIdFunc:                    importStateIdFunc("galaxy_cluster.test_cache", "cluster_id"),
+				ImportStateVerifyIdentifierAttribute: "cluster_id",
+				ImportStateVerifyIgnore: []string{
+					// These fields are not returned by the Galaxy API
+					"private_link_cluster",
+					"result_cache_enabled",
+					"result_cache_default_visibility_seconds",
+					"warp_resiliency_enabled",
+					"trino_uri", // computed, only available when cluster is ENABLED
+				},
+			},
 		},
 	})
 }
@@ -133,6 +164,22 @@ func TestAccResourceCluster_WarpSpeed(t *testing.T) {
 						tfjsonpath.New("warp_resiliency_enabled"),
 						knownvalue.Bool(true),
 					),
+				},
+			},
+			// Import testing
+			{
+				ResourceName:                         "galaxy_cluster.test_warp",
+				ImportState:                          true,
+				ImportStateVerify:                    true,
+				ImportStateIdFunc:                    importStateIdFunc("galaxy_cluster.test_warp", "cluster_id"),
+				ImportStateVerifyIdentifierAttribute: "cluster_id",
+				ImportStateVerifyIgnore: []string{
+					// These fields are not returned by the Galaxy API
+					"private_link_cluster",
+					"result_cache_enabled",
+					"processing_mode",
+					"warp_resiliency_enabled",
+					"trino_uri", // computed, only available when cluster is ENABLED
 				},
 			},
 		},
@@ -234,6 +281,21 @@ func TestAccResourceCluster_MinimalConfig(t *testing.T) {
 						tfjsonpath.New("cluster_id"),
 						knownvalue.NotNull(),
 					),
+				},
+			},
+			// Import testing
+			{
+				ResourceName:                         "galaxy_cluster.test",
+				ImportState:                          true,
+				ImportStateVerify:                    true,
+				ImportStateIdFunc:                    importStateIdFunc("galaxy_cluster.test", "cluster_id"),
+				ImportStateVerifyIdentifierAttribute: "cluster_id",
+				ImportStateVerifyIgnore: []string{
+					// These fields are not returned by the Galaxy API
+					"private_link_cluster",
+					"result_cache_enabled",
+					"warp_resiliency_enabled",
+					"trino_uri", // computed, only available when cluster is ENABLED
 				},
 			},
 		},

@@ -51,6 +51,14 @@ func TestAccResourceTag_Basic(t *testing.T) {
 					),
 				},
 			},
+			// Import testing
+			{
+				ResourceName:                         "galaxy_tag.test",
+				ImportState:                          true,
+				ImportStateVerify:                    true,
+				ImportStateIdFunc:                    importStateIdFunc("galaxy_tag.test", "tag_id"),
+				ImportStateVerifyIdentifierAttribute: "tag_id",
+			},
 			// Update and Read testing
 			{
 				Config: testAccTagConfigUpdate(suffix),
@@ -117,6 +125,14 @@ func TestAccResourceTag_MultipleTags(t *testing.T) {
 						knownvalue.StringExact("#FFA500"),
 					),
 				},
+			},
+			// Import testing for pii tag
+			{
+				ResourceName:                         "galaxy_tag.pii",
+				ImportState:                          true,
+				ImportStateVerify:                    true,
+				ImportStateIdFunc:                    importStateIdFunc("galaxy_tag.pii", "tag_id"),
+				ImportStateVerifyIdentifierAttribute: "tag_id",
 			},
 		},
 	})
@@ -198,6 +214,14 @@ func TestAccResourceTag_MinimalConfig(t *testing.T) {
 						knownvalue.StringExact("#0000FF"),
 					),
 				},
+			},
+			// Import testing
+			{
+				ResourceName:                         "galaxy_tag.test",
+				ImportState:                          true,
+				ImportStateVerify:                    true,
+				ImportStateIdFunc:                    importStateIdFunc("galaxy_tag.test", "tag_id"),
+				ImportStateVerifyIdentifierAttribute: "tag_id",
 			},
 		},
 	})

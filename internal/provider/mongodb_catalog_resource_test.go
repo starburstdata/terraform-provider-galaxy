@@ -51,6 +51,18 @@ func TestAccResourceMongoDBCatalog_Basic(t *testing.T) {
 					),
 				},
 			},
+			// Import testing
+			{
+				ResourceName:                         "galaxy_mongodb_catalog.test",
+				ImportState:                          true,
+				ImportStateVerify:                    true,
+				ImportStateIdFunc:                    importStateIdFunc("galaxy_mongodb_catalog.test", "catalog_id"),
+				ImportStateVerifyIdentifierAttribute: "catalog_id",
+				ImportStateVerifyIgnore: []string{
+					"password", // write-only, never returned by API
+					"validate", // request-only parameter, not returned by API
+				},
+			},
 			// Update and Read testing
 			{
 				Config: testAccMongoDBCatalogConfigUpdated(suffix),
@@ -124,6 +136,18 @@ func TestAccResourceMongoDBCatalog_MinimalConfig(t *testing.T) {
 						tfjsonpath.New("catalog_id"),
 						knownvalue.NotNull(),
 					),
+				},
+			},
+			// Import testing
+			{
+				ResourceName:                         "galaxy_mongodb_catalog.test",
+				ImportState:                          true,
+				ImportStateVerify:                    true,
+				ImportStateIdFunc:                    importStateIdFunc("galaxy_mongodb_catalog.test", "catalog_id"),
+				ImportStateVerifyIdentifierAttribute: "catalog_id",
+				ImportStateVerifyIgnore: []string{
+					"password", // write-only, never returned by API
+					"validate", // request-only parameter, not returned by API
 				},
 			},
 		},

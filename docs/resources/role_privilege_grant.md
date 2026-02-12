@@ -26,8 +26,11 @@ description: |-
 ### Optional
 
 - `column_name` (String) Column name
-- `list_all_privileges` (Boolean) Lists all inherited and directly granted privileges if true, or only directly granted privileges if false.
 - `role_id` (String) - A role
 - This parameter can be looked up using `name` instead of its Id. Use `name=value` instead of an Id to lookup/search using the `value`. `value` must be encoded ([see RFC](https://www.rfc-editor.org/rfc/rfc3986#section-2.2) including `=`)
 - `schema_name` (String) Schema name
 - `table_name` (String) Table name
+
+### Read-Only
+
+- `list_all_privileges` (Boolean) Lists all inherited and directly granted privileges if true, or only directly granted privileges if false.

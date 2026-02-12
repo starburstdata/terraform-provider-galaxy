@@ -51,6 +51,14 @@ func TestAccResourceColumnMask_Basic(t *testing.T) {
 					),
 				},
 			},
+			// Import testing
+			{
+				ResourceName:                         "galaxy_column_mask.test",
+				ImportState:                          true,
+				ImportStateVerify:                    true,
+				ImportStateIdFunc:                    importStateIdFunc("galaxy_column_mask.test", "column_mask_id"),
+				ImportStateVerifyIdentifierAttribute: "column_mask_id",
+			},
 			// Update and Read testing
 			{
 				Config: testAccColumnMaskConfigUpdate(suffix),
@@ -102,6 +110,14 @@ func TestAccResourceColumnMask_EmailMask(t *testing.T) {
 						knownvalue.StringExact("Show only email domain"),
 					),
 				},
+			},
+			// Import testing
+			{
+				ResourceName:                         "galaxy_column_mask.email",
+				ImportState:                          true,
+				ImportStateVerify:                    true,
+				ImportStateIdFunc:                    importStateIdFunc("galaxy_column_mask.email", "column_mask_id"),
+				ImportStateVerifyIdentifierAttribute: "column_mask_id",
 			},
 		},
 	})

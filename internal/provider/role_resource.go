@@ -15,6 +15,7 @@ import (
 
 	"github.com/hashicorp/terraform-plugin-framework/attr"
 	"github.com/hashicorp/terraform-plugin-framework/diag"
+	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
@@ -25,6 +26,7 @@ import (
 
 var _ resource.Resource = (*roleResource)(nil)
 var _ resource.ResourceWithConfigure = (*roleResource)(nil)
+var _ resource.ResourceWithImportState = (*roleResource)(nil)
 
 func NewRoleResource() resource.Resource {
 	return &roleResource{}
@@ -200,6 +202,10 @@ func (r *roleResource) Delete(ctx context.Context, req resource.DeleteRequest, r
 	}
 
 	tflog.Debug(ctx, "Deleted role", map[string]interface{}{"id": id})
+}
+
+func (r *roleResource) ImportState(ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse) {
+	resource.ImportStatePassthroughID(ctx, path.Root("role_id"), req, resp)
 }
 
 // Helper methods

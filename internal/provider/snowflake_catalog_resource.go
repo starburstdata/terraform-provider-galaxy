@@ -14,6 +14,7 @@ import (
 	"fmt"
 
 	"github.com/hashicorp/terraform-plugin-framework/diag"
+	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/types"
@@ -25,6 +26,7 @@ import (
 
 var _ resource.Resource = (*snowflake_catalogResource)(nil)
 var _ resource.ResourceWithConfigure = (*snowflake_catalogResource)(nil)
+var _ resource.ResourceWithImportState = (*snowflake_catalogResource)(nil)
 
 func NewSnowflakeCatalogResource() resource.Resource {
 	return &snowflake_catalogResource{}
@@ -221,6 +223,10 @@ func (r *snowflake_catalogResource) Delete(ctx context.Context, req resource.Del
 	}
 
 	tflog.Debug(ctx, "Deleted snowflake_catalog", map[string]interface{}{"id": id})
+}
+
+func (r *snowflake_catalogResource) ImportState(ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse) {
+	resource.ImportStatePassthroughID(ctx, path.Root("catalog_id"), req, resp)
 }
 
 // Helper methods

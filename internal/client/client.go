@@ -814,8 +814,53 @@ func (c *GalaxyClient) ListRoleGrants(ctx context.Context, roleID string) (map[s
 
 func (c *GalaxyClient) ListRolePrivileges(ctx context.Context, roleID string) (map[string]interface{}, error) {
 	var result map[string]interface{}
-	err := c.doRequest(ctx, "GET", "/public/api/v1/role/"+roleID+"/privileges", nil, &result)
+	err := c.doRequest(ctx, "GET", "/public/api/v1/role/"+roleID+"/privilege", nil, &result)
 	return result, err
+}
+
+// FindRolePrivilegeGrant searches for a specific privilege grant in a role's privilege list.
+// Retries with exponential backoff to handle eventual consistency in the list API.
+// Returns the grant map if found, nil if not found after retries, or an error.
+func (c *GalaxyClient) FindRolePrivilegeGrant(ctx context.Context, roleID, entityID, privilege, grantKind string) (map[string]interface{}, error) {
+	for attempt := 0; attempt < 3; attempt++ {
+		result, err := c.ListRolePrivileges(ctx, roleID)
+		if err != nil {
+			return nil, err
+		}
+
+		grants, ok := result["result"].([]interface{})
+		if !ok {
+			return nil, fmt.Errorf("unexpected response format: result is not an array")
+		}
+
+		for _, g := range grants {
+			grant, ok := g.(map[string]interface{})
+			if !ok {
+				continue
+			}
+			gEntityID, _ := grant["entityId"].(string)
+			gPrivilege, _ := grant["privilege"].(string)
+			gGrantKind, _ := grant["grantKind"].(string)
+			if gEntityID == entityID && gPrivilege == privilege && gGrantKind == grantKind {
+				return grant, nil
+			}
+		}
+
+		if attempt < 2 {
+			wait := time.Duration(attempt+1) * 3 * time.Second
+			tflog.Debug(ctx, "Grant not yet visible in privilege list, retrying", map[string]interface{}{
+				"attempt":   attempt + 1,
+				"wait":      wait.String(),
+				"roleId":    roleID,
+				"entityId":  entityID,
+				"privilege": privilege,
+				"grantKind": grantKind,
+			})
+			time.Sleep(wait)
+		}
+	}
+
+	return nil, nil
 }
 
 func (c *GalaxyClient) ListTags(ctx context.Context) (map[string]interface{}, error) {
