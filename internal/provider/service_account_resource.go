@@ -15,6 +15,7 @@ import (
 
 	"github.com/hashicorp/terraform-plugin-framework/attr"
 	"github.com/hashicorp/terraform-plugin-framework/diag"
+	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
@@ -25,6 +26,7 @@ import (
 
 var _ resource.Resource = (*service_accountResource)(nil)
 var _ resource.ResourceWithConfigure = (*service_accountResource)(nil)
+var _ resource.ResourceWithImportState = (*service_accountResource)(nil)
 
 func NewServiceAccountResource() resource.Resource {
 	return &service_accountResource{}
@@ -187,6 +189,10 @@ func (r *service_accountResource) Delete(ctx context.Context, req resource.Delet
 	tflog.Debug(ctx, "Deleted service_account", map[string]interface{}{"id": id})
 }
 
+func (r *service_accountResource) ImportState(ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse) {
+	resource.ImportStatePassthroughID(ctx, path.Root("service_account_id"), req, resp)
+}
+
 // Helper methods
 func (r *service_accountResource) modelToCreateRequest(ctx context.Context, model *resource_service_account.ServiceAccountModel, diags *diag.Diagnostics) map[string]interface{} {
 	request := make(map[string]interface{})
@@ -234,7 +240,8 @@ func (r *service_accountResource) updateModelFromResponse(ctx context.Context, m
 	if username, ok := response["username"].(string); ok {
 		model.Username = types.StringValue(username)
 	}
-
+	// Note: response["userName"] includes the domain suffix (e.g., "user@domain")
+	// and maps to a different model field (UserName/user_name), not Username/username
 	if userName, ok := response["userName"].(string); ok {
 		model.UserName = types.StringValue(userName)
 	}
@@ -253,6 +260,8 @@ func (r *service_accountResource) updateModelFromResponse(ctx context.Context, m
 		}
 		if len(roleIds) > 0 {
 			model.AdditionalRoleIds = types.ListValueMust(types.StringType, roleIds)
+		} else {
+			model.AdditionalRoleIds = types.ListValueMust(types.StringType, []attr.Value{})
 		}
 	}
 

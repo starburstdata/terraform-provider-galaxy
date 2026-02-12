@@ -14,6 +14,7 @@ import (
 	"fmt"
 
 	"github.com/hashicorp/terraform-plugin-framework/diag"
+	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
@@ -24,6 +25,7 @@ import (
 
 var _ resource.Resource = (*data_productResource)(nil)
 var _ resource.ResourceWithConfigure = (*data_productResource)(nil)
+var _ resource.ResourceWithImportState = (*data_productResource)(nil)
 
 func NewDataProductResource() resource.Resource {
 	return &data_productResource{}
@@ -196,6 +198,10 @@ func (r *data_productResource) Delete(ctx context.Context, req resource.DeleteRe
 	tflog.Debug(ctx, "Deleted data_product", map[string]interface{}{"id": id})
 }
 
+func (r *data_productResource) ImportState(ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse) {
+	resource.ImportStatePassthroughID(ctx, path.Root("data_product_id"), req, resp)
+}
+
 // Helper methods
 func (r *data_productResource) modelToCreateRequest(ctx context.Context, model *resource_data_product.DataProductModel, diags *diag.Diagnostics) map[string]interface{} {
 	request := make(map[string]interface{})
@@ -291,6 +297,11 @@ func (r *data_productResource) updateModelFromResponse(ctx context.Context, mode
 
 	if catalogId, ok := response["catalogId"].(string); ok {
 		model.CatalogId = types.StringValue(catalogId)
+	} else if catalog, ok := response["catalog"].(map[string]interface{}); ok {
+		// GET response nests catalogId under the "catalog" object
+		if catalogId, ok := catalog["catalogId"].(string); ok {
+			model.CatalogId = types.StringValue(catalogId)
+		}
 	}
 
 	if schemaName, ok := response["schemaName"].(string); ok {

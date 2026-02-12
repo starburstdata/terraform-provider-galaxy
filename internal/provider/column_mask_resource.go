@@ -14,6 +14,7 @@ import (
 	"fmt"
 
 	"github.com/hashicorp/terraform-plugin-framework/diag"
+	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
@@ -24,6 +25,7 @@ import (
 
 var _ resource.Resource = (*column_maskResource)(nil)
 var _ resource.ResourceWithConfigure = (*column_maskResource)(nil)
+var _ resource.ResourceWithImportState = (*column_maskResource)(nil)
 
 func NewColumnMaskResource() resource.Resource {
 	return &column_maskResource{}
@@ -184,6 +186,10 @@ func (r *column_maskResource) Delete(ctx context.Context, req resource.DeleteReq
 	}
 
 	tflog.Debug(ctx, "Deleted column_mask", map[string]interface{}{"id": id})
+}
+
+func (r *column_maskResource) ImportState(ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse) {
+	resource.ImportStatePassthroughID(ctx, path.Root("column_mask_id"), req, resp)
 }
 
 // Helper methods

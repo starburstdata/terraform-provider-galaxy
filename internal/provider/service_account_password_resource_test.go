@@ -11,8 +11,26 @@ import (
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/knownvalue"
 	"github.com/hashicorp/terraform-plugin-testing/statecheck"
+	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-plugin-testing/tfjsonpath"
 )
+
+// serviceAccountPasswordCompositeImportStateIdFunc returns a function that constructs the composite
+// import ID in format "service_account_id/password_id" from the resource state.
+func serviceAccountPasswordCompositeImportStateIdFunc(resourceName string) resource.ImportStateIdFunc {
+	return func(s *terraform.State) (string, error) {
+		rs, ok := s.RootModule().Resources[resourceName]
+		if !ok {
+			return "", fmt.Errorf("resource not found: %s", resourceName)
+		}
+		serviceAccountID := rs.Primary.Attributes["service_account_id"]
+		passwordID := rs.Primary.Attributes["service_account_password_id"]
+		if serviceAccountID == "" || passwordID == "" {
+			return "", fmt.Errorf("service_account_id or service_account_password_id not set")
+		}
+		return fmt.Sprintf("%s/%s", serviceAccountID, passwordID), nil
+	}
+}
 
 func TestAccResourceServiceAccountPassword_Basic(t *testing.T) {
 	// Generate a short random suffix to avoid conflicts with leftover resources
@@ -57,6 +75,17 @@ func TestAccResourceServiceAccountPassword_Basic(t *testing.T) {
 					),
 				},
 			},
+			// Import testing
+			{
+				ResourceName:                         "galaxy_service_account_password.test",
+				ImportState:                          true,
+				ImportStateVerify:                    true,
+				ImportStateIdFunc:                    serviceAccountPasswordCompositeImportStateIdFunc("galaxy_service_account_password.test"),
+				ImportStateVerifyIdentifierAttribute: "service_account_password_id",
+				ImportStateVerifyIgnore: []string{
+					"password", // only returned on create, not on subsequent reads
+				},
+			},
 		},
 	})
 }
@@ -96,6 +125,17 @@ func TestAccResourceServiceAccountPassword_MultiplePasswords(t *testing.T) {
 						tfjsonpath.New("service_account_password_id"),
 						knownvalue.NotNull(),
 					),
+				},
+			},
+			// Import testing for primary password
+			{
+				ResourceName:                         "galaxy_service_account_password.primary",
+				ImportState:                          true,
+				ImportStateVerify:                    true,
+				ImportStateIdFunc:                    serviceAccountPasswordCompositeImportStateIdFunc("galaxy_service_account_password.primary"),
+				ImportStateVerifyIdentifierAttribute: "service_account_password_id",
+				ImportStateVerifyIgnore: []string{
+					"password", // only returned on create, not on subsequent reads
 				},
 			},
 		},
@@ -169,6 +209,17 @@ func TestAccResourceServiceAccountPassword_MinimalConfig(t *testing.T) {
 						tfjsonpath.New("password"),
 						knownvalue.NotNull(),
 					),
+				},
+			},
+			// Import testing
+			{
+				ResourceName:                         "galaxy_service_account_password.test",
+				ImportState:                          true,
+				ImportStateVerify:                    true,
+				ImportStateIdFunc:                    serviceAccountPasswordCompositeImportStateIdFunc("galaxy_service_account_password.test"),
+				ImportStateVerifyIdentifierAttribute: "service_account_password_id",
+				ImportStateVerifyIgnore: []string{
+					"password", // only returned on create, not on subsequent reads
 				},
 			},
 		},

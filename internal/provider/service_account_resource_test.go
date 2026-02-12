@@ -46,6 +46,19 @@ func TestAccResourceServiceAccount_Basic(t *testing.T) {
 					),
 				},
 			},
+			// Import testing
+			{
+				ResourceName:                         "galaxy_service_account.test",
+				ImportState:                          true,
+				ImportStateVerify:                    true,
+				ImportStateIdFunc:                    importStateIdFunc("galaxy_service_account.test", "service_account_id"),
+				ImportStateVerifyIdentifierAttribute: "service_account_id",
+				ImportStateVerifyIgnore: []string{
+					"with_initial_password", // write-only, used only during creation
+					"passwords",             // password field within passwords is only returned on create
+					"username",              // API GET returns userName (with domain) not username
+				},
+			},
 		},
 	})
 }
@@ -75,6 +88,19 @@ func TestAccResourceServiceAccount_WithRoles(t *testing.T) {
 						tfjsonpath.New("additional_role_ids"),
 						knownvalue.NotNull(),
 					),
+				},
+			},
+			// Import testing
+			{
+				ResourceName:                         "galaxy_service_account.test_with_role",
+				ImportState:                          true,
+				ImportStateVerify:                    true,
+				ImportStateIdFunc:                    importStateIdFunc("galaxy_service_account.test_with_role", "service_account_id"),
+				ImportStateVerifyIdentifierAttribute: "service_account_id",
+				ImportStateVerifyIgnore: []string{
+					"with_initial_password", // write-only, used only during creation
+					"passwords",             // password field within passwords is only returned on create
+					"username",              // API GET returns userName (with domain) not username
 				},
 			},
 		},
@@ -136,6 +162,19 @@ func TestAccResourceServiceAccount_MinimalConfig(t *testing.T) {
 						tfjsonpath.New("service_account_id"),
 						knownvalue.NotNull(),
 					),
+				},
+			},
+			// Import testing
+			{
+				ResourceName:                         "galaxy_service_account.test",
+				ImportState:                          true,
+				ImportStateVerify:                    true,
+				ImportStateIdFunc:                    importStateIdFunc("galaxy_service_account.test", "service_account_id"),
+				ImportStateVerifyIdentifierAttribute: "service_account_id",
+				ImportStateVerifyIgnore: []string{
+					"with_initial_password", // write-only, used only during creation
+					"passwords",             // password field within passwords is only returned on create
+					"username",              // API GET returns userName (with domain) not username
 				},
 			},
 		},

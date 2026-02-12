@@ -15,6 +15,7 @@ import (
 
 	"github.com/hashicorp/terraform-plugin-framework/attr"
 	"github.com/hashicorp/terraform-plugin-framework/diag"
+	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-framework/types/basetypes"
@@ -26,6 +27,7 @@ import (
 
 var _ resource.Resource = (*policyResource)(nil)
 var _ resource.ResourceWithConfigure = (*policyResource)(nil)
+var _ resource.ResourceWithImportState = (*policyResource)(nil)
 
 func NewPolicyResource() resource.Resource {
 	return &policyResource{}
@@ -197,6 +199,10 @@ func (r *policyResource) Delete(ctx context.Context, req resource.DeleteRequest,
 	}
 
 	tflog.Debug(ctx, "Deleted policy", map[string]interface{}{"id": id})
+}
+
+func (r *policyResource) ImportState(ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse) {
+	resource.ImportStatePassthroughID(ctx, path.Root("policy_id"), req, resp)
 }
 
 // Helper methods

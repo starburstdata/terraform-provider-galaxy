@@ -16,6 +16,7 @@ import (
 	"strings"
 
 	"github.com/hashicorp/terraform-plugin-framework/diag"
+	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
@@ -25,6 +26,7 @@ import (
 )
 
 var _ resource.Resource = (*clusterResource)(nil)
+var _ resource.ResourceWithImportState = (*clusterResource)(nil)
 
 func NewClusterResource() resource.Resource {
 	return &clusterResource{}
@@ -246,6 +248,10 @@ func (r *clusterResource) Delete(ctx context.Context, req resource.DeleteRequest
 	})
 }
 
+func (r *clusterResource) ImportState(ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse) {
+	resource.ImportStatePassthroughID(ctx, path.Root("cluster_id"), req, resp)
+}
+
 // applyEdgeCaseLogic applies business logic edge cases to the cluster model
 func (r *clusterResource) applyEdgeCaseLogic(model *resource_cluster.ClusterModel, diags *diag.Diagnostics) {
 	// Edge case: WarpResiliencyEnabled should always be set to true if processing_mode includes "WarpSpeed"
@@ -403,12 +409,7 @@ func (r *clusterResource) updateModelFromResponse(ctx context.Context, model *re
 	if processingMode, ok := response["processingMode"].(string); ok {
 		model.ProcessingMode = types.StringValue(processingMode)
 	} else {
-		// If processingMode is not in response, check if we have a known value in the model
-		if model.ProcessingMode.IsUnknown() {
-			// Set to null if it was unknown (not specified by user)
-			model.ProcessingMode = types.StringNull()
-		}
-		// Otherwise keep the current plan value (e.g., "WarpSpeed" specified by user)
+		model.ProcessingMode = types.StringNull()
 	}
 
 	if resultCacheEnabled, ok := response["resultCacheEnabled"].(bool); ok {
@@ -418,13 +419,7 @@ func (r *clusterResource) updateModelFromResponse(ctx context.Context, model *re
 	if resultCacheDefaultVisibilitySeconds, ok := response["resultCacheDefaultVisibilitySeconds"].(float64); ok {
 		model.ResultCacheDefaultVisibilitySeconds = types.Int64Value(int64(resultCacheDefaultVisibilitySeconds))
 	} else {
-		// Preserve the configured value if the API doesn't return this field
-		// This handles the case where the user specifies the value but the API
-		// doesn't echo it back in the response
-		if model.ResultCacheDefaultVisibilitySeconds.IsUnknown() {
-			model.ResultCacheDefaultVisibilitySeconds = types.Int64Null()
-		}
-		// Otherwise keep the existing model value (user's configured value)
+		model.ResultCacheDefaultVisibilitySeconds = types.Int64Null()
 	}
 
 	if warpResiliencyEnabled, ok := response["warpResiliencyEnabled"].(bool); ok {

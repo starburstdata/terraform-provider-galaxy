@@ -47,6 +47,17 @@ func TestAccResourceRole_Basic(t *testing.T) {
 					),
 				},
 			},
+			// Import testing
+			{
+				ResourceName:                         "galaxy_role.test",
+				ImportState:                          true,
+				ImportStateVerify:                    true,
+				ImportStateIdFunc:                    importStateIdFunc("galaxy_role.test", "role_id"),
+				ImportStateVerifyIdentifierAttribute: "role_id",
+				ImportStateVerifyIgnore: []string{
+					"grant_to_creating_role", // write-only, used only during creation
+				},
+			},
 			// Update and Read testing
 			{
 				Config: testAccRoleConfigUpdate(uniqueId),
@@ -90,6 +101,17 @@ func TestAccResourceRole_WithDescription(t *testing.T) {
 					),
 				},
 			},
+			// Import testing
+			{
+				ResourceName:                         "galaxy_role.test_desc",
+				ImportState:                          true,
+				ImportStateVerify:                    true,
+				ImportStateIdFunc:                    importStateIdFunc("galaxy_role.test_desc", "role_id"),
+				ImportStateVerifyIdentifierAttribute: "role_id",
+				ImportStateVerifyIgnore: []string{
+					"grant_to_creating_role", // write-only, used only during creation
+				},
+			},
 		},
 	})
 }
@@ -125,6 +147,17 @@ func TestAccResourceRole_MultipleRoles(t *testing.T) {
 						tfjsonpath.New("role_name"),
 						knownvalue.StringExact(fmt.Sprintf("dataeng_%s", uniqueId)),
 					),
+				},
+			},
+			// Import testing for admin role
+			{
+				ResourceName:                         "galaxy_role.admin",
+				ImportState:                          true,
+				ImportStateVerify:                    true,
+				ImportStateIdFunc:                    importStateIdFunc("galaxy_role.admin", "role_id"),
+				ImportStateVerifyIdentifierAttribute: "role_id",
+				ImportStateVerifyIgnore: []string{
+					"grant_to_creating_role", // write-only, used only during creation
 				},
 			},
 		},

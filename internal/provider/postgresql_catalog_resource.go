@@ -14,6 +14,7 @@ import (
 	"fmt"
 
 	"github.com/hashicorp/terraform-plugin-framework/diag"
+	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/types"
@@ -25,6 +26,7 @@ import (
 
 var _ resource.Resource = (*postgresql_catalogResource)(nil)
 var _ resource.ResourceWithConfigure = (*postgresql_catalogResource)(nil)
+var _ resource.ResourceWithImportState = (*postgresql_catalogResource)(nil)
 
 func NewPostgresqlCatalogResource() resource.Resource {
 	return &postgresql_catalogResource{}
@@ -197,6 +199,10 @@ func (r *postgresql_catalogResource) Delete(ctx context.Context, req resource.De
 	}
 
 	tflog.Debug(ctx, "Deleted postgresql_catalog", map[string]interface{}{"id": id})
+}
+
+func (r *postgresql_catalogResource) ImportState(ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse) {
+	resource.ImportStatePassthroughID(ctx, path.Root("catalog_id"), req, resp)
 }
 
 // Helper methods

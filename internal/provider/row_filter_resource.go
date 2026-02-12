@@ -14,6 +14,7 @@ import (
 	"fmt"
 
 	"github.com/hashicorp/terraform-plugin-framework/diag"
+	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
@@ -24,6 +25,7 @@ import (
 
 var _ resource.Resource = (*row_filterResource)(nil)
 var _ resource.ResourceWithConfigure = (*row_filterResource)(nil)
+var _ resource.ResourceWithImportState = (*row_filterResource)(nil)
 
 func NewRowFilterResource() resource.Resource {
 	return &row_filterResource{}
@@ -184,6 +186,10 @@ func (r *row_filterResource) Delete(ctx context.Context, req resource.DeleteRequ
 	}
 
 	tflog.Debug(ctx, "Deleted row_filter", map[string]interface{}{"id": id})
+}
+
+func (r *row_filterResource) ImportState(ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse) {
+	resource.ImportStatePassthroughID(ctx, path.Root("row_filter_id"), req, resp)
 }
 
 // Helper methods
