@@ -355,6 +355,13 @@ func (r *clusterResource) updateModelFromResponse(ctx context.Context, model *re
 		model.WarpSpeedCluster = types.BoolValue(false)
 	}
 
+	// Extended fields (computed) - enabled field from response
+	if enabled, ok := response["enabled"].(bool); ok {
+		model.Enabled = types.BoolValue(enabled)
+	} else {
+		model.Enabled = types.BoolNull()
+	}
+
 	// Edge case: trino_uri field remains unknown after apply when cluster is in DISABLED state. Only set when ENABLED.
 	if trinoUri, ok := response["trinoUri"].(string); ok {
 		if model.ClusterState.ValueString() == "ENABLED" {

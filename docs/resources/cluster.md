@@ -38,5 +38,6 @@ description: |-
 - `batch_cluster` (Boolean) Supports resource intensive query processing mode (read only)
 - `cluster_id` (String) Cluster ID (read only)
 - `cluster_state` (String) Cluster state (read only)
+- `enabled` (Boolean) Cluster enabled state (extended field) (read only)
 - `trino_uri` (String) Connection URL (read only)
 - `warp_speed_cluster` (Boolean) Supports warp speed mode (read only)

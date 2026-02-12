@@ -38,6 +38,11 @@ func ClusterDataSourceSchema(ctx context.Context) schema.Schema {
 				Description:         "Cluster state (read only)",
 				MarkdownDescription: "Cluster state (read only)",
 			},
+			"enabled": schema.BoolAttribute{
+				Computed:            true,
+				Description:         "Cluster enabled state (extended field) (read only)",
+				MarkdownDescription: "Cluster enabled state (extended field) (read only)",
+			},
 			"idle_stop_minutes": schema.Int64Attribute{
 				Computed:            true,
 				Description:         "Idle stop duration (in minutes) (read only)",
@@ -58,10 +63,30 @@ func ClusterDataSourceSchema(ctx context.Context) schema.Schema {
 				Description:         "Cluster name (read only)",
 				MarkdownDescription: "Cluster name (read only)",
 			},
+			"private_link_cluster": schema.BoolAttribute{
+				Computed:            true,
+				Description:         "Private Link enabled (extended field) (read only)",
+				MarkdownDescription: "Private Link enabled (extended field) (read only)",
+			},
+			"processing_mode": schema.StringAttribute{
+				Computed:            true,
+				Description:         "Cluster query processing mode (extended field) (read only)",
+				MarkdownDescription: "Cluster query processing mode (extended field) (read only)",
+			},
 			"replicas": schema.Int64Attribute{
 				Computed:            true,
 				Description:         "Number of replicas (read only)",
 				MarkdownDescription: "Number of replicas (read only)",
+			},
+			"result_cache_default_visibility_seconds": schema.Int64Attribute{
+				Computed:            true,
+				Description:         "Default visibility for result cache in seconds (extended field) (read only)",
+				MarkdownDescription: "Default visibility for result cache in seconds (extended field) (read only)",
+			},
+			"result_cache_enabled": schema.BoolAttribute{
+				Computed:            true,
+				Description:         "Result cache enabled (extended field) (read only)",
+				MarkdownDescription: "Result cache enabled (extended field) (read only)",
 			},
 			"trino_uri": schema.StringAttribute{
 				Computed:            true,
@@ -78,16 +103,21 @@ func ClusterDataSourceSchema(ctx context.Context) schema.Schema {
 }
 
 type ClusterModel struct {
-	BatchCluster     types.Bool   `tfsdk:"batch_cluster"`
-	CatalogRefs      types.List   `tfsdk:"catalog_refs"`
-	CloudRegionId    types.String `tfsdk:"cloud_region_id"`
-	ClusterId        types.String `tfsdk:"cluster_id"`
-	ClusterState     types.String `tfsdk:"cluster_state"`
-	IdleStopMinutes  types.Int64  `tfsdk:"idle_stop_minutes"`
-	MaxWorkers       types.Int64  `tfsdk:"max_workers"`
-	MinWorkers       types.Int64  `tfsdk:"min_workers"`
-	Name             types.String `tfsdk:"name"`
-	Replicas         types.Int64  `tfsdk:"replicas"`
-	TrinoUri         types.String `tfsdk:"trino_uri"`
-	WarpSpeedCluster types.Bool   `tfsdk:"warp_speed_cluster"`
+	BatchCluster                        types.Bool   `tfsdk:"batch_cluster"`
+	CatalogRefs                         types.List   `tfsdk:"catalog_refs"`
+	CloudRegionId                       types.String `tfsdk:"cloud_region_id"`
+	ClusterId                           types.String `tfsdk:"cluster_id"`
+	ClusterState                        types.String `tfsdk:"cluster_state"`
+	Enabled                             types.Bool   `tfsdk:"enabled"`
+	IdleStopMinutes                     types.Int64  `tfsdk:"idle_stop_minutes"`
+	MaxWorkers                          types.Int64  `tfsdk:"max_workers"`
+	MinWorkers                          types.Int64  `tfsdk:"min_workers"`
+	Name                                types.String `tfsdk:"name"`
+	PrivateLinkCluster                  types.Bool   `tfsdk:"private_link_cluster"`
+	ProcessingMode                      types.String `tfsdk:"processing_mode"`
+	Replicas                            types.Int64  `tfsdk:"replicas"`
+	ResultCacheDefaultVisibilitySeconds types.Int64  `tfsdk:"result_cache_default_visibility_seconds"`
+	ResultCacheEnabled                  types.Bool   `tfsdk:"result_cache_enabled"`
+	TrinoUri                            types.String `tfsdk:"trino_uri"`
+	WarpSpeedCluster                    types.Bool   `tfsdk:"warp_speed_cluster"`
 }

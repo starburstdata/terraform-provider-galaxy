@@ -236,21 +236,21 @@ func IsNotFound(err error) bool {
 	return ok
 }
 
-// GetAllPaginatedResults fetches all paginated results from an API endpoint
-// This should be used by data sources to automatically handle pagination
+// GetAllPaginatedResults fetches all paginated results from an API endpoint.
+// The path may include query parameters (e.g. "/api/v1/cluster?extended=true").
+// This should be used by data sources to automatically handle pagination.
 func (c *GalaxyClient) GetAllPaginatedResults(ctx context.Context, path string) ([]interface{}, error) {
 	var allResults []interface{}
 	pageToken := ""
 
 	for {
-		// Build URL with pagination parameters
 		requestPath := path
 		if pageToken != "" {
 			separator := "?"
 			if strings.Contains(path, "?") {
 				separator = "&"
 			}
-			requestPath = fmt.Sprintf("%s%spageToken=%s", path, separator, url.QueryEscape(pageToken))
+			requestPath = fmt.Sprintf("%s%spageToken=%s", requestPath, separator, url.QueryEscape(pageToken))
 		}
 
 		var response map[string]interface{}
@@ -268,7 +268,7 @@ func (c *GalaxyClient) GetAllPaginatedResults(ctx context.Context, path string) 
 		if nextToken, ok := response["nextPageToken"].(string); ok && nextToken != "" {
 			pageToken = nextToken
 		} else {
-			break // No more pages
+			break
 		}
 	}
 
@@ -279,19 +279,19 @@ func (c *GalaxyClient) GetAllPaginatedResults(ctx context.Context, path string) 
 
 func (c *GalaxyClient) CreateCluster(ctx context.Context, cluster interface{}) (map[string]interface{}, error) {
 	var result map[string]interface{}
-	err := c.doRequest(ctx, "POST", "/public/api/v1/cluster", cluster, &result)
+	err := c.doRequest(ctx, "POST", "/public/api/v1/cluster?extended=true", cluster, &result)
 	return result, err
 }
 
 func (c *GalaxyClient) GetCluster(ctx context.Context, clusterID string) (map[string]interface{}, error) {
 	var result map[string]interface{}
-	err := c.doRequest(ctx, "GET", "/public/api/v1/cluster/"+clusterID, nil, &result)
+	err := c.doRequest(ctx, "GET", "/public/api/v1/cluster/"+clusterID+"?extended=true", nil, &result)
 	return result, err
 }
 
 func (c *GalaxyClient) UpdateCluster(ctx context.Context, clusterID string, cluster interface{}) (map[string]interface{}, error) {
 	var result map[string]interface{}
-	err := c.doRequest(ctx, "PATCH", "/public/api/v1/cluster/"+clusterID, cluster, &result)
+	err := c.doRequest(ctx, "PATCH", "/public/api/v1/cluster/"+clusterID+"?extended=true", cluster, &result)
 	return result, err
 }
 
@@ -490,7 +490,7 @@ func (c *GalaxyClient) ListClusters(ctx context.Context) ([]map[string]interface
 	var result struct {
 		Clusters []map[string]interface{} `json:"clusters"`
 	}
-	err := c.doRequest(ctx, "GET", "/public/api/v1/cluster", nil, &result)
+	err := c.doRequest(ctx, "GET", "/public/api/v1/cluster?extended=true", nil, &result)
 	return result.Clusters, err
 }
 
