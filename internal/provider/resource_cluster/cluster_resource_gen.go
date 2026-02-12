@@ -40,6 +40,11 @@ func ClusterResourceSchema(ctx context.Context) schema.Schema {
 				Description:         "Cluster state (read only)",
 				MarkdownDescription: "Cluster state (read only)",
 			},
+			"enabled": schema.BoolAttribute{
+				Computed:            true,
+				Description:         "Cluster enabled state (extended field) (read only)",
+				MarkdownDescription: "Cluster enabled state (extended field) (read only)",
+			},
 			"idle_stop_minutes": schema.Int64Attribute{
 				Optional:            true,
 				Computed:            true,
@@ -120,6 +125,7 @@ type ClusterModel struct {
 	CloudRegionId                       types.String `tfsdk:"cloud_region_id"`
 	ClusterId                           types.String `tfsdk:"cluster_id"`
 	ClusterState                        types.String `tfsdk:"cluster_state"`
+	Enabled                             types.Bool   `tfsdk:"enabled"`
 	IdleStopMinutes                     types.Int64  `tfsdk:"idle_stop_minutes"`
 	MaxWorkers                          types.Int64  `tfsdk:"max_workers"`
 	MinWorkers                          types.Int64  `tfsdk:"min_workers"`

@@ -47,6 +47,11 @@ func ClustersDataSourceSchema(ctx context.Context) schema.Schema {
 							Description:         "Cluster state (read only)",
 							MarkdownDescription: "Cluster state (read only)",
 						},
+						"enabled": schema.BoolAttribute{
+							Computed:            true,
+							Description:         "Cluster enabled state (extended field) (read only)",
+							MarkdownDescription: "Cluster enabled state (extended field) (read only)",
+						},
 						"idle_stop_minutes": schema.Int64Attribute{
 							Computed:            true,
 							Description:         "Idle stop duration (in minutes) (read only)",
@@ -67,10 +72,30 @@ func ClustersDataSourceSchema(ctx context.Context) schema.Schema {
 							Description:         "Cluster name (read only)",
 							MarkdownDescription: "Cluster name (read only)",
 						},
+						"private_link_cluster": schema.BoolAttribute{
+							Computed:            true,
+							Description:         "Private Link enabled (extended field) (read only)",
+							MarkdownDescription: "Private Link enabled (extended field) (read only)",
+						},
+						"processing_mode": schema.StringAttribute{
+							Computed:            true,
+							Description:         "Cluster query processing mode (extended field) (read only)",
+							MarkdownDescription: "Cluster query processing mode (extended field) (read only)",
+						},
 						"replicas": schema.Int64Attribute{
 							Computed:            true,
 							Description:         "Number of replicas (read only)",
 							MarkdownDescription: "Number of replicas (read only)",
+						},
+						"result_cache_default_visibility_seconds": schema.Int64Attribute{
+							Computed:            true,
+							Description:         "Default visibility for result cache in seconds (extended field) (read only)",
+							MarkdownDescription: "Default visibility for result cache in seconds (extended field) (read only)",
+						},
+						"result_cache_enabled": schema.BoolAttribute{
+							Computed:            true,
+							Description:         "Result cache enabled (extended field) (read only)",
+							MarkdownDescription: "Result cache enabled (extended field) (read only)",
 						},
 						"trino_uri": schema.StringAttribute{
 							Computed:            true,
@@ -216,6 +241,24 @@ func (t ResultType) ValueFromObject(ctx context.Context, in basetypes.ObjectValu
 			fmt.Sprintf(`cluster_state expected to be basetypes.StringValue, was: %T`, clusterStateAttribute))
 	}
 
+	enabledAttribute, ok := attributes["enabled"]
+
+	if !ok {
+		diags.AddError(
+			"Attribute Missing",
+			`enabled is missing from object`)
+
+		return nil, diags
+	}
+
+	enabledVal, ok := enabledAttribute.(basetypes.BoolValue)
+
+	if !ok {
+		diags.AddError(
+			"Attribute Wrong Type",
+			fmt.Sprintf(`enabled expected to be basetypes.BoolValue, was: %T`, enabledAttribute))
+	}
+
 	idleStopMinutesAttribute, ok := attributes["idle_stop_minutes"]
 
 	if !ok {
@@ -288,6 +331,42 @@ func (t ResultType) ValueFromObject(ctx context.Context, in basetypes.ObjectValu
 			fmt.Sprintf(`name expected to be basetypes.StringValue, was: %T`, nameAttribute))
 	}
 
+	privateLinkClusterAttribute, ok := attributes["private_link_cluster"]
+
+	if !ok {
+		diags.AddError(
+			"Attribute Missing",
+			`private_link_cluster is missing from object`)
+
+		return nil, diags
+	}
+
+	privateLinkClusterVal, ok := privateLinkClusterAttribute.(basetypes.BoolValue)
+
+	if !ok {
+		diags.AddError(
+			"Attribute Wrong Type",
+			fmt.Sprintf(`private_link_cluster expected to be basetypes.BoolValue, was: %T`, privateLinkClusterAttribute))
+	}
+
+	processingModeAttribute, ok := attributes["processing_mode"]
+
+	if !ok {
+		diags.AddError(
+			"Attribute Missing",
+			`processing_mode is missing from object`)
+
+		return nil, diags
+	}
+
+	processingModeVal, ok := processingModeAttribute.(basetypes.StringValue)
+
+	if !ok {
+		diags.AddError(
+			"Attribute Wrong Type",
+			fmt.Sprintf(`processing_mode expected to be basetypes.StringValue, was: %T`, processingModeAttribute))
+	}
+
 	replicasAttribute, ok := attributes["replicas"]
 
 	if !ok {
@@ -304,6 +383,42 @@ func (t ResultType) ValueFromObject(ctx context.Context, in basetypes.ObjectValu
 		diags.AddError(
 			"Attribute Wrong Type",
 			fmt.Sprintf(`replicas expected to be basetypes.Int64Value, was: %T`, replicasAttribute))
+	}
+
+	resultCacheDefaultVisibilitySecondsAttribute, ok := attributes["result_cache_default_visibility_seconds"]
+
+	if !ok {
+		diags.AddError(
+			"Attribute Missing",
+			`result_cache_default_visibility_seconds is missing from object`)
+
+		return nil, diags
+	}
+
+	resultCacheDefaultVisibilitySecondsVal, ok := resultCacheDefaultVisibilitySecondsAttribute.(basetypes.Int64Value)
+
+	if !ok {
+		diags.AddError(
+			"Attribute Wrong Type",
+			fmt.Sprintf(`result_cache_default_visibility_seconds expected to be basetypes.Int64Value, was: %T`, resultCacheDefaultVisibilitySecondsAttribute))
+	}
+
+	resultCacheEnabledAttribute, ok := attributes["result_cache_enabled"]
+
+	if !ok {
+		diags.AddError(
+			"Attribute Missing",
+			`result_cache_enabled is missing from object`)
+
+		return nil, diags
+	}
+
+	resultCacheEnabledVal, ok := resultCacheEnabledAttribute.(basetypes.BoolValue)
+
+	if !ok {
+		diags.AddError(
+			"Attribute Wrong Type",
+			fmt.Sprintf(`result_cache_enabled expected to be basetypes.BoolValue, was: %T`, resultCacheEnabledAttribute))
 	}
 
 	trinoUriAttribute, ok := attributes["trino_uri"]
@@ -347,19 +462,24 @@ func (t ResultType) ValueFromObject(ctx context.Context, in basetypes.ObjectValu
 	}
 
 	return ResultValue{
-		BatchCluster:     batchClusterVal,
-		CatalogRefs:      catalogRefsVal,
-		CloudRegionId:    cloudRegionIdVal,
-		ClusterId:        clusterIdVal,
-		ClusterState:     clusterStateVal,
-		IdleStopMinutes:  idleStopMinutesVal,
-		MaxWorkers:       maxWorkersVal,
-		MinWorkers:       minWorkersVal,
-		Name:             nameVal,
-		Replicas:         replicasVal,
-		TrinoUri:         trinoUriVal,
-		WarpSpeedCluster: warpSpeedClusterVal,
-		state:            attr.ValueStateKnown,
+		BatchCluster:                        batchClusterVal,
+		CatalogRefs:                         catalogRefsVal,
+		CloudRegionId:                       cloudRegionIdVal,
+		ClusterId:                           clusterIdVal,
+		ClusterState:                        clusterStateVal,
+		Enabled:                             enabledVal,
+		IdleStopMinutes:                     idleStopMinutesVal,
+		MaxWorkers:                          maxWorkersVal,
+		MinWorkers:                          minWorkersVal,
+		Name:                                nameVal,
+		PrivateLinkCluster:                  privateLinkClusterVal,
+		ProcessingMode:                      processingModeVal,
+		Replicas:                            replicasVal,
+		ResultCacheDefaultVisibilitySeconds: resultCacheDefaultVisibilitySecondsVal,
+		ResultCacheEnabled:                  resultCacheEnabledVal,
+		TrinoUri:                            trinoUriVal,
+		WarpSpeedCluster:                    warpSpeedClusterVal,
+		state:                               attr.ValueStateKnown,
 	}, diags
 }
 
@@ -516,6 +636,24 @@ func NewResultValue(attributeTypes map[string]attr.Type, attributes map[string]a
 			fmt.Sprintf(`cluster_state expected to be basetypes.StringValue, was: %T`, clusterStateAttribute))
 	}
 
+	enabledAttribute, ok := attributes["enabled"]
+
+	if !ok {
+		diags.AddError(
+			"Attribute Missing",
+			`enabled is missing from object`)
+
+		return NewResultValueUnknown(), diags
+	}
+
+	enabledVal, ok := enabledAttribute.(basetypes.BoolValue)
+
+	if !ok {
+		diags.AddError(
+			"Attribute Wrong Type",
+			fmt.Sprintf(`enabled expected to be basetypes.BoolValue, was: %T`, enabledAttribute))
+	}
+
 	idleStopMinutesAttribute, ok := attributes["idle_stop_minutes"]
 
 	if !ok {
@@ -588,6 +726,42 @@ func NewResultValue(attributeTypes map[string]attr.Type, attributes map[string]a
 			fmt.Sprintf(`name expected to be basetypes.StringValue, was: %T`, nameAttribute))
 	}
 
+	privateLinkClusterAttribute, ok := attributes["private_link_cluster"]
+
+	if !ok {
+		diags.AddError(
+			"Attribute Missing",
+			`private_link_cluster is missing from object`)
+
+		return NewResultValueUnknown(), diags
+	}
+
+	privateLinkClusterVal, ok := privateLinkClusterAttribute.(basetypes.BoolValue)
+
+	if !ok {
+		diags.AddError(
+			"Attribute Wrong Type",
+			fmt.Sprintf(`private_link_cluster expected to be basetypes.BoolValue, was: %T`, privateLinkClusterAttribute))
+	}
+
+	processingModeAttribute, ok := attributes["processing_mode"]
+
+	if !ok {
+		diags.AddError(
+			"Attribute Missing",
+			`processing_mode is missing from object`)
+
+		return NewResultValueUnknown(), diags
+	}
+
+	processingModeVal, ok := processingModeAttribute.(basetypes.StringValue)
+
+	if !ok {
+		diags.AddError(
+			"Attribute Wrong Type",
+			fmt.Sprintf(`processing_mode expected to be basetypes.StringValue, was: %T`, processingModeAttribute))
+	}
+
 	replicasAttribute, ok := attributes["replicas"]
 
 	if !ok {
@@ -604,6 +778,42 @@ func NewResultValue(attributeTypes map[string]attr.Type, attributes map[string]a
 		diags.AddError(
 			"Attribute Wrong Type",
 			fmt.Sprintf(`replicas expected to be basetypes.Int64Value, was: %T`, replicasAttribute))
+	}
+
+	resultCacheDefaultVisibilitySecondsAttribute, ok := attributes["result_cache_default_visibility_seconds"]
+
+	if !ok {
+		diags.AddError(
+			"Attribute Missing",
+			`result_cache_default_visibility_seconds is missing from object`)
+
+		return NewResultValueUnknown(), diags
+	}
+
+	resultCacheDefaultVisibilitySecondsVal, ok := resultCacheDefaultVisibilitySecondsAttribute.(basetypes.Int64Value)
+
+	if !ok {
+		diags.AddError(
+			"Attribute Wrong Type",
+			fmt.Sprintf(`result_cache_default_visibility_seconds expected to be basetypes.Int64Value, was: %T`, resultCacheDefaultVisibilitySecondsAttribute))
+	}
+
+	resultCacheEnabledAttribute, ok := attributes["result_cache_enabled"]
+
+	if !ok {
+		diags.AddError(
+			"Attribute Missing",
+			`result_cache_enabled is missing from object`)
+
+		return NewResultValueUnknown(), diags
+	}
+
+	resultCacheEnabledVal, ok := resultCacheEnabledAttribute.(basetypes.BoolValue)
+
+	if !ok {
+		diags.AddError(
+			"Attribute Wrong Type",
+			fmt.Sprintf(`result_cache_enabled expected to be basetypes.BoolValue, was: %T`, resultCacheEnabledAttribute))
 	}
 
 	trinoUriAttribute, ok := attributes["trino_uri"]
@@ -647,19 +857,24 @@ func NewResultValue(attributeTypes map[string]attr.Type, attributes map[string]a
 	}
 
 	return ResultValue{
-		BatchCluster:     batchClusterVal,
-		CatalogRefs:      catalogRefsVal,
-		CloudRegionId:    cloudRegionIdVal,
-		ClusterId:        clusterIdVal,
-		ClusterState:     clusterStateVal,
-		IdleStopMinutes:  idleStopMinutesVal,
-		MaxWorkers:       maxWorkersVal,
-		MinWorkers:       minWorkersVal,
-		Name:             nameVal,
-		Replicas:         replicasVal,
-		TrinoUri:         trinoUriVal,
-		WarpSpeedCluster: warpSpeedClusterVal,
-		state:            attr.ValueStateKnown,
+		BatchCluster:                        batchClusterVal,
+		CatalogRefs:                         catalogRefsVal,
+		CloudRegionId:                       cloudRegionIdVal,
+		ClusterId:                           clusterIdVal,
+		ClusterState:                        clusterStateVal,
+		Enabled:                             enabledVal,
+		IdleStopMinutes:                     idleStopMinutesVal,
+		MaxWorkers:                          maxWorkersVal,
+		MinWorkers:                          minWorkersVal,
+		Name:                                nameVal,
+		PrivateLinkCluster:                  privateLinkClusterVal,
+		ProcessingMode:                      processingModeVal,
+		Replicas:                            replicasVal,
+		ResultCacheDefaultVisibilitySeconds: resultCacheDefaultVisibilitySecondsVal,
+		ResultCacheEnabled:                  resultCacheEnabledVal,
+		TrinoUri:                            trinoUriVal,
+		WarpSpeedCluster:                    warpSpeedClusterVal,
+		state:                               attr.ValueStateKnown,
 	}, diags
 }
 
@@ -731,23 +946,28 @@ func (t ResultType) ValueType(ctx context.Context) attr.Value {
 var _ basetypes.ObjectValuable = ResultValue{}
 
 type ResultValue struct {
-	BatchCluster     basetypes.BoolValue   `tfsdk:"batch_cluster"`
-	CatalogRefs      basetypes.ListValue   `tfsdk:"catalog_refs"`
-	CloudRegionId    basetypes.StringValue `tfsdk:"cloud_region_id"`
-	ClusterId        basetypes.StringValue `tfsdk:"cluster_id"`
-	ClusterState     basetypes.StringValue `tfsdk:"cluster_state"`
-	IdleStopMinutes  basetypes.Int64Value  `tfsdk:"idle_stop_minutes"`
-	MaxWorkers       basetypes.Int64Value  `tfsdk:"max_workers"`
-	MinWorkers       basetypes.Int64Value  `tfsdk:"min_workers"`
-	Name             basetypes.StringValue `tfsdk:"name"`
-	Replicas         basetypes.Int64Value  `tfsdk:"replicas"`
-	TrinoUri         basetypes.StringValue `tfsdk:"trino_uri"`
-	WarpSpeedCluster basetypes.BoolValue   `tfsdk:"warp_speed_cluster"`
-	state            attr.ValueState
+	BatchCluster                        basetypes.BoolValue   `tfsdk:"batch_cluster"`
+	CatalogRefs                         basetypes.ListValue   `tfsdk:"catalog_refs"`
+	CloudRegionId                       basetypes.StringValue `tfsdk:"cloud_region_id"`
+	ClusterId                           basetypes.StringValue `tfsdk:"cluster_id"`
+	ClusterState                        basetypes.StringValue `tfsdk:"cluster_state"`
+	Enabled                             basetypes.BoolValue   `tfsdk:"enabled"`
+	IdleStopMinutes                     basetypes.Int64Value  `tfsdk:"idle_stop_minutes"`
+	MaxWorkers                          basetypes.Int64Value  `tfsdk:"max_workers"`
+	MinWorkers                          basetypes.Int64Value  `tfsdk:"min_workers"`
+	Name                                basetypes.StringValue `tfsdk:"name"`
+	PrivateLinkCluster                  basetypes.BoolValue   `tfsdk:"private_link_cluster"`
+	ProcessingMode                      basetypes.StringValue `tfsdk:"processing_mode"`
+	Replicas                            basetypes.Int64Value  `tfsdk:"replicas"`
+	ResultCacheDefaultVisibilitySeconds basetypes.Int64Value  `tfsdk:"result_cache_default_visibility_seconds"`
+	ResultCacheEnabled                  basetypes.BoolValue   `tfsdk:"result_cache_enabled"`
+	TrinoUri                            basetypes.StringValue `tfsdk:"trino_uri"`
+	WarpSpeedCluster                    basetypes.BoolValue   `tfsdk:"warp_speed_cluster"`
+	state                               attr.ValueState
 }
 
 func (v ResultValue) ToTerraformValue(ctx context.Context) (tftypes.Value, error) {
-	attrTypes := make(map[string]tftypes.Type, 12)
+	attrTypes := make(map[string]tftypes.Type, 17)
 
 	var val tftypes.Value
 	var err error
@@ -759,11 +979,16 @@ func (v ResultValue) ToTerraformValue(ctx context.Context) (tftypes.Value, error
 	attrTypes["cloud_region_id"] = basetypes.StringType{}.TerraformType(ctx)
 	attrTypes["cluster_id"] = basetypes.StringType{}.TerraformType(ctx)
 	attrTypes["cluster_state"] = basetypes.StringType{}.TerraformType(ctx)
+	attrTypes["enabled"] = basetypes.BoolType{}.TerraformType(ctx)
 	attrTypes["idle_stop_minutes"] = basetypes.Int64Type{}.TerraformType(ctx)
 	attrTypes["max_workers"] = basetypes.Int64Type{}.TerraformType(ctx)
 	attrTypes["min_workers"] = basetypes.Int64Type{}.TerraformType(ctx)
 	attrTypes["name"] = basetypes.StringType{}.TerraformType(ctx)
+	attrTypes["private_link_cluster"] = basetypes.BoolType{}.TerraformType(ctx)
+	attrTypes["processing_mode"] = basetypes.StringType{}.TerraformType(ctx)
 	attrTypes["replicas"] = basetypes.Int64Type{}.TerraformType(ctx)
+	attrTypes["result_cache_default_visibility_seconds"] = basetypes.Int64Type{}.TerraformType(ctx)
+	attrTypes["result_cache_enabled"] = basetypes.BoolType{}.TerraformType(ctx)
 	attrTypes["trino_uri"] = basetypes.StringType{}.TerraformType(ctx)
 	attrTypes["warp_speed_cluster"] = basetypes.BoolType{}.TerraformType(ctx)
 
@@ -771,7 +996,7 @@ func (v ResultValue) ToTerraformValue(ctx context.Context) (tftypes.Value, error
 
 	switch v.state {
 	case attr.ValueStateKnown:
-		vals := make(map[string]tftypes.Value, 12)
+		vals := make(map[string]tftypes.Value, 17)
 
 		val, err = v.BatchCluster.ToTerraformValue(ctx)
 
@@ -813,6 +1038,14 @@ func (v ResultValue) ToTerraformValue(ctx context.Context) (tftypes.Value, error
 
 		vals["cluster_state"] = val
 
+		val, err = v.Enabled.ToTerraformValue(ctx)
+
+		if err != nil {
+			return tftypes.NewValue(objectType, tftypes.UnknownValue), err
+		}
+
+		vals["enabled"] = val
+
 		val, err = v.IdleStopMinutes.ToTerraformValue(ctx)
 
 		if err != nil {
@@ -845,6 +1078,22 @@ func (v ResultValue) ToTerraformValue(ctx context.Context) (tftypes.Value, error
 
 		vals["name"] = val
 
+		val, err = v.PrivateLinkCluster.ToTerraformValue(ctx)
+
+		if err != nil {
+			return tftypes.NewValue(objectType, tftypes.UnknownValue), err
+		}
+
+		vals["private_link_cluster"] = val
+
+		val, err = v.ProcessingMode.ToTerraformValue(ctx)
+
+		if err != nil {
+			return tftypes.NewValue(objectType, tftypes.UnknownValue), err
+		}
+
+		vals["processing_mode"] = val
+
 		val, err = v.Replicas.ToTerraformValue(ctx)
 
 		if err != nil {
@@ -852,6 +1101,22 @@ func (v ResultValue) ToTerraformValue(ctx context.Context) (tftypes.Value, error
 		}
 
 		vals["replicas"] = val
+
+		val, err = v.ResultCacheDefaultVisibilitySeconds.ToTerraformValue(ctx)
+
+		if err != nil {
+			return tftypes.NewValue(objectType, tftypes.UnknownValue), err
+		}
+
+		vals["result_cache_default_visibility_seconds"] = val
+
+		val, err = v.ResultCacheEnabled.ToTerraformValue(ctx)
+
+		if err != nil {
+			return tftypes.NewValue(objectType, tftypes.UnknownValue), err
+		}
+
+		vals["result_cache_enabled"] = val
 
 		val, err = v.TrinoUri.ToTerraformValue(ctx)
 
@@ -916,16 +1181,21 @@ func (v ResultValue) ToObjectValue(ctx context.Context) (basetypes.ObjectValue, 
 			"catalog_refs": basetypes.ListType{
 				ElemType: types.StringType,
 			},
-			"cloud_region_id":    basetypes.StringType{},
-			"cluster_id":         basetypes.StringType{},
-			"cluster_state":      basetypes.StringType{},
-			"idle_stop_minutes":  basetypes.Int64Type{},
-			"max_workers":        basetypes.Int64Type{},
-			"min_workers":        basetypes.Int64Type{},
-			"name":               basetypes.StringType{},
-			"replicas":           basetypes.Int64Type{},
-			"trino_uri":          basetypes.StringType{},
-			"warp_speed_cluster": basetypes.BoolType{},
+			"cloud_region_id":      basetypes.StringType{},
+			"cluster_id":           basetypes.StringType{},
+			"cluster_state":        basetypes.StringType{},
+			"enabled":              basetypes.BoolType{},
+			"idle_stop_minutes":    basetypes.Int64Type{},
+			"max_workers":          basetypes.Int64Type{},
+			"min_workers":          basetypes.Int64Type{},
+			"name":                 basetypes.StringType{},
+			"private_link_cluster": basetypes.BoolType{},
+			"processing_mode":      basetypes.StringType{},
+			"replicas":             basetypes.Int64Type{},
+			"result_cache_default_visibility_seconds": basetypes.Int64Type{},
+			"result_cache_enabled":                    basetypes.BoolType{},
+			"trino_uri":                               basetypes.StringType{},
+			"warp_speed_cluster":                      basetypes.BoolType{},
 		}), diags
 	}
 
@@ -934,16 +1204,21 @@ func (v ResultValue) ToObjectValue(ctx context.Context) (basetypes.ObjectValue, 
 		"catalog_refs": basetypes.ListType{
 			ElemType: types.StringType,
 		},
-		"cloud_region_id":    basetypes.StringType{},
-		"cluster_id":         basetypes.StringType{},
-		"cluster_state":      basetypes.StringType{},
-		"idle_stop_minutes":  basetypes.Int64Type{},
-		"max_workers":        basetypes.Int64Type{},
-		"min_workers":        basetypes.Int64Type{},
-		"name":               basetypes.StringType{},
-		"replicas":           basetypes.Int64Type{},
-		"trino_uri":          basetypes.StringType{},
-		"warp_speed_cluster": basetypes.BoolType{},
+		"cloud_region_id":      basetypes.StringType{},
+		"cluster_id":           basetypes.StringType{},
+		"cluster_state":        basetypes.StringType{},
+		"enabled":              basetypes.BoolType{},
+		"idle_stop_minutes":    basetypes.Int64Type{},
+		"max_workers":          basetypes.Int64Type{},
+		"min_workers":          basetypes.Int64Type{},
+		"name":                 basetypes.StringType{},
+		"private_link_cluster": basetypes.BoolType{},
+		"processing_mode":      basetypes.StringType{},
+		"replicas":             basetypes.Int64Type{},
+		"result_cache_default_visibility_seconds": basetypes.Int64Type{},
+		"result_cache_enabled":                    basetypes.BoolType{},
+		"trino_uri":                               basetypes.StringType{},
+		"warp_speed_cluster":                      basetypes.BoolType{},
 	}
 
 	if v.IsNull() {
@@ -957,18 +1232,23 @@ func (v ResultValue) ToObjectValue(ctx context.Context) (basetypes.ObjectValue, 
 	objVal, diags := types.ObjectValue(
 		attributeTypes,
 		map[string]attr.Value{
-			"batch_cluster":      v.BatchCluster,
-			"catalog_refs":       catalogRefsVal,
-			"cloud_region_id":    v.CloudRegionId,
-			"cluster_id":         v.ClusterId,
-			"cluster_state":      v.ClusterState,
-			"idle_stop_minutes":  v.IdleStopMinutes,
-			"max_workers":        v.MaxWorkers,
-			"min_workers":        v.MinWorkers,
-			"name":               v.Name,
-			"replicas":           v.Replicas,
-			"trino_uri":          v.TrinoUri,
-			"warp_speed_cluster": v.WarpSpeedCluster,
+			"batch_cluster":        v.BatchCluster,
+			"catalog_refs":         catalogRefsVal,
+			"cloud_region_id":      v.CloudRegionId,
+			"cluster_id":           v.ClusterId,
+			"cluster_state":        v.ClusterState,
+			"enabled":              v.Enabled,
+			"idle_stop_minutes":    v.IdleStopMinutes,
+			"max_workers":          v.MaxWorkers,
+			"min_workers":          v.MinWorkers,
+			"name":                 v.Name,
+			"private_link_cluster": v.PrivateLinkCluster,
+			"processing_mode":      v.ProcessingMode,
+			"replicas":             v.Replicas,
+			"result_cache_default_visibility_seconds": v.ResultCacheDefaultVisibilitySeconds,
+			"result_cache_enabled":                    v.ResultCacheEnabled,
+			"trino_uri":                               v.TrinoUri,
+			"warp_speed_cluster":                      v.WarpSpeedCluster,
 		})
 
 	return objVal, diags
@@ -1009,6 +1289,10 @@ func (v ResultValue) Equal(o attr.Value) bool {
 		return false
 	}
 
+	if !v.Enabled.Equal(other.Enabled) {
+		return false
+	}
+
 	if !v.IdleStopMinutes.Equal(other.IdleStopMinutes) {
 		return false
 	}
@@ -1025,7 +1309,23 @@ func (v ResultValue) Equal(o attr.Value) bool {
 		return false
 	}
 
+	if !v.PrivateLinkCluster.Equal(other.PrivateLinkCluster) {
+		return false
+	}
+
+	if !v.ProcessingMode.Equal(other.ProcessingMode) {
+		return false
+	}
+
 	if !v.Replicas.Equal(other.Replicas) {
+		return false
+	}
+
+	if !v.ResultCacheDefaultVisibilitySeconds.Equal(other.ResultCacheDefaultVisibilitySeconds) {
+		return false
+	}
+
+	if !v.ResultCacheEnabled.Equal(other.ResultCacheEnabled) {
 		return false
 	}
 
@@ -1054,15 +1354,20 @@ func (v ResultValue) AttributeTypes(ctx context.Context) map[string]attr.Type {
 		"catalog_refs": basetypes.ListType{
 			ElemType: types.StringType,
 		},
-		"cloud_region_id":    basetypes.StringType{},
-		"cluster_id":         basetypes.StringType{},
-		"cluster_state":      basetypes.StringType{},
-		"idle_stop_minutes":  basetypes.Int64Type{},
-		"max_workers":        basetypes.Int64Type{},
-		"min_workers":        basetypes.Int64Type{},
-		"name":               basetypes.StringType{},
-		"replicas":           basetypes.Int64Type{},
-		"trino_uri":          basetypes.StringType{},
-		"warp_speed_cluster": basetypes.BoolType{},
+		"cloud_region_id":      basetypes.StringType{},
+		"cluster_id":           basetypes.StringType{},
+		"cluster_state":        basetypes.StringType{},
+		"enabled":              basetypes.BoolType{},
+		"idle_stop_minutes":    basetypes.Int64Type{},
+		"max_workers":          basetypes.Int64Type{},
+		"min_workers":          basetypes.Int64Type{},
+		"name":                 basetypes.StringType{},
+		"private_link_cluster": basetypes.BoolType{},
+		"processing_mode":      basetypes.StringType{},
+		"replicas":             basetypes.Int64Type{},
+		"result_cache_default_visibility_seconds": basetypes.Int64Type{},
+		"result_cache_enabled":                    basetypes.BoolType{},
+		"trino_uri":                               basetypes.StringType{},
+		"warp_speed_cluster":                      basetypes.BoolType{},
 	}
 }

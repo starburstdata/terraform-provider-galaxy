@@ -133,4 +133,31 @@ func (d *clusterDataSource) updateModelFromResponse(ctx context.Context, model *
 	} else {
 		model.CatalogRefs = types.ListNull(types.StringType)
 	}
+
+	// Extended fields - always populated since we always request extended=true
+	if enabled, ok := response["enabled"].(bool); ok {
+		model.Enabled = types.BoolValue(enabled)
+	} else {
+		model.Enabled = types.BoolNull()
+	}
+	if privateLinkCluster, ok := response["privateLinkCluster"].(bool); ok {
+		model.PrivateLinkCluster = types.BoolValue(privateLinkCluster)
+	} else {
+		model.PrivateLinkCluster = types.BoolNull()
+	}
+	if processingMode, ok := response["processingMode"].(string); ok {
+		model.ProcessingMode = types.StringValue(processingMode)
+	} else {
+		model.ProcessingMode = types.StringNull()
+	}
+	if resultCacheDefaultVisibilitySeconds, ok := response["resultCacheDefaultVisibilitySeconds"].(float64); ok {
+		model.ResultCacheDefaultVisibilitySeconds = types.Int64Value(int64(resultCacheDefaultVisibilitySeconds))
+	} else {
+		model.ResultCacheDefaultVisibilitySeconds = types.Int64Null()
+	}
+	if resultCacheEnabled, ok := response["resultCacheEnabled"].(bool); ok {
+		model.ResultCacheEnabled = types.BoolValue(resultCacheEnabled)
+	} else {
+		model.ResultCacheEnabled = types.BoolNull()
+	}
 }

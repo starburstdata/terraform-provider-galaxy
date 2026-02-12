@@ -69,7 +69,7 @@ func (d *clustersDataSource) Read(ctx context.Context, req datasource.ReadReques
 	tflog.Debug(ctx, "Reading clusters with automatic pagination")
 
 	// Use automatic pagination to get ALL clusters across all pages
-	allClusters, err := d.client.GetAllPaginatedResults(ctx, "/public/api/v1/cluster")
+	allClusters, err := d.client.GetAllPaginatedResults(ctx, "/public/api/v1/cluster?extended=true")
 	if err != nil {
 		resp.Diagnostics.AddError(
 			"Error reading clusters",
@@ -214,6 +214,33 @@ func (d *clustersDataSource) mapSingleCluster(ctx context.Context, clusterMap ma
 
 	// Map catalog refs list
 	attributes["catalog_refs"] = d.mapCatalogRefs(ctx, clusterMap)
+
+	// Extended fields - always populated (extended=true is hardcoded in client)
+	if enabled, ok := clusterMap["enabled"].(bool); ok {
+		attributes["enabled"] = types.BoolValue(enabled)
+	} else {
+		attributes["enabled"] = types.BoolNull()
+	}
+	if privateLinkCluster, ok := clusterMap["privateLinkCluster"].(bool); ok {
+		attributes["private_link_cluster"] = types.BoolValue(privateLinkCluster)
+	} else {
+		attributes["private_link_cluster"] = types.BoolNull()
+	}
+	if processingMode, ok := clusterMap["processingMode"].(string); ok {
+		attributes["processing_mode"] = types.StringValue(processingMode)
+	} else {
+		attributes["processing_mode"] = types.StringNull()
+	}
+	if resultCacheDefaultVisibilitySeconds, ok := clusterMap["resultCacheDefaultVisibilitySeconds"].(float64); ok {
+		attributes["result_cache_default_visibility_seconds"] = types.Int64Value(int64(resultCacheDefaultVisibilitySeconds))
+	} else {
+		attributes["result_cache_default_visibility_seconds"] = types.Int64Null()
+	}
+	if resultCacheEnabled, ok := clusterMap["resultCacheEnabled"].(bool); ok {
+		attributes["result_cache_enabled"] = types.BoolValue(resultCacheEnabled)
+	} else {
+		attributes["result_cache_enabled"] = types.BoolNull()
+	}
 
 	// Create the ResultValue using the constructor
 	cluster, diags := datasource_clusters.NewResultValue(attributeTypes, attributes)
