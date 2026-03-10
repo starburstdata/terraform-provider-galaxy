@@ -66,14 +66,13 @@ func (d *dataQualitySummaryDataSource) Read(ctx context.Context, req datasource.
 	}
 
 	catalogID := config.CatalogId.ValueString()
-	schemaID := config.SchemaId.ValueString()
-	tflog.Debug(ctx, "Reading data quality summary", map[string]interface{}{"catalogId": catalogID, "schemaId": schemaID})
+	tflog.Debug(ctx, "Reading data quality summary", map[string]interface{}{"catalogId": catalogID})
 
-	response, err := d.client.GetDataQualitySummary(ctx, catalogID, schemaID)
+	response, err := d.client.GetDataQualitySummary(ctx, catalogID)
 	if err != nil {
 		resp.Diagnostics.AddError(
 			"Error reading data quality summary",
-			"Could not read data quality summary for catalog "+catalogID+" schema "+schemaID+": "+err.Error(),
+			"Could not read data quality summary for catalog "+catalogID+": "+err.Error(),
 		)
 		return
 	}
@@ -85,7 +84,7 @@ func (d *dataQualitySummaryDataSource) Read(ctx context.Context, req datasource.
 }
 
 func (d *dataQualitySummaryDataSource) updateModelFromResponse(ctx context.Context, model *datasource_data_quality_summary.DataQualitySummaryModel, response map[string]interface{}) {
-	// The catalogId and schemaId are already set from the configuration
+	// The catalogId is already set from the configuration
 
 	// Map category_counts
 	if categoryCounts, ok := response["categoryCounts"].([]interface{}); ok {
@@ -137,6 +136,33 @@ func (d *dataQualitySummaryDataSource) updateModelFromResponse(ctx context.Conte
 		model.DailySummaries = types.ListNull(datasource_data_quality_summary.DailySummariesType{})
 	}
 
+	// Map schema_summaries
+	if schemaSummaries, ok := response["schemaSummaries"].([]interface{}); ok {
+		schemaList := make([]datasource_data_quality_summary.SchemaSummariesValue, 0, len(schemaSummaries))
+		for _, item := range schemaSummaries {
+			if itemMap, ok := item.(map[string]interface{}); ok {
+				schemaSummary := datasource_data_quality_summary.SchemaSummariesValue{
+					SchemaId:              types.StringValue(getStringFromMap(itemMap, "schemaId")),
+					EvaluatedChecks:       types.Int64Value(getInt64FromMap(itemMap, "evaluatedChecks")),
+					FailedChecks:          types.Int64Value(getInt64FromMap(itemMap, "failedChecks")),
+					NotYetEvaluatedChecks: types.Int64Value(getInt64FromMap(itemMap, "notYetEvaluatedChecks")),
+					NumberOfChecks:        types.Int64Value(getInt64FromMap(itemMap, "numberOfChecks")),
+					SuccessfulChecks:      types.Int64Value(getInt64FromMap(itemMap, "successfulChecks")),
+				}
+				schemaList = append(schemaList, schemaSummary)
+			}
+		}
+		schemaListValue, diags := types.ListValueFrom(ctx, datasource_data_quality_summary.SchemaSummariesType{}.ValueType(ctx).Type(ctx), schemaList)
+		if diags.HasError() {
+			tflog.Error(ctx, "Error creating schema summaries list", map[string]interface{}{"errors": diags})
+			model.SchemaSummaries = types.ListNull(datasource_data_quality_summary.SchemaSummariesType{}.ValueType(ctx).Type(ctx))
+		} else {
+			model.SchemaSummaries = schemaListValue
+		}
+	} else {
+		model.SchemaSummaries = types.ListNull(datasource_data_quality_summary.SchemaSummariesType{})
+	}
+
 	// Map severity_counts
 	if severityCounts, ok := response["severityCounts"].([]interface{}); ok {
 		severityList := make([]datasource_data_quality_summary.SeverityCountsValue, 0, len(severityCounts))
@@ -160,33 +186,6 @@ func (d *dataQualitySummaryDataSource) updateModelFromResponse(ctx context.Conte
 		}
 	} else {
 		model.SeverityCounts = types.ListNull(datasource_data_quality_summary.SeverityCountsType{})
-	}
-
-	// Map table_summaries
-	if tableSummaries, ok := response["tableSummaries"].([]interface{}); ok {
-		tableList := make([]datasource_data_quality_summary.TableSummariesValue, 0, len(tableSummaries))
-		for _, item := range tableSummaries {
-			if itemMap, ok := item.(map[string]interface{}); ok {
-				tableSummary := datasource_data_quality_summary.TableSummariesValue{
-					TableId:               types.StringValue(getStringFromMap(itemMap, "tableId")),
-					EvaluatedChecks:       types.Int64Value(getInt64FromMap(itemMap, "evaluatedChecks")),
-					FailedChecks:          types.Int64Value(getInt64FromMap(itemMap, "failedChecks")),
-					NotYetEvaluatedChecks: types.Int64Value(getInt64FromMap(itemMap, "notYetEvaluatedChecks")),
-					NumberOfChecks:        types.Int64Value(getInt64FromMap(itemMap, "numberOfChecks")),
-					SuccessfulChecks:      types.Int64Value(getInt64FromMap(itemMap, "successfulChecks")),
-				}
-				tableList = append(tableList, tableSummary)
-			}
-		}
-		tableListValue, diags := types.ListValueFrom(ctx, datasource_data_quality_summary.TableSummariesType{}.ValueType(ctx).Type(ctx), tableList)
-		if diags.HasError() {
-			tflog.Error(ctx, "Error creating table summaries list", map[string]interface{}{"errors": diags})
-			model.TableSummaries = types.ListNull(datasource_data_quality_summary.TableSummariesType{}.ValueType(ctx).Type(ctx))
-		} else {
-			model.TableSummaries = tableListValue
-		}
-	} else {
-		model.TableSummaries = types.ListNull(datasource_data_quality_summary.TableSummariesType{}.ValueType(ctx).Type(ctx))
 	}
 }
 

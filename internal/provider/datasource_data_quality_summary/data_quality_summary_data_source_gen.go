@@ -91,10 +91,49 @@ func DataQualitySummaryDataSourceSchema(ctx context.Context) schema.Schema {
 				Description:         "Summaries for each day (read only)",
 				MarkdownDescription: "Summaries for each day (read only)",
 			},
-			"schema_id": schema.StringAttribute{
-				Required:            true,
-				Description:         "A schema from a catalog",
-				MarkdownDescription: "A schema from a catalog",
+			"schema_summaries": schema.ListNestedAttribute{
+				NestedObject: schema.NestedAttributeObject{
+					Attributes: map[string]schema.Attribute{
+						"evaluated_checks": schema.Int64Attribute{
+							Computed:            true,
+							Description:         "Number of evaluated quality checks",
+							MarkdownDescription: "Number of evaluated quality checks",
+						},
+						"failed_checks": schema.Int64Attribute{
+							Computed:            true,
+							Description:         "Number of failed quality checks",
+							MarkdownDescription: "Number of failed quality checks",
+						},
+						"not_yet_evaluated_checks": schema.Int64Attribute{
+							Computed:            true,
+							Description:         "Number of not yet evaluated quality checks",
+							MarkdownDescription: "Number of not yet evaluated quality checks",
+						},
+						"number_of_checks": schema.Int64Attribute{
+							Computed:            true,
+							Description:         "Total number of quality checks",
+							MarkdownDescription: "Total number of quality checks",
+						},
+						"schema_id": schema.StringAttribute{
+							Computed:            true,
+							Description:         "Schema ID",
+							MarkdownDescription: "Schema ID",
+						},
+						"successful_checks": schema.Int64Attribute{
+							Computed:            true,
+							Description:         "Number of successful quality checks",
+							MarkdownDescription: "Number of successful quality checks",
+						},
+					},
+					CustomType: SchemaSummariesType{
+						ObjectType: types.ObjectType{
+							AttrTypes: SchemaSummariesValue{}.AttributeTypes(ctx),
+						},
+					},
+				},
+				Computed:            true,
+				Description:         "Summaries per schema (read only)",
+				MarkdownDescription: "Summaries per schema (read only)",
 			},
 			"severity_counts": schema.ListNestedAttribute{
 				NestedObject: schema.NestedAttributeObject{
@@ -130,61 +169,16 @@ func DataQualitySummaryDataSourceSchema(ctx context.Context) schema.Schema {
 				Description:         "Counts grouped by severities (read only)",
 				MarkdownDescription: "Counts grouped by severities (read only)",
 			},
-			"table_summaries": schema.ListNestedAttribute{
-				NestedObject: schema.NestedAttributeObject{
-					Attributes: map[string]schema.Attribute{
-						"evaluated_checks": schema.Int64Attribute{
-							Computed:            true,
-							Description:         "Number of evaluated quality checks",
-							MarkdownDescription: "Number of evaluated quality checks",
-						},
-						"failed_checks": schema.Int64Attribute{
-							Computed:            true,
-							Description:         "Number of failed quality checks",
-							MarkdownDescription: "Number of failed quality checks",
-						},
-						"not_yet_evaluated_checks": schema.Int64Attribute{
-							Computed:            true,
-							Description:         "Number of not yet evaluated quality checks",
-							MarkdownDescription: "Number of not yet evaluated quality checks",
-						},
-						"number_of_checks": schema.Int64Attribute{
-							Computed:            true,
-							Description:         "Total number of quality checks",
-							MarkdownDescription: "Total number of quality checks",
-						},
-						"successful_checks": schema.Int64Attribute{
-							Computed:            true,
-							Description:         "Number of successful quality checks",
-							MarkdownDescription: "Number of successful quality checks",
-						},
-						"table_id": schema.StringAttribute{
-							Computed:            true,
-							Description:         "Table ID",
-							MarkdownDescription: "Table ID",
-						},
-					},
-					CustomType: TableSummariesType{
-						ObjectType: types.ObjectType{
-							AttrTypes: TableSummariesValue{}.AttributeTypes(ctx),
-						},
-					},
-				},
-				Computed:            true,
-				Description:         "Summaries per table (read only)",
-				MarkdownDescription: "Summaries per table (read only)",
-			},
 		},
 	}
 }
 
 type DataQualitySummaryModel struct {
-	CatalogId      types.String `tfsdk:"catalog_id"`
-	CategoryCounts types.List   `tfsdk:"category_counts"`
-	DailySummaries types.List   `tfsdk:"daily_summaries"`
-	SchemaId       types.String `tfsdk:"schema_id"`
-	SeverityCounts types.List   `tfsdk:"severity_counts"`
-	TableSummaries types.List   `tfsdk:"table_summaries"`
+	CatalogId       types.String `tfsdk:"catalog_id"`
+	CategoryCounts  types.List   `tfsdk:"category_counts"`
+	DailySummaries  types.List   `tfsdk:"daily_summaries"`
+	SchemaSummaries types.List   `tfsdk:"schema_summaries"`
+	SeverityCounts  types.List   `tfsdk:"severity_counts"`
 }
 
 var _ basetypes.ObjectTypable = CategoryCountsType{}
@@ -1165,6 +1159,605 @@ func (v DailySummariesValue) AttributeTypes(ctx context.Context) map[string]attr
 	}
 }
 
+var _ basetypes.ObjectTypable = SchemaSummariesType{}
+
+type SchemaSummariesType struct {
+	basetypes.ObjectType
+}
+
+func (t SchemaSummariesType) Equal(o attr.Type) bool {
+	other, ok := o.(SchemaSummariesType)
+
+	if !ok {
+		return false
+	}
+
+	return t.ObjectType.Equal(other.ObjectType)
+}
+
+func (t SchemaSummariesType) String() string {
+	return "SchemaSummariesType"
+}
+
+func (t SchemaSummariesType) ValueFromObject(ctx context.Context, in basetypes.ObjectValue) (basetypes.ObjectValuable, diag.Diagnostics) {
+	var diags diag.Diagnostics
+
+	attributes := in.Attributes()
+
+	evaluatedChecksAttribute, ok := attributes["evaluated_checks"]
+
+	if !ok {
+		diags.AddError(
+			"Attribute Missing",
+			`evaluated_checks is missing from object`)
+
+		return nil, diags
+	}
+
+	evaluatedChecksVal, ok := evaluatedChecksAttribute.(basetypes.Int64Value)
+
+	if !ok {
+		diags.AddError(
+			"Attribute Wrong Type",
+			fmt.Sprintf(`evaluated_checks expected to be basetypes.Int64Value, was: %T`, evaluatedChecksAttribute))
+	}
+
+	failedChecksAttribute, ok := attributes["failed_checks"]
+
+	if !ok {
+		diags.AddError(
+			"Attribute Missing",
+			`failed_checks is missing from object`)
+
+		return nil, diags
+	}
+
+	failedChecksVal, ok := failedChecksAttribute.(basetypes.Int64Value)
+
+	if !ok {
+		diags.AddError(
+			"Attribute Wrong Type",
+			fmt.Sprintf(`failed_checks expected to be basetypes.Int64Value, was: %T`, failedChecksAttribute))
+	}
+
+	notYetEvaluatedChecksAttribute, ok := attributes["not_yet_evaluated_checks"]
+
+	if !ok {
+		diags.AddError(
+			"Attribute Missing",
+			`not_yet_evaluated_checks is missing from object`)
+
+		return nil, diags
+	}
+
+	notYetEvaluatedChecksVal, ok := notYetEvaluatedChecksAttribute.(basetypes.Int64Value)
+
+	if !ok {
+		diags.AddError(
+			"Attribute Wrong Type",
+			fmt.Sprintf(`not_yet_evaluated_checks expected to be basetypes.Int64Value, was: %T`, notYetEvaluatedChecksAttribute))
+	}
+
+	numberOfChecksAttribute, ok := attributes["number_of_checks"]
+
+	if !ok {
+		diags.AddError(
+			"Attribute Missing",
+			`number_of_checks is missing from object`)
+
+		return nil, diags
+	}
+
+	numberOfChecksVal, ok := numberOfChecksAttribute.(basetypes.Int64Value)
+
+	if !ok {
+		diags.AddError(
+			"Attribute Wrong Type",
+			fmt.Sprintf(`number_of_checks expected to be basetypes.Int64Value, was: %T`, numberOfChecksAttribute))
+	}
+
+	schemaIdAttribute, ok := attributes["schema_id"]
+
+	if !ok {
+		diags.AddError(
+			"Attribute Missing",
+			`schema_id is missing from object`)
+
+		return nil, diags
+	}
+
+	schemaIdVal, ok := schemaIdAttribute.(basetypes.StringValue)
+
+	if !ok {
+		diags.AddError(
+			"Attribute Wrong Type",
+			fmt.Sprintf(`schema_id expected to be basetypes.StringValue, was: %T`, schemaIdAttribute))
+	}
+
+	successfulChecksAttribute, ok := attributes["successful_checks"]
+
+	if !ok {
+		diags.AddError(
+			"Attribute Missing",
+			`successful_checks is missing from object`)
+
+		return nil, diags
+	}
+
+	successfulChecksVal, ok := successfulChecksAttribute.(basetypes.Int64Value)
+
+	if !ok {
+		diags.AddError(
+			"Attribute Wrong Type",
+			fmt.Sprintf(`successful_checks expected to be basetypes.Int64Value, was: %T`, successfulChecksAttribute))
+	}
+
+	if diags.HasError() {
+		return nil, diags
+	}
+
+	return SchemaSummariesValue{
+		EvaluatedChecks:       evaluatedChecksVal,
+		FailedChecks:          failedChecksVal,
+		NotYetEvaluatedChecks: notYetEvaluatedChecksVal,
+		NumberOfChecks:        numberOfChecksVal,
+		SchemaId:              schemaIdVal,
+		SuccessfulChecks:      successfulChecksVal,
+		state:                 attr.ValueStateKnown,
+	}, diags
+}
+
+func NewSchemaSummariesValueNull() SchemaSummariesValue {
+	return SchemaSummariesValue{
+		state: attr.ValueStateNull,
+	}
+}
+
+func NewSchemaSummariesValueUnknown() SchemaSummariesValue {
+	return SchemaSummariesValue{
+		state: attr.ValueStateUnknown,
+	}
+}
+
+func NewSchemaSummariesValue(attributeTypes map[string]attr.Type, attributes map[string]attr.Value) (SchemaSummariesValue, diag.Diagnostics) {
+	var diags diag.Diagnostics
+
+	// Reference: https://github.com/hashicorp/terraform-plugin-framework/issues/521
+	ctx := context.Background()
+
+	for name, attributeType := range attributeTypes {
+		attribute, ok := attributes[name]
+
+		if !ok {
+			diags.AddError(
+				"Missing SchemaSummariesValue Attribute Value",
+				"While creating a SchemaSummariesValue value, a missing attribute value was detected. "+
+					"A SchemaSummariesValue must contain values for all attributes, even if null or unknown. "+
+					"This is always an issue with the provider and should be reported to the provider developers.\n\n"+
+					fmt.Sprintf("SchemaSummariesValue Attribute Name (%s) Expected Type: %s", name, attributeType.String()),
+			)
+
+			continue
+		}
+
+		if !attributeType.Equal(attribute.Type(ctx)) {
+			diags.AddError(
+				"Invalid SchemaSummariesValue Attribute Type",
+				"While creating a SchemaSummariesValue value, an invalid attribute value was detected. "+
+					"A SchemaSummariesValue must use a matching attribute type for the value. "+
+					"This is always an issue with the provider and should be reported to the provider developers.\n\n"+
+					fmt.Sprintf("SchemaSummariesValue Attribute Name (%s) Expected Type: %s\n", name, attributeType.String())+
+					fmt.Sprintf("SchemaSummariesValue Attribute Name (%s) Given Type: %s", name, attribute.Type(ctx)),
+			)
+		}
+	}
+
+	for name := range attributes {
+		_, ok := attributeTypes[name]
+
+		if !ok {
+			diags.AddError(
+				"Extra SchemaSummariesValue Attribute Value",
+				"While creating a SchemaSummariesValue value, an extra attribute value was detected. "+
+					"A SchemaSummariesValue must not contain values beyond the expected attribute types. "+
+					"This is always an issue with the provider and should be reported to the provider developers.\n\n"+
+					fmt.Sprintf("Extra SchemaSummariesValue Attribute Name: %s", name),
+			)
+		}
+	}
+
+	if diags.HasError() {
+		return NewSchemaSummariesValueUnknown(), diags
+	}
+
+	evaluatedChecksAttribute, ok := attributes["evaluated_checks"]
+
+	if !ok {
+		diags.AddError(
+			"Attribute Missing",
+			`evaluated_checks is missing from object`)
+
+		return NewSchemaSummariesValueUnknown(), diags
+	}
+
+	evaluatedChecksVal, ok := evaluatedChecksAttribute.(basetypes.Int64Value)
+
+	if !ok {
+		diags.AddError(
+			"Attribute Wrong Type",
+			fmt.Sprintf(`evaluated_checks expected to be basetypes.Int64Value, was: %T`, evaluatedChecksAttribute))
+	}
+
+	failedChecksAttribute, ok := attributes["failed_checks"]
+
+	if !ok {
+		diags.AddError(
+			"Attribute Missing",
+			`failed_checks is missing from object`)
+
+		return NewSchemaSummariesValueUnknown(), diags
+	}
+
+	failedChecksVal, ok := failedChecksAttribute.(basetypes.Int64Value)
+
+	if !ok {
+		diags.AddError(
+			"Attribute Wrong Type",
+			fmt.Sprintf(`failed_checks expected to be basetypes.Int64Value, was: %T`, failedChecksAttribute))
+	}
+
+	notYetEvaluatedChecksAttribute, ok := attributes["not_yet_evaluated_checks"]
+
+	if !ok {
+		diags.AddError(
+			"Attribute Missing",
+			`not_yet_evaluated_checks is missing from object`)
+
+		return NewSchemaSummariesValueUnknown(), diags
+	}
+
+	notYetEvaluatedChecksVal, ok := notYetEvaluatedChecksAttribute.(basetypes.Int64Value)
+
+	if !ok {
+		diags.AddError(
+			"Attribute Wrong Type",
+			fmt.Sprintf(`not_yet_evaluated_checks expected to be basetypes.Int64Value, was: %T`, notYetEvaluatedChecksAttribute))
+	}
+
+	numberOfChecksAttribute, ok := attributes["number_of_checks"]
+
+	if !ok {
+		diags.AddError(
+			"Attribute Missing",
+			`number_of_checks is missing from object`)
+
+		return NewSchemaSummariesValueUnknown(), diags
+	}
+
+	numberOfChecksVal, ok := numberOfChecksAttribute.(basetypes.Int64Value)
+
+	if !ok {
+		diags.AddError(
+			"Attribute Wrong Type",
+			fmt.Sprintf(`number_of_checks expected to be basetypes.Int64Value, was: %T`, numberOfChecksAttribute))
+	}
+
+	schemaIdAttribute, ok := attributes["schema_id"]
+
+	if !ok {
+		diags.AddError(
+			"Attribute Missing",
+			`schema_id is missing from object`)
+
+		return NewSchemaSummariesValueUnknown(), diags
+	}
+
+	schemaIdVal, ok := schemaIdAttribute.(basetypes.StringValue)
+
+	if !ok {
+		diags.AddError(
+			"Attribute Wrong Type",
+			fmt.Sprintf(`schema_id expected to be basetypes.StringValue, was: %T`, schemaIdAttribute))
+	}
+
+	successfulChecksAttribute, ok := attributes["successful_checks"]
+
+	if !ok {
+		diags.AddError(
+			"Attribute Missing",
+			`successful_checks is missing from object`)
+
+		return NewSchemaSummariesValueUnknown(), diags
+	}
+
+	successfulChecksVal, ok := successfulChecksAttribute.(basetypes.Int64Value)
+
+	if !ok {
+		diags.AddError(
+			"Attribute Wrong Type",
+			fmt.Sprintf(`successful_checks expected to be basetypes.Int64Value, was: %T`, successfulChecksAttribute))
+	}
+
+	if diags.HasError() {
+		return NewSchemaSummariesValueUnknown(), diags
+	}
+
+	return SchemaSummariesValue{
+		EvaluatedChecks:       evaluatedChecksVal,
+		FailedChecks:          failedChecksVal,
+		NotYetEvaluatedChecks: notYetEvaluatedChecksVal,
+		NumberOfChecks:        numberOfChecksVal,
+		SchemaId:              schemaIdVal,
+		SuccessfulChecks:      successfulChecksVal,
+		state:                 attr.ValueStateKnown,
+	}, diags
+}
+
+func NewSchemaSummariesValueMust(attributeTypes map[string]attr.Type, attributes map[string]attr.Value) SchemaSummariesValue {
+	object, diags := NewSchemaSummariesValue(attributeTypes, attributes)
+
+	if diags.HasError() {
+		// This could potentially be added to the diag package.
+		diagsStrings := make([]string, 0, len(diags))
+
+		for _, diagnostic := range diags {
+			diagsStrings = append(diagsStrings, fmt.Sprintf(
+				"%s | %s | %s",
+				diagnostic.Severity(),
+				diagnostic.Summary(),
+				diagnostic.Detail()))
+		}
+
+		panic("NewSchemaSummariesValueMust received error(s): " + strings.Join(diagsStrings, "\n"))
+	}
+
+	return object
+}
+
+func (t SchemaSummariesType) ValueFromTerraform(ctx context.Context, in tftypes.Value) (attr.Value, error) {
+	if in.Type() == nil {
+		return NewSchemaSummariesValueNull(), nil
+	}
+
+	if !in.Type().Equal(t.TerraformType(ctx)) {
+		return nil, fmt.Errorf("expected %s, got %s", t.TerraformType(ctx), in.Type())
+	}
+
+	if !in.IsKnown() {
+		return NewSchemaSummariesValueUnknown(), nil
+	}
+
+	if in.IsNull() {
+		return NewSchemaSummariesValueNull(), nil
+	}
+
+	attributes := map[string]attr.Value{}
+
+	val := map[string]tftypes.Value{}
+
+	err := in.As(&val)
+
+	if err != nil {
+		return nil, err
+	}
+
+	for k, v := range val {
+		a, err := t.AttrTypes[k].ValueFromTerraform(ctx, v)
+
+		if err != nil {
+			return nil, err
+		}
+
+		attributes[k] = a
+	}
+
+	return NewSchemaSummariesValueMust(SchemaSummariesValue{}.AttributeTypes(ctx), attributes), nil
+}
+
+func (t SchemaSummariesType) ValueType(ctx context.Context) attr.Value {
+	return SchemaSummariesValue{}
+}
+
+var _ basetypes.ObjectValuable = SchemaSummariesValue{}
+
+type SchemaSummariesValue struct {
+	EvaluatedChecks       basetypes.Int64Value  `tfsdk:"evaluated_checks"`
+	FailedChecks          basetypes.Int64Value  `tfsdk:"failed_checks"`
+	NotYetEvaluatedChecks basetypes.Int64Value  `tfsdk:"not_yet_evaluated_checks"`
+	NumberOfChecks        basetypes.Int64Value  `tfsdk:"number_of_checks"`
+	SchemaId              basetypes.StringValue `tfsdk:"schema_id"`
+	SuccessfulChecks      basetypes.Int64Value  `tfsdk:"successful_checks"`
+	state                 attr.ValueState
+}
+
+func (v SchemaSummariesValue) ToTerraformValue(ctx context.Context) (tftypes.Value, error) {
+	attrTypes := make(map[string]tftypes.Type, 6)
+
+	var val tftypes.Value
+	var err error
+
+	attrTypes["evaluated_checks"] = basetypes.Int64Type{}.TerraformType(ctx)
+	attrTypes["failed_checks"] = basetypes.Int64Type{}.TerraformType(ctx)
+	attrTypes["not_yet_evaluated_checks"] = basetypes.Int64Type{}.TerraformType(ctx)
+	attrTypes["number_of_checks"] = basetypes.Int64Type{}.TerraformType(ctx)
+	attrTypes["schema_id"] = basetypes.StringType{}.TerraformType(ctx)
+	attrTypes["successful_checks"] = basetypes.Int64Type{}.TerraformType(ctx)
+
+	objectType := tftypes.Object{AttributeTypes: attrTypes}
+
+	switch v.state {
+	case attr.ValueStateKnown:
+		vals := make(map[string]tftypes.Value, 6)
+
+		val, err = v.EvaluatedChecks.ToTerraformValue(ctx)
+
+		if err != nil {
+			return tftypes.NewValue(objectType, tftypes.UnknownValue), err
+		}
+
+		vals["evaluated_checks"] = val
+
+		val, err = v.FailedChecks.ToTerraformValue(ctx)
+
+		if err != nil {
+			return tftypes.NewValue(objectType, tftypes.UnknownValue), err
+		}
+
+		vals["failed_checks"] = val
+
+		val, err = v.NotYetEvaluatedChecks.ToTerraformValue(ctx)
+
+		if err != nil {
+			return tftypes.NewValue(objectType, tftypes.UnknownValue), err
+		}
+
+		vals["not_yet_evaluated_checks"] = val
+
+		val, err = v.NumberOfChecks.ToTerraformValue(ctx)
+
+		if err != nil {
+			return tftypes.NewValue(objectType, tftypes.UnknownValue), err
+		}
+
+		vals["number_of_checks"] = val
+
+		val, err = v.SchemaId.ToTerraformValue(ctx)
+
+		if err != nil {
+			return tftypes.NewValue(objectType, tftypes.UnknownValue), err
+		}
+
+		vals["schema_id"] = val
+
+		val, err = v.SuccessfulChecks.ToTerraformValue(ctx)
+
+		if err != nil {
+			return tftypes.NewValue(objectType, tftypes.UnknownValue), err
+		}
+
+		vals["successful_checks"] = val
+
+		if err := tftypes.ValidateValue(objectType, vals); err != nil {
+			return tftypes.NewValue(objectType, tftypes.UnknownValue), err
+		}
+
+		return tftypes.NewValue(objectType, vals), nil
+	case attr.ValueStateNull:
+		return tftypes.NewValue(objectType, nil), nil
+	case attr.ValueStateUnknown:
+		return tftypes.NewValue(objectType, tftypes.UnknownValue), nil
+	default:
+		panic(fmt.Sprintf("unhandled Object state in ToTerraformValue: %s", v.state))
+	}
+}
+
+func (v SchemaSummariesValue) IsNull() bool {
+	return v.state == attr.ValueStateNull
+}
+
+func (v SchemaSummariesValue) IsUnknown() bool {
+	return v.state == attr.ValueStateUnknown
+}
+
+func (v SchemaSummariesValue) String() string {
+	return "SchemaSummariesValue"
+}
+
+func (v SchemaSummariesValue) ToObjectValue(ctx context.Context) (basetypes.ObjectValue, diag.Diagnostics) {
+	var diags diag.Diagnostics
+
+	attributeTypes := map[string]attr.Type{
+		"evaluated_checks":         basetypes.Int64Type{},
+		"failed_checks":            basetypes.Int64Type{},
+		"not_yet_evaluated_checks": basetypes.Int64Type{},
+		"number_of_checks":         basetypes.Int64Type{},
+		"schema_id":                basetypes.StringType{},
+		"successful_checks":        basetypes.Int64Type{},
+	}
+
+	if v.IsNull() {
+		return types.ObjectNull(attributeTypes), diags
+	}
+
+	if v.IsUnknown() {
+		return types.ObjectUnknown(attributeTypes), diags
+	}
+
+	objVal, diags := types.ObjectValue(
+		attributeTypes,
+		map[string]attr.Value{
+			"evaluated_checks":         v.EvaluatedChecks,
+			"failed_checks":            v.FailedChecks,
+			"not_yet_evaluated_checks": v.NotYetEvaluatedChecks,
+			"number_of_checks":         v.NumberOfChecks,
+			"schema_id":                v.SchemaId,
+			"successful_checks":        v.SuccessfulChecks,
+		})
+
+	return objVal, diags
+}
+
+func (v SchemaSummariesValue) Equal(o attr.Value) bool {
+	other, ok := o.(SchemaSummariesValue)
+
+	if !ok {
+		return false
+	}
+
+	if v.state != other.state {
+		return false
+	}
+
+	if v.state != attr.ValueStateKnown {
+		return true
+	}
+
+	if !v.EvaluatedChecks.Equal(other.EvaluatedChecks) {
+		return false
+	}
+
+	if !v.FailedChecks.Equal(other.FailedChecks) {
+		return false
+	}
+
+	if !v.NotYetEvaluatedChecks.Equal(other.NotYetEvaluatedChecks) {
+		return false
+	}
+
+	if !v.NumberOfChecks.Equal(other.NumberOfChecks) {
+		return false
+	}
+
+	if !v.SchemaId.Equal(other.SchemaId) {
+		return false
+	}
+
+	if !v.SuccessfulChecks.Equal(other.SuccessfulChecks) {
+		return false
+	}
+
+	return true
+}
+
+func (v SchemaSummariesValue) Type(ctx context.Context) attr.Type {
+	return SchemaSummariesType{
+		basetypes.ObjectType{
+			AttrTypes: v.AttributeTypes(ctx),
+		},
+	}
+}
+
+func (v SchemaSummariesValue) AttributeTypes(ctx context.Context) map[string]attr.Type {
+	return map[string]attr.Type{
+		"evaluated_checks":         basetypes.Int64Type{},
+		"failed_checks":            basetypes.Int64Type{},
+		"not_yet_evaluated_checks": basetypes.Int64Type{},
+		"number_of_checks":         basetypes.Int64Type{},
+		"schema_id":                basetypes.StringType{},
+		"successful_checks":        basetypes.Int64Type{},
+	}
+}
+
 var _ basetypes.ObjectTypable = SeverityCountsType{}
 
 type SeverityCountsType struct {
@@ -1651,604 +2244,5 @@ func (v SeverityCountsValue) AttributeTypes(ctx context.Context) map[string]attr
 		"severity":               basetypes.StringType{},
 		"successful_evaluations": basetypes.Int64Type{},
 		"total_evaluations":      basetypes.Int64Type{},
-	}
-}
-
-var _ basetypes.ObjectTypable = TableSummariesType{}
-
-type TableSummariesType struct {
-	basetypes.ObjectType
-}
-
-func (t TableSummariesType) Equal(o attr.Type) bool {
-	other, ok := o.(TableSummariesType)
-
-	if !ok {
-		return false
-	}
-
-	return t.ObjectType.Equal(other.ObjectType)
-}
-
-func (t TableSummariesType) String() string {
-	return "TableSummariesType"
-}
-
-func (t TableSummariesType) ValueFromObject(ctx context.Context, in basetypes.ObjectValue) (basetypes.ObjectValuable, diag.Diagnostics) {
-	var diags diag.Diagnostics
-
-	attributes := in.Attributes()
-
-	evaluatedChecksAttribute, ok := attributes["evaluated_checks"]
-
-	if !ok {
-		diags.AddError(
-			"Attribute Missing",
-			`evaluated_checks is missing from object`)
-
-		return nil, diags
-	}
-
-	evaluatedChecksVal, ok := evaluatedChecksAttribute.(basetypes.Int64Value)
-
-	if !ok {
-		diags.AddError(
-			"Attribute Wrong Type",
-			fmt.Sprintf(`evaluated_checks expected to be basetypes.Int64Value, was: %T`, evaluatedChecksAttribute))
-	}
-
-	failedChecksAttribute, ok := attributes["failed_checks"]
-
-	if !ok {
-		diags.AddError(
-			"Attribute Missing",
-			`failed_checks is missing from object`)
-
-		return nil, diags
-	}
-
-	failedChecksVal, ok := failedChecksAttribute.(basetypes.Int64Value)
-
-	if !ok {
-		diags.AddError(
-			"Attribute Wrong Type",
-			fmt.Sprintf(`failed_checks expected to be basetypes.Int64Value, was: %T`, failedChecksAttribute))
-	}
-
-	notYetEvaluatedChecksAttribute, ok := attributes["not_yet_evaluated_checks"]
-
-	if !ok {
-		diags.AddError(
-			"Attribute Missing",
-			`not_yet_evaluated_checks is missing from object`)
-
-		return nil, diags
-	}
-
-	notYetEvaluatedChecksVal, ok := notYetEvaluatedChecksAttribute.(basetypes.Int64Value)
-
-	if !ok {
-		diags.AddError(
-			"Attribute Wrong Type",
-			fmt.Sprintf(`not_yet_evaluated_checks expected to be basetypes.Int64Value, was: %T`, notYetEvaluatedChecksAttribute))
-	}
-
-	numberOfChecksAttribute, ok := attributes["number_of_checks"]
-
-	if !ok {
-		diags.AddError(
-			"Attribute Missing",
-			`number_of_checks is missing from object`)
-
-		return nil, diags
-	}
-
-	numberOfChecksVal, ok := numberOfChecksAttribute.(basetypes.Int64Value)
-
-	if !ok {
-		diags.AddError(
-			"Attribute Wrong Type",
-			fmt.Sprintf(`number_of_checks expected to be basetypes.Int64Value, was: %T`, numberOfChecksAttribute))
-	}
-
-	successfulChecksAttribute, ok := attributes["successful_checks"]
-
-	if !ok {
-		diags.AddError(
-			"Attribute Missing",
-			`successful_checks is missing from object`)
-
-		return nil, diags
-	}
-
-	successfulChecksVal, ok := successfulChecksAttribute.(basetypes.Int64Value)
-
-	if !ok {
-		diags.AddError(
-			"Attribute Wrong Type",
-			fmt.Sprintf(`successful_checks expected to be basetypes.Int64Value, was: %T`, successfulChecksAttribute))
-	}
-
-	tableIdAttribute, ok := attributes["table_id"]
-
-	if !ok {
-		diags.AddError(
-			"Attribute Missing",
-			`table_id is missing from object`)
-
-		return nil, diags
-	}
-
-	tableIdVal, ok := tableIdAttribute.(basetypes.StringValue)
-
-	if !ok {
-		diags.AddError(
-			"Attribute Wrong Type",
-			fmt.Sprintf(`table_id expected to be basetypes.StringValue, was: %T`, tableIdAttribute))
-	}
-
-	if diags.HasError() {
-		return nil, diags
-	}
-
-	return TableSummariesValue{
-		EvaluatedChecks:       evaluatedChecksVal,
-		FailedChecks:          failedChecksVal,
-		NotYetEvaluatedChecks: notYetEvaluatedChecksVal,
-		NumberOfChecks:        numberOfChecksVal,
-		SuccessfulChecks:      successfulChecksVal,
-		TableId:               tableIdVal,
-		state:                 attr.ValueStateKnown,
-	}, diags
-}
-
-func NewTableSummariesValueNull() TableSummariesValue {
-	return TableSummariesValue{
-		state: attr.ValueStateNull,
-	}
-}
-
-func NewTableSummariesValueUnknown() TableSummariesValue {
-	return TableSummariesValue{
-		state: attr.ValueStateUnknown,
-	}
-}
-
-func NewTableSummariesValue(attributeTypes map[string]attr.Type, attributes map[string]attr.Value) (TableSummariesValue, diag.Diagnostics) {
-	var diags diag.Diagnostics
-
-	// Reference: https://github.com/hashicorp/terraform-plugin-framework/issues/521
-	ctx := context.Background()
-
-	for name, attributeType := range attributeTypes {
-		attribute, ok := attributes[name]
-
-		if !ok {
-			diags.AddError(
-				"Missing TableSummariesValue Attribute Value",
-				"While creating a TableSummariesValue value, a missing attribute value was detected. "+
-					"A TableSummariesValue must contain values for all attributes, even if null or unknown. "+
-					"This is always an issue with the provider and should be reported to the provider developers.\n\n"+
-					fmt.Sprintf("TableSummariesValue Attribute Name (%s) Expected Type: %s", name, attributeType.String()),
-			)
-
-			continue
-		}
-
-		if !attributeType.Equal(attribute.Type(ctx)) {
-			diags.AddError(
-				"Invalid TableSummariesValue Attribute Type",
-				"While creating a TableSummariesValue value, an invalid attribute value was detected. "+
-					"A TableSummariesValue must use a matching attribute type for the value. "+
-					"This is always an issue with the provider and should be reported to the provider developers.\n\n"+
-					fmt.Sprintf("TableSummariesValue Attribute Name (%s) Expected Type: %s\n", name, attributeType.String())+
-					fmt.Sprintf("TableSummariesValue Attribute Name (%s) Given Type: %s", name, attribute.Type(ctx)),
-			)
-		}
-	}
-
-	for name := range attributes {
-		_, ok := attributeTypes[name]
-
-		if !ok {
-			diags.AddError(
-				"Extra TableSummariesValue Attribute Value",
-				"While creating a TableSummariesValue value, an extra attribute value was detected. "+
-					"A TableSummariesValue must not contain values beyond the expected attribute types. "+
-					"This is always an issue with the provider and should be reported to the provider developers.\n\n"+
-					fmt.Sprintf("Extra TableSummariesValue Attribute Name: %s", name),
-			)
-		}
-	}
-
-	if diags.HasError() {
-		return NewTableSummariesValueUnknown(), diags
-	}
-
-	evaluatedChecksAttribute, ok := attributes["evaluated_checks"]
-
-	if !ok {
-		diags.AddError(
-			"Attribute Missing",
-			`evaluated_checks is missing from object`)
-
-		return NewTableSummariesValueUnknown(), diags
-	}
-
-	evaluatedChecksVal, ok := evaluatedChecksAttribute.(basetypes.Int64Value)
-
-	if !ok {
-		diags.AddError(
-			"Attribute Wrong Type",
-			fmt.Sprintf(`evaluated_checks expected to be basetypes.Int64Value, was: %T`, evaluatedChecksAttribute))
-	}
-
-	failedChecksAttribute, ok := attributes["failed_checks"]
-
-	if !ok {
-		diags.AddError(
-			"Attribute Missing",
-			`failed_checks is missing from object`)
-
-		return NewTableSummariesValueUnknown(), diags
-	}
-
-	failedChecksVal, ok := failedChecksAttribute.(basetypes.Int64Value)
-
-	if !ok {
-		diags.AddError(
-			"Attribute Wrong Type",
-			fmt.Sprintf(`failed_checks expected to be basetypes.Int64Value, was: %T`, failedChecksAttribute))
-	}
-
-	notYetEvaluatedChecksAttribute, ok := attributes["not_yet_evaluated_checks"]
-
-	if !ok {
-		diags.AddError(
-			"Attribute Missing",
-			`not_yet_evaluated_checks is missing from object`)
-
-		return NewTableSummariesValueUnknown(), diags
-	}
-
-	notYetEvaluatedChecksVal, ok := notYetEvaluatedChecksAttribute.(basetypes.Int64Value)
-
-	if !ok {
-		diags.AddError(
-			"Attribute Wrong Type",
-			fmt.Sprintf(`not_yet_evaluated_checks expected to be basetypes.Int64Value, was: %T`, notYetEvaluatedChecksAttribute))
-	}
-
-	numberOfChecksAttribute, ok := attributes["number_of_checks"]
-
-	if !ok {
-		diags.AddError(
-			"Attribute Missing",
-			`number_of_checks is missing from object`)
-
-		return NewTableSummariesValueUnknown(), diags
-	}
-
-	numberOfChecksVal, ok := numberOfChecksAttribute.(basetypes.Int64Value)
-
-	if !ok {
-		diags.AddError(
-			"Attribute Wrong Type",
-			fmt.Sprintf(`number_of_checks expected to be basetypes.Int64Value, was: %T`, numberOfChecksAttribute))
-	}
-
-	successfulChecksAttribute, ok := attributes["successful_checks"]
-
-	if !ok {
-		diags.AddError(
-			"Attribute Missing",
-			`successful_checks is missing from object`)
-
-		return NewTableSummariesValueUnknown(), diags
-	}
-
-	successfulChecksVal, ok := successfulChecksAttribute.(basetypes.Int64Value)
-
-	if !ok {
-		diags.AddError(
-			"Attribute Wrong Type",
-			fmt.Sprintf(`successful_checks expected to be basetypes.Int64Value, was: %T`, successfulChecksAttribute))
-	}
-
-	tableIdAttribute, ok := attributes["table_id"]
-
-	if !ok {
-		diags.AddError(
-			"Attribute Missing",
-			`table_id is missing from object`)
-
-		return NewTableSummariesValueUnknown(), diags
-	}
-
-	tableIdVal, ok := tableIdAttribute.(basetypes.StringValue)
-
-	if !ok {
-		diags.AddError(
-			"Attribute Wrong Type",
-			fmt.Sprintf(`table_id expected to be basetypes.StringValue, was: %T`, tableIdAttribute))
-	}
-
-	if diags.HasError() {
-		return NewTableSummariesValueUnknown(), diags
-	}
-
-	return TableSummariesValue{
-		EvaluatedChecks:       evaluatedChecksVal,
-		FailedChecks:          failedChecksVal,
-		NotYetEvaluatedChecks: notYetEvaluatedChecksVal,
-		NumberOfChecks:        numberOfChecksVal,
-		SuccessfulChecks:      successfulChecksVal,
-		TableId:               tableIdVal,
-		state:                 attr.ValueStateKnown,
-	}, diags
-}
-
-func NewTableSummariesValueMust(attributeTypes map[string]attr.Type, attributes map[string]attr.Value) TableSummariesValue {
-	object, diags := NewTableSummariesValue(attributeTypes, attributes)
-
-	if diags.HasError() {
-		// This could potentially be added to the diag package.
-		diagsStrings := make([]string, 0, len(diags))
-
-		for _, diagnostic := range diags {
-			diagsStrings = append(diagsStrings, fmt.Sprintf(
-				"%s | %s | %s",
-				diagnostic.Severity(),
-				diagnostic.Summary(),
-				diagnostic.Detail()))
-		}
-
-		panic("NewTableSummariesValueMust received error(s): " + strings.Join(diagsStrings, "\n"))
-	}
-
-	return object
-}
-
-func (t TableSummariesType) ValueFromTerraform(ctx context.Context, in tftypes.Value) (attr.Value, error) {
-	if in.Type() == nil {
-		return NewTableSummariesValueNull(), nil
-	}
-
-	if !in.Type().Equal(t.TerraformType(ctx)) {
-		return nil, fmt.Errorf("expected %s, got %s", t.TerraformType(ctx), in.Type())
-	}
-
-	if !in.IsKnown() {
-		return NewTableSummariesValueUnknown(), nil
-	}
-
-	if in.IsNull() {
-		return NewTableSummariesValueNull(), nil
-	}
-
-	attributes := map[string]attr.Value{}
-
-	val := map[string]tftypes.Value{}
-
-	err := in.As(&val)
-
-	if err != nil {
-		return nil, err
-	}
-
-	for k, v := range val {
-		a, err := t.AttrTypes[k].ValueFromTerraform(ctx, v)
-
-		if err != nil {
-			return nil, err
-		}
-
-		attributes[k] = a
-	}
-
-	return NewTableSummariesValueMust(TableSummariesValue{}.AttributeTypes(ctx), attributes), nil
-}
-
-func (t TableSummariesType) ValueType(ctx context.Context) attr.Value {
-	return TableSummariesValue{}
-}
-
-var _ basetypes.ObjectValuable = TableSummariesValue{}
-
-type TableSummariesValue struct {
-	EvaluatedChecks       basetypes.Int64Value  `tfsdk:"evaluated_checks"`
-	FailedChecks          basetypes.Int64Value  `tfsdk:"failed_checks"`
-	NotYetEvaluatedChecks basetypes.Int64Value  `tfsdk:"not_yet_evaluated_checks"`
-	NumberOfChecks        basetypes.Int64Value  `tfsdk:"number_of_checks"`
-	SuccessfulChecks      basetypes.Int64Value  `tfsdk:"successful_checks"`
-	TableId               basetypes.StringValue `tfsdk:"table_id"`
-	state                 attr.ValueState
-}
-
-func (v TableSummariesValue) ToTerraformValue(ctx context.Context) (tftypes.Value, error) {
-	attrTypes := make(map[string]tftypes.Type, 6)
-
-	var val tftypes.Value
-	var err error
-
-	attrTypes["evaluated_checks"] = basetypes.Int64Type{}.TerraformType(ctx)
-	attrTypes["failed_checks"] = basetypes.Int64Type{}.TerraformType(ctx)
-	attrTypes["not_yet_evaluated_checks"] = basetypes.Int64Type{}.TerraformType(ctx)
-	attrTypes["number_of_checks"] = basetypes.Int64Type{}.TerraformType(ctx)
-	attrTypes["successful_checks"] = basetypes.Int64Type{}.TerraformType(ctx)
-	attrTypes["table_id"] = basetypes.StringType{}.TerraformType(ctx)
-
-	objectType := tftypes.Object{AttributeTypes: attrTypes}
-
-	switch v.state {
-	case attr.ValueStateKnown:
-		vals := make(map[string]tftypes.Value, 6)
-
-		val, err = v.EvaluatedChecks.ToTerraformValue(ctx)
-
-		if err != nil {
-			return tftypes.NewValue(objectType, tftypes.UnknownValue), err
-		}
-
-		vals["evaluated_checks"] = val
-
-		val, err = v.FailedChecks.ToTerraformValue(ctx)
-
-		if err != nil {
-			return tftypes.NewValue(objectType, tftypes.UnknownValue), err
-		}
-
-		vals["failed_checks"] = val
-
-		val, err = v.NotYetEvaluatedChecks.ToTerraformValue(ctx)
-
-		if err != nil {
-			return tftypes.NewValue(objectType, tftypes.UnknownValue), err
-		}
-
-		vals["not_yet_evaluated_checks"] = val
-
-		val, err = v.NumberOfChecks.ToTerraformValue(ctx)
-
-		if err != nil {
-			return tftypes.NewValue(objectType, tftypes.UnknownValue), err
-		}
-
-		vals["number_of_checks"] = val
-
-		val, err = v.SuccessfulChecks.ToTerraformValue(ctx)
-
-		if err != nil {
-			return tftypes.NewValue(objectType, tftypes.UnknownValue), err
-		}
-
-		vals["successful_checks"] = val
-
-		val, err = v.TableId.ToTerraformValue(ctx)
-
-		if err != nil {
-			return tftypes.NewValue(objectType, tftypes.UnknownValue), err
-		}
-
-		vals["table_id"] = val
-
-		if err := tftypes.ValidateValue(objectType, vals); err != nil {
-			return tftypes.NewValue(objectType, tftypes.UnknownValue), err
-		}
-
-		return tftypes.NewValue(objectType, vals), nil
-	case attr.ValueStateNull:
-		return tftypes.NewValue(objectType, nil), nil
-	case attr.ValueStateUnknown:
-		return tftypes.NewValue(objectType, tftypes.UnknownValue), nil
-	default:
-		panic(fmt.Sprintf("unhandled Object state in ToTerraformValue: %s", v.state))
-	}
-}
-
-func (v TableSummariesValue) IsNull() bool {
-	return v.state == attr.ValueStateNull
-}
-
-func (v TableSummariesValue) IsUnknown() bool {
-	return v.state == attr.ValueStateUnknown
-}
-
-func (v TableSummariesValue) String() string {
-	return "TableSummariesValue"
-}
-
-func (v TableSummariesValue) ToObjectValue(ctx context.Context) (basetypes.ObjectValue, diag.Diagnostics) {
-	var diags diag.Diagnostics
-
-	attributeTypes := map[string]attr.Type{
-		"evaluated_checks":         basetypes.Int64Type{},
-		"failed_checks":            basetypes.Int64Type{},
-		"not_yet_evaluated_checks": basetypes.Int64Type{},
-		"number_of_checks":         basetypes.Int64Type{},
-		"successful_checks":        basetypes.Int64Type{},
-		"table_id":                 basetypes.StringType{},
-	}
-
-	if v.IsNull() {
-		return types.ObjectNull(attributeTypes), diags
-	}
-
-	if v.IsUnknown() {
-		return types.ObjectUnknown(attributeTypes), diags
-	}
-
-	objVal, diags := types.ObjectValue(
-		attributeTypes,
-		map[string]attr.Value{
-			"evaluated_checks":         v.EvaluatedChecks,
-			"failed_checks":            v.FailedChecks,
-			"not_yet_evaluated_checks": v.NotYetEvaluatedChecks,
-			"number_of_checks":         v.NumberOfChecks,
-			"successful_checks":        v.SuccessfulChecks,
-			"table_id":                 v.TableId,
-		})
-
-	return objVal, diags
-}
-
-func (v TableSummariesValue) Equal(o attr.Value) bool {
-	other, ok := o.(TableSummariesValue)
-
-	if !ok {
-		return false
-	}
-
-	if v.state != other.state {
-		return false
-	}
-
-	if v.state != attr.ValueStateKnown {
-		return true
-	}
-
-	if !v.EvaluatedChecks.Equal(other.EvaluatedChecks) {
-		return false
-	}
-
-	if !v.FailedChecks.Equal(other.FailedChecks) {
-		return false
-	}
-
-	if !v.NotYetEvaluatedChecks.Equal(other.NotYetEvaluatedChecks) {
-		return false
-	}
-
-	if !v.NumberOfChecks.Equal(other.NumberOfChecks) {
-		return false
-	}
-
-	if !v.SuccessfulChecks.Equal(other.SuccessfulChecks) {
-		return false
-	}
-
-	if !v.TableId.Equal(other.TableId) {
-		return false
-	}
-
-	return true
-}
-
-func (v TableSummariesValue) Type(ctx context.Context) attr.Type {
-	return TableSummariesType{
-		basetypes.ObjectType{
-			AttrTypes: v.AttributeTypes(ctx),
-		},
-	}
-}
-
-func (v TableSummariesValue) AttributeTypes(ctx context.Context) map[string]attr.Type {
-	return map[string]attr.Type{
-		"evaluated_checks":         basetypes.Int64Type{},
-		"failed_checks":            basetypes.Int64Type{},
-		"not_yet_evaluated_checks": basetypes.Int64Type{},
-		"number_of_checks":         basetypes.Int64Type{},
-		"successful_checks":        basetypes.Int64Type{},
-		"table_id":                 basetypes.StringType{},
 	}
 }
