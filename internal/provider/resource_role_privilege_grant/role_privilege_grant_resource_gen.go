@@ -117,6 +117,7 @@ func RolePrivilegeGrantResourceSchema(ctx context.Context) schema.Schema {
 						"ViewDataProduct",
 						"DownloadQueryResults",
 						"ManageQueryRoutingRules",
+						"ManageIcehouseOps",
 					),
 				},
 			},

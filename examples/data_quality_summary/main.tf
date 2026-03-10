@@ -20,16 +20,12 @@ locals {
   first_catalog = try([for catalog in local.catalogs_result : catalog if catalog != null][0], null)
 
   has_catalogs = local.first_catalog != null
-
-  # Use a hardcoded schema ID for testing - data quality is typically on specific schemas
-  test_schema_id = "information_schema" # Common schema that often exists
 }
 
 # Test the data quality summary data source (only if we have catalogs available)
 data "galaxy_data_quality_summary" "test" {
   count      = local.has_catalogs ? 1 : 0
   catalog_id = local.first_catalog.catalog_id
-  schema_id  = local.test_schema_id
 }
 
 # Diagnostic outputs
@@ -52,7 +48,6 @@ output "first_catalog_debug" {
 output "test_parameters" {
   value = {
     catalog_id = local.has_catalogs ? local.first_catalog.catalog_id : "none"
-    schema_id  = local.test_schema_id
   }
   description = "Parameters used for testing data quality summary"
 }
@@ -60,19 +55,19 @@ output "test_parameters" {
 # Data Quality Summary data source test outputs (conditional)
 output "data_quality_summary_test" {
   value = local.has_catalogs ? {
-    catalog_id           = data.galaxy_data_quality_summary.test[0].catalog_id
-    schema_id           = data.galaxy_data_quality_summary.test[0].schema_id
-    category_counts     = length(try(data.galaxy_data_quality_summary.test[0].category_counts, []))
-    daily_summaries     = length(try(data.galaxy_data_quality_summary.test[0].daily_summaries, []))
-    severity_counts     = length(try(data.galaxy_data_quality_summary.test[0].severity_counts, []))
-    test_status         = "success"
-  } : {
-    catalog_id           = "not_available"
-    schema_id           = "No catalogs available for testing"
-    category_counts     = 0
-    daily_summaries     = 0
-    severity_counts     = 0
-    test_status         = "failed"
+    catalog_id       = data.galaxy_data_quality_summary.test[0].catalog_id
+    category_counts  = length(try(data.galaxy_data_quality_summary.test[0].category_counts, []))
+    daily_summaries  = length(try(data.galaxy_data_quality_summary.test[0].daily_summaries, []))
+    schema_summaries = length(try(data.galaxy_data_quality_summary.test[0].schema_summaries, []))
+    severity_counts  = length(try(data.galaxy_data_quality_summary.test[0].severity_counts, []))
+    test_status      = "success"
+    } : {
+    catalog_id       = "not_available"
+    category_counts  = 0
+    daily_summaries  = 0
+    schema_summaries = 0
+    severity_counts  = 0
+    test_status      = "failed"
   }
 }
 
@@ -81,7 +76,7 @@ output "sample_category_counts" {
   value = local.has_catalogs ? [
     for i, category in slice(try(data.galaxy_data_quality_summary.test[0].category_counts, []), 0, min(3, length(try(data.galaxy_data_quality_summary.test[0].category_counts, [])))) :
     {
-      index                   = i
+      index                  = i
       category               = try(category.category, "unknown")
       total_evaluations      = try(category.total_evaluations, 0)
       successful_evaluations = try(category.successful_evaluations, 0)
@@ -96,7 +91,7 @@ output "sample_daily_summaries" {
   value = local.has_catalogs ? [
     for i, daily in slice(try(data.galaxy_data_quality_summary.test[0].daily_summaries, []), 0, min(3, length(try(data.galaxy_data_quality_summary.test[0].daily_summaries, [])))) :
     {
-      index                   = i
+      index                  = i
       day                    = try(daily.day, "unknown")
       total_evaluations      = try(daily.total_evaluations, 0)
       successful_evaluations = try(daily.successful_evaluations, 0)
@@ -106,20 +101,39 @@ output "sample_daily_summaries" {
   description = "Sample daily summaries from data quality summary"
 }
 
+# Show sample schema summaries (if available)
+output "sample_schema_summaries" {
+  value = local.has_catalogs ? [
+    for i, schema in slice(try(data.galaxy_data_quality_summary.test[0].schema_summaries, []), 0, min(3, length(try(data.galaxy_data_quality_summary.test[0].schema_summaries, [])))) :
+    {
+      index                    = i
+      schema_id                = try(schema.schema_id, "unknown")
+      number_of_checks         = try(schema.number_of_checks, 0)
+      evaluated_checks         = try(schema.evaluated_checks, 0)
+      successful_checks        = try(schema.successful_checks, 0)
+      failed_checks            = try(schema.failed_checks, 0)
+      not_yet_evaluated_checks = try(schema.not_yet_evaluated_checks, 0)
+    }
+  ] : []
+  description = "Sample schema summaries from data quality summary"
+}
+
 # Summary statistics
 output "data_quality_summary_stats" {
   value = local.has_catalogs ? {
-    has_data_quality_info   = length(try(data.galaxy_data_quality_summary.test[0].category_counts, [])) > 0
-    categories_tracked      = length(try(data.galaxy_data_quality_summary.test[0].category_counts, []))
-    days_with_data         = length(try(data.galaxy_data_quality_summary.test[0].daily_summaries, []))
-    severity_levels        = length(try(data.galaxy_data_quality_summary.test[0].severity_counts, []))
-    status                 = "success"
-  } : {
-    has_data_quality_info   = false
-    categories_tracked      = 0
-    days_with_data         = 0
-    severity_levels        = 0
-    status                 = "no_catalogs_available"
+    has_data_quality_info = length(try(data.galaxy_data_quality_summary.test[0].category_counts, [])) > 0
+    categories_tracked    = length(try(data.galaxy_data_quality_summary.test[0].category_counts, []))
+    days_with_data        = length(try(data.galaxy_data_quality_summary.test[0].daily_summaries, []))
+    schemas_tracked       = length(try(data.galaxy_data_quality_summary.test[0].schema_summaries, []))
+    severity_levels       = length(try(data.galaxy_data_quality_summary.test[0].severity_counts, []))
+    status                = "success"
+    } : {
+    has_data_quality_info = false
+    categories_tracked    = 0
+    days_with_data        = 0
+    schemas_tracked       = 0
+    severity_levels       = 0
+    status                = "no_catalogs_available"
   }
   description = "Summary statistics of data quality information"
 }

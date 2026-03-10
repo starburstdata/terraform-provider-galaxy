@@ -1029,9 +1029,9 @@ func (c *GalaxyClient) ListPrivatelinks(ctx context.Context) (map[string]interfa
 }
 
 // Data Quality data sources
-func (c *GalaxyClient) GetDataQualitySummary(ctx context.Context, catalogID, schemaID string) (map[string]interface{}, error) {
+func (c *GalaxyClient) GetDataQualitySummary(ctx context.Context, catalogID string) (map[string]interface{}, error) {
 	var result map[string]interface{}
-	path := fmt.Sprintf("/public/api/v1/catalog/%s/schema/%s/dataQualitySummary", catalogID, schemaID)
+	path := fmt.Sprintf("/public/api/v1/catalog/%s/dataQualitySummary", catalogID)
 	err := c.doRequest(ctx, "GET", path, nil, &result)
 	return result, err
 }

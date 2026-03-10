@@ -19,14 +19,13 @@ description: |-
 
 - `catalog_id` (String) - A catalog
 - This parameter can be looked up using `name` instead of its Id. Use `name=value` instead of an Id to lookup/search using the `value`. `value` must be encoded ([see RFC](https://www.rfc-editor.org/rfc/rfc3986#section-2.2) including `=`)
-- `schema_id` (String) A schema from a catalog
 
 ### Read-Only
 
 - `category_counts` (Attributes List) Counts grouped by category (read only) (see [below for nested schema](#nestedatt--category_counts))
 - `daily_summaries` (Attributes List) Summaries for each day (read only) (see [below for nested schema](#nestedatt--daily_summaries))
+- `schema_summaries` (Attributes List) Summaries per schema (read only) (see [below for nested schema](#nestedatt--schema_summaries))
 - `severity_counts` (Attributes List) Counts grouped by severities (read only) (see [below for nested schema](#nestedatt--severity_counts))
-- `table_summaries` (Attributes List) Summaries per table (read only) (see [below for nested schema](#nestedatt--table_summaries))
 
 <a id="nestedatt--category_counts"></a>
 ### Nested Schema for `category_counts`
@@ -50,6 +49,19 @@ Read-Only:
 - `total_evaluations` (Number) Number of total evaluations conducted on the specified day
 
 
+<a id="nestedatt--schema_summaries"></a>
+### Nested Schema for `schema_summaries`
+
+Read-Only:
+
+- `evaluated_checks` (Number) Number of evaluated quality checks
+- `failed_checks` (Number) Number of failed quality checks
+- `not_yet_evaluated_checks` (Number) Number of not yet evaluated quality checks
+- `number_of_checks` (Number) Total number of quality checks
+- `schema_id` (String) Schema ID
+- `successful_checks` (Number) Number of successful quality checks
+
+
 <a id="nestedatt--severity_counts"></a>
 ### Nested Schema for `severity_counts`
 
@@ -59,16 +71,3 @@ Read-Only:
 - `severity` (String) Data quality check severity
 - `successful_evaluations` (Number) Successful evaluations
 - `total_evaluations` (Number) Total evaluations
-
-
-<a id="nestedatt--table_summaries"></a>
-### Nested Schema for `table_summaries`
-
-Read-Only:
-
-- `evaluated_checks` (Number) Number of evaluated quality checks
-- `failed_checks` (Number) Number of failed quality checks
-- `not_yet_evaluated_checks` (Number) Number of not yet evaluated quality checks
-- `number_of_checks` (Number) Total number of quality checks
-- `successful_checks` (Number) Number of successful quality checks
-- `table_id` (String) Table ID
