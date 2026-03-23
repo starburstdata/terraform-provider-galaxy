@@ -18,8 +18,6 @@ description: |-
 ### Required
 
 - `connection_type` (String)
-- `database` (String) Mongodb database
-- `host` (String) Mongodb host
 - `name` (String) Catalog name
 - `password` (String) MongoDB password
 - `read_only` (Boolean) Is catalog read only
@@ -29,9 +27,11 @@ description: |-
 ### Optional
 
 - `cloud_kind` (String) MongoDB cloud kind. Defaults to AWS.
+- `database` (String, Deprecated) Mongodb database
 - `description` (String) Catalog description
 - `dns_seed_list_enabled` (Boolean) Use DNS seed list (SRV). Defaults to false.
 - `federated_database_enabled` (Boolean) Is federated database. Defaults to false.
+- `host` (String, Deprecated) Mongodb host (required for direct and sshTunnel connection types)
 - `hosts` (String) MongoDB hosts
 - `private_link_id` (String) PrivateLink Identifier
 - `ssh_tunnel_id` (String) SSH tunnel identifier

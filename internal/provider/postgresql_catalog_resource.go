@@ -46,6 +46,18 @@ func (r *postgresql_catalogResource) Schema(ctx context.Context, req resource.Sc
 	// PostgreSQL already has endpoint and database_name in the generated schema
 	s := resource_postgresql_catalog.PostgresqlCatalogResourceSchema(ctx)
 
+	// Document cross-field constraint: at least one of endpoint or private_link_id is required
+	if attr, ok := s.Attributes["endpoint"].(schema.StringAttribute); ok {
+		attr.Description = "PostgreSQL database endpoint. At least one of endpoint or private_link_id must be specified."
+		attr.MarkdownDescription = attr.Description
+		s.Attributes["endpoint"] = attr
+	}
+	if attr, ok := s.Attributes["private_link_id"].(schema.StringAttribute); ok {
+		attr.Description = "PrivateLink identifier. At least one of endpoint or private_link_id must be specified."
+		attr.MarkdownDescription = attr.Description
+		s.Attributes["private_link_id"] = attr
+	}
+
 	// Fix: validate is a request-only parameter, not returned by API.
 	// Setting Computed=false ensures it's sent with update requests.
 	if attr, ok := s.Attributes["validate"].(schema.BoolAttribute); ok {
@@ -214,18 +226,56 @@ func (r *postgresql_catalogResource) modelToCreateRequest(ctx context.Context, m
 	request["readOnly"] = model.ReadOnly.ValueBool()
 	request["username"] = model.Username.ValueString()
 	request["password"] = model.Password.ValueString()
-	request["endpoint"] = model.Endpoint.ValueString()
 	request["databaseName"] = model.DatabaseName.ValueString()
 
-	// Optional fields
+	// Validate that at least one of endpoint or privateLinkId is provided
+	hasEndpoint := model.Endpoint.ValueString() != ""
+	hasPrivateLinkId := model.PrivateLinkId.ValueString() != ""
+	hasSshTunnelId := model.SshTunnelId.ValueString() != ""
+	if !hasEndpoint && !hasPrivateLinkId {
+		diags.AddError(
+			"Missing required field",
+			"Either endpoint or private_link_id must be specified for postgresql_catalog",
+		)
+		return request
+	}
+	if hasPrivateLinkId && hasSshTunnelId {
+		diags.AddError(
+			"Invalid configuration",
+			"ssh_tunnel_id and private_link_id are mutually exclusive for postgresql_catalog",
+		)
+		return request
+	}
+
+	// Optional fields - endpoint is now optional (can use privateLinkId instead)
+	if hasEndpoint {
+		request["endpoint"] = model.Endpoint.ValueString()
+	}
+
 	if !model.Port.IsNull() && !model.Port.IsUnknown() {
 		request["port"] = model.Port.ValueInt64()
 	} else {
 		request["port"] = 5432 // Default PostgreSQL port
 	}
 
-	if !model.Description.IsNull() && !model.Description.IsUnknown() && model.Description.ValueString() != "" {
+	if model.Description.ValueString() != "" {
 		request["description"] = model.Description.ValueString()
+	}
+
+	if model.CloudKind.ValueString() != "" {
+		request["cloudKind"] = model.CloudKind.ValueString()
+	}
+
+	if hasSshTunnelId {
+		request["sshTunnelId"] = model.SshTunnelId.ValueString()
+	}
+
+	if hasPrivateLinkId {
+		request["privateLinkId"] = model.PrivateLinkId.ValueString()
+	}
+
+	if !model.TlsEnabled.IsNull() && !model.TlsEnabled.IsUnknown() {
+		request["tlsEnabled"] = model.TlsEnabled.ValueBool()
 	}
 
 	if !model.Validate.IsNull() && !model.Validate.IsUnknown() {
@@ -263,6 +313,8 @@ func (r *postgresql_catalogResource) updateModelFromResponse(ctx context.Context
 
 	if endpoint, ok := response["endpoint"].(string); ok {
 		model.Endpoint = types.StringValue(endpoint)
+	} else if model.Endpoint.IsUnknown() {
+		model.Endpoint = types.StringNull()
 	}
 
 	if databaseName, ok := response["databaseName"].(string); ok {
@@ -290,6 +342,12 @@ func (r *postgresql_catalogResource) updateModelFromResponse(ctx context.Context
 		model.SshTunnelId = types.StringValue(sshTunnelId)
 	} else if model.SshTunnelId.IsUnknown() {
 		model.SshTunnelId = types.StringNull()
+	}
+
+	if privateLinkId, ok := response["privateLinkId"].(string); ok {
+		model.PrivateLinkId = types.StringValue(privateLinkId)
+	} else if model.PrivateLinkId.IsUnknown() {
+		model.PrivateLinkId = types.StringNull()
 	}
 
 	if tlsEnabled, ok := response["tlsEnabled"].(bool); ok {

@@ -53,12 +53,16 @@ func (r *mongodb_catalogResource) Schema(ctx context.Context, req resource.Schem
 
 	// Add missing fields for Mongodb connection
 	baseSchema.Attributes["host"] = schema.StringAttribute{
-		Required:            true,
-		Description:         "Mongodb host",
-		MarkdownDescription: "Mongodb host",
+		Optional:            true,
+		Computed:            true,
+		DeprecationMessage:  "Use hosts instead. This field will be removed in a future version.",
+		Description:         "Mongodb host (required for direct and sshTunnel connection types)",
+		MarkdownDescription: "Mongodb host (required for direct and sshTunnel connection types)",
 	}
 	baseSchema.Attributes["database"] = schema.StringAttribute{
-		Required:            true,
+		Optional:            true,
+		Computed:            true,
+		DeprecationMessage:  "Include the database in the hosts field (e.g., host:port/database). This field will be removed in a future version.",
 		Description:         "Mongodb database",
 		MarkdownDescription: "Mongodb database",
 	}
@@ -101,6 +105,12 @@ func (r *mongodb_catalogResource) Create(ctx context.Context, req resource.Creat
 	// Initialize optional computed fields to null if not provided in config (before API call)
 	if plan.Hosts.IsUnknown() {
 		plan.Hosts = types.StringNull()
+	}
+	if plan.Host.IsUnknown() {
+		plan.Host = types.StringNull()
+	}
+	if plan.Database.IsUnknown() {
+		plan.Database = types.StringNull()
 	}
 	if plan.PrivateLinkId.IsUnknown() {
 		plan.PrivateLinkId = types.StringNull()
@@ -243,28 +253,75 @@ func (r *mongodb_catalogResource) modelToCreateRequest(ctx context.Context, mode
 	request["username"] = model.Username.ValueString()
 	request["password"] = model.Password.ValueString()
 
-	// MongoDB uses "hosts" field for connection (can include port)
-	// Format: host:port/database
-	hostWithDb := model.Host.ValueString()
-	if !model.Database.IsNull() && !model.Database.IsUnknown() && model.Database.ValueString() != "" {
-		hostWithDb = fmt.Sprintf("%s/%s", hostWithDb, model.Database.ValueString())
+	// Determine connection type from provided fields
+	hasHost := model.Host.ValueString() != ""
+	hasHosts := model.Hosts.ValueString() != ""
+	hasPrivateLinkId := model.PrivateLinkId.ValueString() != ""
+	hasSshTunnelId := model.SshTunnelId.ValueString() != ""
+
+	if model.ConnectionType.ValueString() != "" {
+		request["connectionType"] = model.ConnectionType.ValueString()
+	} else if hasPrivateLinkId {
+		request["connectionType"] = "privateLink"
+	} else if hasSshTunnelId {
+		request["connectionType"] = "sshTunnel"
+	} else {
+		request["connectionType"] = "direct"
 	}
-	request["hosts"] = hostWithDb
 
-	// MongoDB connection string includes port in host field
+	// Resolve hosts value from hosts field or deprecated host+database fields
+	resolveHosts := func() (string, bool) {
+		if hasHosts {
+			return model.Hosts.ValueString(), true
+		}
+		if hasHost {
+			h := model.Host.ValueString()
+			if db := model.Database.ValueString(); db != "" {
+				h = fmt.Sprintf("%s/%s", h, db)
+			}
+			return h, true
+		}
+		return "", false
+	}
 
-	if !model.Description.IsNull() && !model.Description.IsUnknown() && model.Description.ValueString() != "" {
+	connType := request["connectionType"].(string)
+	switch connType {
+	case "direct":
+		if hosts, ok := resolveHosts(); ok {
+			request["hosts"] = hosts
+		} else {
+			diags.AddError("Missing required field", "hosts (or deprecated host) is required when connection_type is direct for mongodb_catalog")
+			return request
+		}
+	case "sshTunnel":
+		if !hasSshTunnelId {
+			diags.AddError("Missing required field", "ssh_tunnel_id is required when connection_type is sshTunnel for mongodb_catalog")
+			return request
+		}
+		if hosts, ok := resolveHosts(); ok {
+			request["hosts"] = hosts
+		} else {
+			diags.AddError("Missing required field", "hosts (or deprecated host) is required when connection_type is sshTunnel for mongodb_catalog")
+			return request
+		}
+		request["sshTunnelId"] = model.SshTunnelId.ValueString()
+	case "privateLink":
+		if !hasPrivateLinkId {
+			diags.AddError("Missing required field", "private_link_id is required when connection_type is privateLink for mongodb_catalog")
+			return request
+		}
+		request["privateLinkId"] = model.PrivateLinkId.ValueString()
+	default:
+		diags.AddError("Invalid connection_type", fmt.Sprintf("connection_type must be one of: direct, sshTunnel, privateLink. Got: %s", connType))
+		return request
+	}
+
+	if model.Description.ValueString() != "" {
 		request["description"] = model.Description.ValueString()
 	}
 
-	if !model.CloudKind.IsNull() && !model.CloudKind.IsUnknown() && model.CloudKind.ValueString() != "" {
+	if model.CloudKind.ValueString() != "" {
 		request["cloudKind"] = model.CloudKind.ValueString()
-	}
-
-	if !model.ConnectionType.IsNull() && !model.ConnectionType.IsUnknown() && model.ConnectionType.ValueString() != "" {
-		request["connectionType"] = model.ConnectionType.ValueString()
-	} else {
-		request["connectionType"] = "direct"
 	}
 
 	// Handle regions field
@@ -333,7 +390,15 @@ func (r *mongodb_catalogResource) updateModelFromResponse(ctx context.Context, m
 			model.Host = types.StringValue(hosts)
 		}
 	} else {
-		model.Hosts = types.StringNull()
+		if model.Hosts.IsUnknown() {
+			model.Hosts = types.StringNull()
+		}
+		if model.Host.IsUnknown() {
+			model.Host = types.StringNull()
+		}
+		if model.Database.IsUnknown() {
+			model.Database = types.StringNull()
+		}
 	}
 
 	// MongoDB doesn't have separate port field
@@ -387,13 +452,13 @@ func (r *mongodb_catalogResource) updateModelFromResponse(ctx context.Context, m
 	// Handle optional connection-specific fields
 	if privateLinkId, ok := response["privateLinkId"].(string); ok && privateLinkId != "" {
 		model.PrivateLinkId = types.StringValue(privateLinkId)
-	} else {
+	} else if model.PrivateLinkId.IsUnknown() {
 		model.PrivateLinkId = types.StringNull()
 	}
 
 	if sshTunnelId, ok := response["sshTunnelId"].(string); ok && sshTunnelId != "" {
 		model.SshTunnelId = types.StringValue(sshTunnelId)
-	} else {
+	} else if model.SshTunnelId.IsUnknown() {
 		model.SshTunnelId = types.StringNull()
 	}
 
