@@ -18,7 +18,6 @@ description: |-
 ### Required
 
 - `database_name` (String) SQL Server database name
-- `endpoint` (String) SQL Server database endpoint
 - `name` (String) Catalog name
 - `password` (String) SQL Server database password
 - `read_only` (Boolean) Is catalog read only
@@ -28,7 +27,9 @@ description: |-
 
 - `cloud_kind` (String) SQL Server cloud kind. Defaults to AWS.
 - `description` (String) Catalog description
+- `endpoint` (String) SQL Server database endpoint. At least one of endpoint or private_link_id must be specified.
 - `port` (Number) SQL Server database port. Defaults to 1433.
+- `private_link_id` (String) PrivateLink identifier. At least one of endpoint or private_link_id must be specified.
 - `ssh_tunnel_id` (String) SSH tunnel identifier
 - `validate` (Boolean) Validate catalog configuration before creation
 

@@ -219,12 +219,53 @@ func (r *mysql_catalogResource) modelToCreateRequest(ctx context.Context, model 
 	// Required fields
 	request["name"] = model.Name.ValueString()
 	request["readOnly"] = model.ReadOnly.ValueBool()
-	request["connectionType"] = "direct" // For direct MySQL connection
 	request["username"] = model.Username.ValueString()
 	request["password"] = model.Password.ValueString()
-	request["host"] = model.Host.ValueString()
 
-	// Optional fields - MySQL doesn't use database field in this catalog type
+	// Determine connection type from provided fields
+	hasHost := model.Host.ValueString() != ""
+	hasPrivateLinkId := model.PrivateLinkId.ValueString() != ""
+	hasSshTunnelId := model.SshTunnelId.ValueString() != ""
+
+	if model.ConnectionType.ValueString() != "" {
+		request["connectionType"] = model.ConnectionType.ValueString()
+	} else if hasPrivateLinkId {
+		request["connectionType"] = "privateLink"
+	} else if hasSshTunnelId {
+		request["connectionType"] = "sshTunnel"
+	} else {
+		request["connectionType"] = "direct"
+	}
+
+	connType := request["connectionType"].(string)
+	switch connType {
+	case "direct":
+		if !hasHost {
+			diags.AddError("Missing required field", "host is required when connection_type is direct for mysql_catalog")
+			return request
+		}
+		request["host"] = model.Host.ValueString()
+	case "sshTunnel":
+		if !hasHost {
+			diags.AddError("Missing required field", "host is required when connection_type is sshTunnel for mysql_catalog")
+			return request
+		}
+		if !hasSshTunnelId {
+			diags.AddError("Missing required field", "ssh_tunnel_id is required when connection_type is sshTunnel for mysql_catalog")
+			return request
+		}
+		request["host"] = model.Host.ValueString()
+		request["sshTunnelId"] = model.SshTunnelId.ValueString()
+	case "privateLink":
+		if !hasPrivateLinkId {
+			diags.AddError("Missing required field", "private_link_id is required when connection_type is privateLink for mysql_catalog")
+			return request
+		}
+		request["privateLinkId"] = model.PrivateLinkId.ValueString()
+	default:
+		diags.AddError("Invalid connection_type", fmt.Sprintf("connection_type must be one of: direct, sshTunnel, privateLink. Got: %s", connType))
+		return request
+	}
 
 	if !model.Port.IsNull() && !model.Port.IsUnknown() {
 		request["port"] = model.Port.ValueInt64()
@@ -232,11 +273,11 @@ func (r *mysql_catalogResource) modelToCreateRequest(ctx context.Context, model 
 		request["port"] = 3306 // Default MySQL port
 	}
 
-	if !model.Description.IsNull() && !model.Description.IsUnknown() && model.Description.ValueString() != "" {
+	if model.Description.ValueString() != "" {
 		request["description"] = model.Description.ValueString()
 	}
 
-	if !model.CloudKind.IsNull() && !model.CloudKind.IsUnknown() && model.CloudKind.ValueString() != "" {
+	if model.CloudKind.ValueString() != "" {
 		request["cloudKind"] = model.CloudKind.ValueString()
 	}
 
@@ -294,19 +335,21 @@ func (r *mysql_catalogResource) updateModelFromResponse(ctx context.Context, mod
 	// Password is write-only, keep existing value
 	// model.Password stays as-is
 
-	if host, ok := response["host"].(string); ok {
+	if host, ok := response["host"].(string); ok && host != "" {
 		model.Host = types.StringValue(host)
+	} else if model.Host.IsUnknown() {
+		model.Host = types.StringNull()
 	}
 
 	if privateLinkId, ok := response["privateLinkId"].(string); ok && privateLinkId != "" {
 		model.PrivateLinkId = types.StringValue(privateLinkId)
-	} else {
+	} else if model.PrivateLinkId.IsUnknown() {
 		model.PrivateLinkId = types.StringNull()
 	}
 
 	if sshTunnelId, ok := response["sshTunnelId"].(string); ok && sshTunnelId != "" {
 		model.SshTunnelId = types.StringValue(sshTunnelId)
-	} else {
+	} else if model.SshTunnelId.IsUnknown() {
 		model.SshTunnelId = types.StringNull()
 	}
 

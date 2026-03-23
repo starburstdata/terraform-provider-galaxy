@@ -28,6 +28,7 @@ description: |-
 - `name` (String) Catalog name
 - `password` (String) PostgreSQL database password
 - `port` (Number) PostgreSQL database port. Defaults to 5432.
+- `private_link_id` (String) PrivateLink identifier
 - `read_only` (Boolean) Is catalog read only
 - `ssh_tunnel_id` (String) SSH tunnel identifier
 - `tls_enabled` (Boolean) Use TLS for PostgreSQL connections. Defaults to true.

@@ -44,7 +44,8 @@ func PostgresqlCatalogResourceSchema(ctx context.Context) schema.Schema {
 				MarkdownDescription: "Catalog description",
 			},
 			"endpoint": schema.StringAttribute{
-				Required:            true,
+				Optional:            true,
+				Computed:            true,
 				Description:         "PostgreSQL database endpoint",
 				MarkdownDescription: "PostgreSQL database endpoint",
 			},
@@ -63,6 +64,12 @@ func PostgresqlCatalogResourceSchema(ctx context.Context) schema.Schema {
 				Computed:            true,
 				Description:         "PostgreSQL database port. Defaults to 5432.",
 				MarkdownDescription: "PostgreSQL database port. Defaults to 5432.",
+			},
+			"private_link_id": schema.StringAttribute{
+				Optional:            true,
+				Computed:            true,
+				Description:         "PrivateLink identifier",
+				MarkdownDescription: "PrivateLink identifier",
 			},
 			"read_only": schema.BoolAttribute{
 				Required:            true,
@@ -97,17 +104,18 @@ func PostgresqlCatalogResourceSchema(ctx context.Context) schema.Schema {
 }
 
 type PostgresqlCatalogModel struct {
-	CatalogId    types.String `tfsdk:"catalog_id"`
-	CloudKind    types.String `tfsdk:"cloud_kind"`
-	DatabaseName types.String `tfsdk:"database_name"`
-	Description  types.String `tfsdk:"description"`
-	Endpoint     types.String `tfsdk:"endpoint"`
-	Name         types.String `tfsdk:"name"`
-	Password     types.String `tfsdk:"password"`
-	Port         types.Int64  `tfsdk:"port"`
-	ReadOnly     types.Bool   `tfsdk:"read_only"`
-	SshTunnelId  types.String `tfsdk:"ssh_tunnel_id"`
-	TlsEnabled   types.Bool   `tfsdk:"tls_enabled"`
-	Username     types.String `tfsdk:"username"`
-	Validate     types.Bool   `tfsdk:"validate"`
+	CatalogId     types.String `tfsdk:"catalog_id"`
+	CloudKind     types.String `tfsdk:"cloud_kind"`
+	DatabaseName  types.String `tfsdk:"database_name"`
+	Description   types.String `tfsdk:"description"`
+	Endpoint      types.String `tfsdk:"endpoint"`
+	Name          types.String `tfsdk:"name"`
+	Password      types.String `tfsdk:"password"`
+	Port          types.Int64  `tfsdk:"port"`
+	PrivateLinkId types.String `tfsdk:"private_link_id"`
+	ReadOnly      types.Bool   `tfsdk:"read_only"`
+	SshTunnelId   types.String `tfsdk:"ssh_tunnel_id"`
+	TlsEnabled    types.Bool   `tfsdk:"tls_enabled"`
+	Username      types.String `tfsdk:"username"`
+	Validate      types.Bool   `tfsdk:"validate"`
 }

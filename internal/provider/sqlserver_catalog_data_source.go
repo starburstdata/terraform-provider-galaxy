@@ -105,6 +105,8 @@ func (d *sqlserver_catalogDataSource) updateModelFromResponse(ctx context.Contex
 
 	if endpoint, ok := response["endpoint"].(string); ok {
 		model.Endpoint = types.StringValue(endpoint)
+	} else if model.Endpoint.IsUnknown() {
+		model.Endpoint = types.StringNull()
 	}
 
 	if databaseName, ok := response["databaseName"].(string); ok {
@@ -134,6 +136,12 @@ func (d *sqlserver_catalogDataSource) updateModelFromResponse(ctx context.Contex
 		model.SshTunnelId = types.StringValue(sshTunnelId)
 	} else if model.SshTunnelId.IsUnknown() {
 		model.SshTunnelId = types.StringNull()
+	}
+
+	if privateLinkId, ok := response["privateLinkId"].(string); ok {
+		model.PrivateLinkId = types.StringValue(privateLinkId)
+	} else if model.PrivateLinkId.IsUnknown() {
+		model.PrivateLinkId = types.StringNull()
 	}
 
 	if validate, ok := response["validate"].(bool); ok {

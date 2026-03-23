@@ -32,6 +32,7 @@ Read-Only:
 - `name` (String) Catalog name
 - `password` (String) SQL Server database password
 - `port` (Number) SQL Server database port. Defaults to 1433.
+- `private_link_id` (String) PrivateLink identifier
 - `read_only` (Boolean) Is catalog read only
 - `ssh_tunnel_id` (String) SSH tunnel identifier
 - `username` (String) SQL Server database username
