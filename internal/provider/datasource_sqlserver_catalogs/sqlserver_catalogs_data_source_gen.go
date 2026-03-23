@@ -61,6 +61,11 @@ func SqlserverCatalogsDataSourceSchema(ctx context.Context) schema.Schema {
 							Description:         "SQL Server database port. Defaults to 1433.",
 							MarkdownDescription: "SQL Server database port. Defaults to 1433.",
 						},
+						"private_link_id": schema.StringAttribute{
+							Computed:            true,
+							Description:         "PrivateLink identifier",
+							MarkdownDescription: "PrivateLink identifier",
+						},
 						"read_only": schema.BoolAttribute{
 							Computed:            true,
 							Description:         "Is catalog read only",
@@ -269,6 +274,24 @@ func (t ResultType) ValueFromObject(ctx context.Context, in basetypes.ObjectValu
 			fmt.Sprintf(`port expected to be basetypes.Int64Value, was: %T`, portAttribute))
 	}
 
+	privateLinkIdAttribute, ok := attributes["private_link_id"]
+
+	if !ok {
+		diags.AddError(
+			"Attribute Missing",
+			`private_link_id is missing from object`)
+
+		return nil, diags
+	}
+
+	privateLinkIdVal, ok := privateLinkIdAttribute.(basetypes.StringValue)
+
+	if !ok {
+		diags.AddError(
+			"Attribute Wrong Type",
+			fmt.Sprintf(`private_link_id expected to be basetypes.StringValue, was: %T`, privateLinkIdAttribute))
+	}
+
 	readOnlyAttribute, ok := attributes["read_only"]
 
 	if !ok {
@@ -346,19 +369,20 @@ func (t ResultType) ValueFromObject(ctx context.Context, in basetypes.ObjectValu
 	}
 
 	return ResultValue{
-		CatalogId:    catalogIdVal,
-		CloudKind:    cloudKindVal,
-		DatabaseName: databaseNameVal,
-		Description:  descriptionVal,
-		Endpoint:     endpointVal,
-		Name:         nameVal,
-		Password:     passwordVal,
-		Port:         portVal,
-		ReadOnly:     readOnlyVal,
-		SshTunnelId:  sshTunnelIdVal,
-		Username:     usernameVal,
-		Validate:     validateVal,
-		state:        attr.ValueStateKnown,
+		CatalogId:     catalogIdVal,
+		CloudKind:     cloudKindVal,
+		DatabaseName:  databaseNameVal,
+		Description:   descriptionVal,
+		Endpoint:      endpointVal,
+		Name:          nameVal,
+		Password:      passwordVal,
+		Port:          portVal,
+		PrivateLinkId: privateLinkIdVal,
+		ReadOnly:      readOnlyVal,
+		SshTunnelId:   sshTunnelIdVal,
+		Username:      usernameVal,
+		Validate:      validateVal,
+		state:         attr.ValueStateKnown,
 	}, diags
 }
 
@@ -569,6 +593,24 @@ func NewResultValue(attributeTypes map[string]attr.Type, attributes map[string]a
 			fmt.Sprintf(`port expected to be basetypes.Int64Value, was: %T`, portAttribute))
 	}
 
+	privateLinkIdAttribute, ok := attributes["private_link_id"]
+
+	if !ok {
+		diags.AddError(
+			"Attribute Missing",
+			`private_link_id is missing from object`)
+
+		return NewResultValueUnknown(), diags
+	}
+
+	privateLinkIdVal, ok := privateLinkIdAttribute.(basetypes.StringValue)
+
+	if !ok {
+		diags.AddError(
+			"Attribute Wrong Type",
+			fmt.Sprintf(`private_link_id expected to be basetypes.StringValue, was: %T`, privateLinkIdAttribute))
+	}
+
 	readOnlyAttribute, ok := attributes["read_only"]
 
 	if !ok {
@@ -646,19 +688,20 @@ func NewResultValue(attributeTypes map[string]attr.Type, attributes map[string]a
 	}
 
 	return ResultValue{
-		CatalogId:    catalogIdVal,
-		CloudKind:    cloudKindVal,
-		DatabaseName: databaseNameVal,
-		Description:  descriptionVal,
-		Endpoint:     endpointVal,
-		Name:         nameVal,
-		Password:     passwordVal,
-		Port:         portVal,
-		ReadOnly:     readOnlyVal,
-		SshTunnelId:  sshTunnelIdVal,
-		Username:     usernameVal,
-		Validate:     validateVal,
-		state:        attr.ValueStateKnown,
+		CatalogId:     catalogIdVal,
+		CloudKind:     cloudKindVal,
+		DatabaseName:  databaseNameVal,
+		Description:   descriptionVal,
+		Endpoint:      endpointVal,
+		Name:          nameVal,
+		Password:      passwordVal,
+		Port:          portVal,
+		PrivateLinkId: privateLinkIdVal,
+		ReadOnly:      readOnlyVal,
+		SshTunnelId:   sshTunnelIdVal,
+		Username:      usernameVal,
+		Validate:      validateVal,
+		state:         attr.ValueStateKnown,
 	}, diags
 }
 
@@ -730,23 +773,24 @@ func (t ResultType) ValueType(ctx context.Context) attr.Value {
 var _ basetypes.ObjectValuable = ResultValue{}
 
 type ResultValue struct {
-	CatalogId    basetypes.StringValue `tfsdk:"catalog_id"`
-	CloudKind    basetypes.StringValue `tfsdk:"cloud_kind"`
-	DatabaseName basetypes.StringValue `tfsdk:"database_name"`
-	Description  basetypes.StringValue `tfsdk:"description"`
-	Endpoint     basetypes.StringValue `tfsdk:"endpoint"`
-	Name         basetypes.StringValue `tfsdk:"name"`
-	Password     basetypes.StringValue `tfsdk:"password"`
-	Port         basetypes.Int64Value  `tfsdk:"port"`
-	ReadOnly     basetypes.BoolValue   `tfsdk:"read_only"`
-	SshTunnelId  basetypes.StringValue `tfsdk:"ssh_tunnel_id"`
-	Username     basetypes.StringValue `tfsdk:"username"`
-	Validate     basetypes.BoolValue   `tfsdk:"validate"`
-	state        attr.ValueState
+	CatalogId     basetypes.StringValue `tfsdk:"catalog_id"`
+	CloudKind     basetypes.StringValue `tfsdk:"cloud_kind"`
+	DatabaseName  basetypes.StringValue `tfsdk:"database_name"`
+	Description   basetypes.StringValue `tfsdk:"description"`
+	Endpoint      basetypes.StringValue `tfsdk:"endpoint"`
+	Name          basetypes.StringValue `tfsdk:"name"`
+	Password      basetypes.StringValue `tfsdk:"password"`
+	Port          basetypes.Int64Value  `tfsdk:"port"`
+	PrivateLinkId basetypes.StringValue `tfsdk:"private_link_id"`
+	ReadOnly      basetypes.BoolValue   `tfsdk:"read_only"`
+	SshTunnelId   basetypes.StringValue `tfsdk:"ssh_tunnel_id"`
+	Username      basetypes.StringValue `tfsdk:"username"`
+	Validate      basetypes.BoolValue   `tfsdk:"validate"`
+	state         attr.ValueState
 }
 
 func (v ResultValue) ToTerraformValue(ctx context.Context) (tftypes.Value, error) {
-	attrTypes := make(map[string]tftypes.Type, 12)
+	attrTypes := make(map[string]tftypes.Type, 13)
 
 	var val tftypes.Value
 	var err error
@@ -759,6 +803,7 @@ func (v ResultValue) ToTerraformValue(ctx context.Context) (tftypes.Value, error
 	attrTypes["name"] = basetypes.StringType{}.TerraformType(ctx)
 	attrTypes["password"] = basetypes.StringType{}.TerraformType(ctx)
 	attrTypes["port"] = basetypes.Int64Type{}.TerraformType(ctx)
+	attrTypes["private_link_id"] = basetypes.StringType{}.TerraformType(ctx)
 	attrTypes["read_only"] = basetypes.BoolType{}.TerraformType(ctx)
 	attrTypes["ssh_tunnel_id"] = basetypes.StringType{}.TerraformType(ctx)
 	attrTypes["username"] = basetypes.StringType{}.TerraformType(ctx)
@@ -768,7 +813,7 @@ func (v ResultValue) ToTerraformValue(ctx context.Context) (tftypes.Value, error
 
 	switch v.state {
 	case attr.ValueStateKnown:
-		vals := make(map[string]tftypes.Value, 12)
+		vals := make(map[string]tftypes.Value, 13)
 
 		val, err = v.CatalogId.ToTerraformValue(ctx)
 
@@ -834,6 +879,14 @@ func (v ResultValue) ToTerraformValue(ctx context.Context) (tftypes.Value, error
 
 		vals["port"] = val
 
+		val, err = v.PrivateLinkId.ToTerraformValue(ctx)
+
+		if err != nil {
+			return tftypes.NewValue(objectType, tftypes.UnknownValue), err
+		}
+
+		vals["private_link_id"] = val
+
 		val, err = v.ReadOnly.ToTerraformValue(ctx)
 
 		if err != nil {
@@ -896,18 +949,19 @@ func (v ResultValue) ToObjectValue(ctx context.Context) (basetypes.ObjectValue, 
 	var diags diag.Diagnostics
 
 	attributeTypes := map[string]attr.Type{
-		"catalog_id":    basetypes.StringType{},
-		"cloud_kind":    basetypes.StringType{},
-		"database_name": basetypes.StringType{},
-		"description":   basetypes.StringType{},
-		"endpoint":      basetypes.StringType{},
-		"name":          basetypes.StringType{},
-		"password":      basetypes.StringType{},
-		"port":          basetypes.Int64Type{},
-		"read_only":     basetypes.BoolType{},
-		"ssh_tunnel_id": basetypes.StringType{},
-		"username":      basetypes.StringType{},
-		"validate":      basetypes.BoolType{},
+		"catalog_id":      basetypes.StringType{},
+		"cloud_kind":      basetypes.StringType{},
+		"database_name":   basetypes.StringType{},
+		"description":     basetypes.StringType{},
+		"endpoint":        basetypes.StringType{},
+		"name":            basetypes.StringType{},
+		"password":        basetypes.StringType{},
+		"port":            basetypes.Int64Type{},
+		"private_link_id": basetypes.StringType{},
+		"read_only":       basetypes.BoolType{},
+		"ssh_tunnel_id":   basetypes.StringType{},
+		"username":        basetypes.StringType{},
+		"validate":        basetypes.BoolType{},
 	}
 
 	if v.IsNull() {
@@ -921,18 +975,19 @@ func (v ResultValue) ToObjectValue(ctx context.Context) (basetypes.ObjectValue, 
 	objVal, diags := types.ObjectValue(
 		attributeTypes,
 		map[string]attr.Value{
-			"catalog_id":    v.CatalogId,
-			"cloud_kind":    v.CloudKind,
-			"database_name": v.DatabaseName,
-			"description":   v.Description,
-			"endpoint":      v.Endpoint,
-			"name":          v.Name,
-			"password":      v.Password,
-			"port":          v.Port,
-			"read_only":     v.ReadOnly,
-			"ssh_tunnel_id": v.SshTunnelId,
-			"username":      v.Username,
-			"validate":      v.Validate,
+			"catalog_id":      v.CatalogId,
+			"cloud_kind":      v.CloudKind,
+			"database_name":   v.DatabaseName,
+			"description":     v.Description,
+			"endpoint":        v.Endpoint,
+			"name":            v.Name,
+			"password":        v.Password,
+			"port":            v.Port,
+			"private_link_id": v.PrivateLinkId,
+			"read_only":       v.ReadOnly,
+			"ssh_tunnel_id":   v.SshTunnelId,
+			"username":        v.Username,
+			"validate":        v.Validate,
 		})
 
 	return objVal, diags
@@ -985,6 +1040,10 @@ func (v ResultValue) Equal(o attr.Value) bool {
 		return false
 	}
 
+	if !v.PrivateLinkId.Equal(other.PrivateLinkId) {
+		return false
+	}
+
 	if !v.ReadOnly.Equal(other.ReadOnly) {
 		return false
 	}
@@ -1014,17 +1073,18 @@ func (v ResultValue) Type(ctx context.Context) attr.Type {
 
 func (v ResultValue) AttributeTypes(ctx context.Context) map[string]attr.Type {
 	return map[string]attr.Type{
-		"catalog_id":    basetypes.StringType{},
-		"cloud_kind":    basetypes.StringType{},
-		"database_name": basetypes.StringType{},
-		"description":   basetypes.StringType{},
-		"endpoint":      basetypes.StringType{},
-		"name":          basetypes.StringType{},
-		"password":      basetypes.StringType{},
-		"port":          basetypes.Int64Type{},
-		"read_only":     basetypes.BoolType{},
-		"ssh_tunnel_id": basetypes.StringType{},
-		"username":      basetypes.StringType{},
-		"validate":      basetypes.BoolType{},
+		"catalog_id":      basetypes.StringType{},
+		"cloud_kind":      basetypes.StringType{},
+		"database_name":   basetypes.StringType{},
+		"description":     basetypes.StringType{},
+		"endpoint":        basetypes.StringType{},
+		"name":            basetypes.StringType{},
+		"password":        basetypes.StringType{},
+		"port":            basetypes.Int64Type{},
+		"private_link_id": basetypes.StringType{},
+		"read_only":       basetypes.BoolType{},
+		"ssh_tunnel_id":   basetypes.StringType{},
+		"username":        basetypes.StringType{},
+		"validate":        basetypes.BoolType{},
 	}
 }

@@ -18,7 +18,6 @@ description: |-
 ### Required
 
 - `database_name` (String) PostgreSQL database name
-- `endpoint` (String) PostgreSQL database endpoint
 - `name` (String) Catalog name
 - `password` (String)
 - `read_only` (Boolean) Is catalog read only
@@ -28,7 +27,9 @@ description: |-
 
 - `cloud_kind` (String) PostgreSQL cloud kind. Defaults to AWS.
 - `description` (String) Catalog description
+- `endpoint` (String) PostgreSQL database endpoint. At least one of endpoint or private_link_id must be specified.
 - `port` (Number) PostgreSQL database port. Defaults to 5432.
+- `private_link_id` (String) PrivateLink identifier. At least one of endpoint or private_link_id must be specified.
 - `ssh_tunnel_id` (String) SSH tunnel identifier
 - `tls_enabled` (Boolean) Use TLS for PostgreSQL connections. Defaults to true.
 - `validate` (Boolean) Validate catalog configuration before creation

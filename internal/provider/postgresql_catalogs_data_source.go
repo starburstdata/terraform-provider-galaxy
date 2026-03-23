@@ -212,6 +212,13 @@ func (d *postgresql_catalogsDataSource) mapSinglePostgresqlCatalog(ctx context.C
 		attributes["tls_enabled"] = types.BoolNull()
 	}
 
+	// Map private link ID
+	if privateLinkId, ok := catalogMap["privateLinkId"].(string); ok {
+		attributes["private_link_id"] = types.StringValue(privateLinkId)
+	} else {
+		attributes["private_link_id"] = types.StringNull()
+	}
+
 	// Map username
 	if username, ok := catalogMap["username"].(string); ok {
 		attributes["username"] = types.StringValue(username)

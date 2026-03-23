@@ -197,6 +197,13 @@ func (d *sqlserver_catalogsDataSource) mapSingleSqlserverCatalog(ctx context.Con
 		attributes["ssh_tunnel_id"] = types.StringNull()
 	}
 
+	// Map private link ID
+	if privateLinkId, ok := catalogMap["privateLinkId"].(string); ok {
+		attributes["private_link_id"] = types.StringValue(privateLinkId)
+	} else {
+		attributes["private_link_id"] = types.StringNull()
+	}
+
 	if username, ok := catalogMap["username"].(string); ok {
 		attributes["username"] = types.StringValue(username)
 	} else {
