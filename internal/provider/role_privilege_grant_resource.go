@@ -141,6 +141,21 @@ func (r *role_privilege_grantResource) Read(ctx context.Context, req resource.Re
 	privilege := state.Privilege.ValueString()
 	grantKind := state.GrantKind.ValueString()
 
+	// Pass scope fields so FindRolePrivilegeGrant matches the correct grant
+	// when multiple grants exist for the same entity/privilege/grantKind.
+	schemaName := ""
+	if !state.SchemaName.IsNull() && !state.SchemaName.IsUnknown() {
+		schemaName = state.SchemaName.ValueString()
+	}
+	tableName := ""
+	if !state.TableName.IsNull() && !state.TableName.IsUnknown() {
+		tableName = state.TableName.ValueString()
+	}
+	columnName := ""
+	if !state.ColumnName.IsNull() && !state.ColumnName.IsUnknown() {
+		columnName = state.ColumnName.ValueString()
+	}
+
 	tflog.Debug(ctx, "Reading role_privilege_grant", map[string]interface{}{
 		"roleId":    roleId,
 		"entityId":  entityId,
@@ -148,7 +163,7 @@ func (r *role_privilege_grantResource) Read(ctx context.Context, req resource.Re
 		"grantKind": grantKind,
 	})
 
-	grant, err := r.client.FindRolePrivilegeGrant(ctx, roleId, entityId, privilege, grantKind)
+	grant, err := r.client.FindRolePrivilegeGrant(ctx, roleId, entityId, privilege, grantKind, schemaName, tableName, columnName)
 	if err != nil {
 		if client.IsNotFound(err) {
 			resp.State.RemoveResource(ctx)
@@ -246,22 +261,40 @@ func (r *role_privilege_grantResource) Delete(ctx context.Context, req resource.
 }
 
 func (r *role_privilege_grantResource) ImportState(ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse) {
-	// Import format: role_id/entity_id/entity_kind/privilege/grant_kind
-	// Example: abc123/catalog456/Catalog/SELECT/AllowGrant
+	// Import formats:
+	//   basic:    role_id/entity_id/entity_kind/privilege/grant_kind
+	//   extended: role_id/entity_id/entity_kind/privilege/grant_kind/schema_name/table_name/column_name
+	// The extended format disambiguates when multiple grants share the same entity/privilege/grantKind.
 	parts := strings.Split(req.ID, "/")
-	if len(parts) != 5 {
+	if len(parts) != 5 && len(parts) != 8 {
 		resp.Diagnostics.AddError(
 			"Invalid Import ID",
-			fmt.Sprintf("Expected import ID format: role_id/entity_id/entity_kind/privilege/grant_kind, got: %s", req.ID),
+			fmt.Sprintf("Expected format: role_id/entity_id/entity_kind/privilege/grant_kind[/schema_name/table_name/column_name], got: %s", req.ID),
 		)
 		return
 	}
 
-	resp.Diagnostics.Append(resp.State.SetAttribute(ctx, path.Root("role_id"), parts[0])...)
-	resp.Diagnostics.Append(resp.State.SetAttribute(ctx, path.Root("entity_id"), parts[1])...)
-	resp.Diagnostics.Append(resp.State.SetAttribute(ctx, path.Root("entity_kind"), parts[2])...)
-	resp.Diagnostics.Append(resp.State.SetAttribute(ctx, path.Root("privilege"), parts[3])...)
-	resp.Diagnostics.Append(resp.State.SetAttribute(ctx, path.Root("grant_kind"), parts[4])...)
+	fields := []struct {
+		name  string
+		value string
+	}{
+		{"role_id", parts[0]},
+		{"entity_id", parts[1]},
+		{"entity_kind", parts[2]},
+		{"privilege", parts[3]},
+		{"grant_kind", parts[4]},
+	}
+	if len(parts) == 8 {
+		fields = append(fields,
+			struct{ name, value string }{"schema_name", parts[5]},
+			struct{ name, value string }{"table_name", parts[6]},
+			struct{ name, value string }{"column_name", parts[7]},
+		)
+	}
+
+	for _, f := range fields {
+		resp.Diagnostics.Append(resp.State.SetAttribute(ctx, path.Root(f.name), f.value)...)
+	}
 }
 
 // Helper methods
@@ -315,8 +348,18 @@ func (r *role_privilege_grantResource) updateModelFromResponse(ctx context.Conte
 		model.EntityId = types.StringValue(entityId)
 	}
 
+	// The API may promote entityKind (e.g., Table → Column with added columnName: "*").
+	// Preserve the user's configured value to avoid unnecessary replacement. Only update
+	// during import (when entityKind comes from ImportState, not user config).
 	if entityKind, ok := response["entityKind"].(string); ok {
-		model.EntityKind = types.StringValue(entityKind)
+		if model.EntityKind.IsNull() || model.EntityKind.IsUnknown() {
+			model.EntityKind = types.StringValue(entityKind)
+		} else if model.EntityKind.ValueString() != entityKind {
+			tflog.Debug(ctx, "API returned different entityKind than configured (likely promotion), preserving user value", map[string]interface{}{
+				"configured": model.EntityKind.ValueString(),
+				"api":        entityKind,
+			})
+		}
 	}
 
 	if grantKind, ok := response["grantKind"].(string); ok {
@@ -337,30 +380,28 @@ func (r *role_privilege_grantResource) updateModelFromResponse(ctx context.Conte
 		}
 	}
 
-	// For optional scope fields (columnName, schemaName, tableName), preserve plan values
-	// when the API doesn't return them. This handles the case where users specify wildcard
-	// values like "*" that the API accepts but doesn't echo back in the response.
-	// If the plan value is null/unknown, set to null (must be known after apply).
+	// For optional scope fields (columnName, schemaName, tableName):
+	// - If the API returns a value, use it (the API preserves wildcards as-is)
+	// - If the API omits the field and model has no value, set null
+	// - If the API omits the field but model already has a value, keep it
+	//   (handles entity_kind promotion where the grant request didn't include all fields)
 	if columnName, ok := response["columnName"].(string); ok {
 		model.ColumnName = types.StringValue(columnName)
 	} else if model.ColumnName.IsNull() || model.ColumnName.IsUnknown() {
 		model.ColumnName = types.StringNull()
 	}
-	// Otherwise keep existing model value (user-specified value like "*")
 
 	if schemaName, ok := response["schemaName"].(string); ok {
 		model.SchemaName = types.StringValue(schemaName)
 	} else if model.SchemaName.IsNull() || model.SchemaName.IsUnknown() {
 		model.SchemaName = types.StringNull()
 	}
-	// Otherwise keep existing model value (user-specified value like "*")
 
 	if tableName, ok := response["tableName"].(string); ok {
 		model.TableName = types.StringValue(tableName)
 	} else if model.TableName.IsNull() || model.TableName.IsUnknown() {
 		model.TableName = types.StringNull()
 	}
-	// Otherwise keep existing model value (user-specified value like "*")
 
 	// list_all_privileges is not a resource property; always null
 	model.ListAllPrivileges = types.BoolNull()

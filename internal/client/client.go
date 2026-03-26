@@ -820,8 +820,10 @@ func (c *GalaxyClient) ListRolePrivileges(ctx context.Context, roleID string) (m
 
 // FindRolePrivilegeGrant searches for a specific privilege grant in a role's privilege list.
 // Retries with exponential backoff to handle eventual consistency in the list API.
+// Scope fields (schemaName, tableName, columnName) narrow the match when non-empty;
+// empty strings are ignored so that imports (which lack scope info) still work.
 // Returns the grant map if found, nil if not found after retries, or an error.
-func (c *GalaxyClient) FindRolePrivilegeGrant(ctx context.Context, roleID, entityID, privilege, grantKind string) (map[string]interface{}, error) {
+func (c *GalaxyClient) FindRolePrivilegeGrant(ctx context.Context, roleID, entityID, privilege, grantKind, schemaName, tableName, columnName string) (map[string]interface{}, error) {
 	for attempt := 0; attempt < 3; attempt++ {
 		result, err := c.ListRolePrivileges(ctx, roleID)
 		if err != nil {
@@ -841,9 +843,30 @@ func (c *GalaxyClient) FindRolePrivilegeGrant(ctx context.Context, roleID, entit
 			gEntityID, _ := grant["entityId"].(string)
 			gPrivilege, _ := grant["privilege"].(string)
 			gGrantKind, _ := grant["grantKind"].(string)
-			if gEntityID == entityID && gPrivilege == privilege && gGrantKind == grantKind {
-				return grant, nil
+			if gEntityID != entityID || gPrivilege != privilege || gGrantKind != grantKind {
+				continue
 			}
+
+			// Match on scope fields when provided (non-empty).
+			// The API may promote entityKind (Table→Column) and add columnName,
+			// so we only filter on fields the caller actually has.
+			if schemaName != "" {
+				if gs, _ := grant["schemaName"].(string); gs != schemaName {
+					continue
+				}
+			}
+			if tableName != "" {
+				if gt, _ := grant["tableName"].(string); gt != tableName {
+					continue
+				}
+			}
+			if columnName != "" {
+				if gc, _ := grant["columnName"].(string); gc != columnName {
+					continue
+				}
+			}
+
+			return grant, nil
 		}
 
 		if attempt < 2 {
