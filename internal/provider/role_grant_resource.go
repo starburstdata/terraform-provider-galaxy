@@ -151,9 +151,13 @@ func (r *roleGrantResource) Create(ctx context.Context, req resource.CreateReque
 		grantedRoleName = name
 	}
 
+	// Serialize read-modify-write to prevent concurrent PATCH conflicts
+	r.client.LockRole(roleID)
+
 	// Read current grants
 	grants, err := r.client.GetRoleGrants(ctx, roleID)
 	if err != nil {
+		r.client.UnlockRole(roleID)
 		resp.Diagnostics.AddError(
 			"Error reading role grants",
 			"Could not read current grants for role "+roleID+": "+err.Error(),
@@ -164,6 +168,7 @@ func (r *roleGrantResource) Create(ctx context.Context, req resource.CreateReque
 	// Check for duplicate
 	for _, g := range grants {
 		if getStringFromMap(g, "roleId") == grantedRoleID {
+			r.client.UnlockRole(roleID)
 			resp.Diagnostics.AddError(
 				"Duplicate role grant",
 				fmt.Sprintf("Role %s is already granted to role %s.", grantedRoleID, roleID),
@@ -182,6 +187,7 @@ func (r *roleGrantResource) Create(ctx context.Context, req resource.CreateReque
 
 	// PATCH the full list
 	_, err = r.client.UpdateRoleGrants(ctx, roleID, grants)
+	r.client.UnlockRole(roleID)
 	if err != nil {
 		resp.Diagnostics.AddError(
 			"Error creating role grant",
@@ -278,9 +284,13 @@ func (r *roleGrantResource) Delete(ctx context.Context, req resource.DeleteReque
 		"grantedRoleId": grantedRoleID,
 	})
 
+	// Serialize read-modify-write to prevent concurrent PATCH conflicts
+	r.client.LockRole(roleID)
+
 	// Read current grants
 	grants, err := r.client.GetRoleGrants(ctx, roleID)
 	if err != nil {
+		r.client.UnlockRole(roleID)
 		if client.IsNotFound(err) {
 			return
 		}
@@ -301,6 +311,7 @@ func (r *roleGrantResource) Delete(ctx context.Context, req resource.DeleteReque
 
 	// PATCH with filtered list
 	_, err = r.client.UpdateRoleGrants(ctx, roleID, filtered)
+	r.client.UnlockRole(roleID)
 	if err != nil {
 		if client.IsNotFound(err) {
 			tflog.Warn(ctx, "Role not found during role_grant delete; treating as already deleted", map[string]interface{}{

@@ -128,6 +128,82 @@ func TestAccResourceRoleGrant_ImportState(t *testing.T) {
 	})
 }
 
+func TestAccResourceRoleGrant_ConcurrentGrants(t *testing.T) {
+	uniqueId := id.UniqueId()
+	if len(uniqueId) > 8 {
+		uniqueId = uniqueId[len(uniqueId)-8:]
+	}
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccRoleGrantConfigConcurrent(uniqueId),
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(
+						"galaxy_role_grant.grant_1",
+						tfjsonpath.New("role_id"),
+						knownvalue.NotNull(),
+					),
+					statecheck.ExpectKnownValue(
+						"galaxy_role_grant.grant_2",
+						tfjsonpath.New("role_id"),
+						knownvalue.NotNull(),
+					),
+					statecheck.ExpectKnownValue(
+						"galaxy_role_grant.grant_3",
+						tfjsonpath.New("role_id"),
+						knownvalue.NotNull(),
+					),
+				},
+			},
+		},
+	})
+}
+
+func testAccRoleGrantConfigConcurrent(suffix string) string {
+	return fmt.Sprintf(`
+resource "galaxy_role" "parent" {
+  role_name              = "concparent_%[1]s"
+  grant_to_creating_role = true
+}
+
+resource "galaxy_role" "child_1" {
+  role_name              = "concchild1_%[1]s"
+  grant_to_creating_role = true
+}
+
+resource "galaxy_role" "child_2" {
+  role_name              = "concchild2_%[1]s"
+  grant_to_creating_role = true
+}
+
+resource "galaxy_role" "child_3" {
+  role_name              = "concchild3_%[1]s"
+  grant_to_creating_role = true
+}
+
+resource "galaxy_role_grant" "grant_1" {
+  role_id         = galaxy_role.parent.role_id
+  granted_role_id = galaxy_role.child_1.role_id
+  admin_option    = false
+}
+
+resource "galaxy_role_grant" "grant_2" {
+  role_id         = galaxy_role.parent.role_id
+  granted_role_id = galaxy_role.child_2.role_id
+  admin_option    = false
+}
+
+resource "galaxy_role_grant" "grant_3" {
+  role_id         = galaxy_role.parent.role_id
+  granted_role_id = galaxy_role.child_3.role_id
+  admin_option    = false
+}
+`, suffix)
+}
+
 func testAccRoleGrantConfigBasic(suffix string) string {
 	return fmt.Sprintf(`
 resource "galaxy_role" "parent" {
