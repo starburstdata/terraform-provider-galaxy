@@ -35,6 +35,10 @@ type GalaxyClient struct {
 	tokenMu     sync.RWMutex
 	accessToken string
 	tokenExpiry time.Time
+
+	// roleMu serializes read-modify-write operations on role grants
+	// to prevent concurrent PATCH conflicts (RETRY_SERIALIZABLE errors)
+	roleMu sync.Map // map[string]*sync.Mutex
 }
 
 type TokenResponse struct {
@@ -47,7 +51,8 @@ type TokenResponse struct {
 // Catalog and tag operations can experience conflicting transactions
 func isRetryable500Endpoint(path string) bool {
 	return strings.HasPrefix(path, "/public/api/v1/tag/") ||
-		strings.HasPrefix(path, "/public/api/v1/catalog")
+		strings.HasPrefix(path, "/public/api/v1/catalog") ||
+		strings.HasPrefix(path, "/public/api/v1/role/")
 }
 
 func NewGalaxyClient(baseURL, clientID, clientSecret, providerVersion string) *GalaxyClient {
@@ -985,6 +990,24 @@ func (c *GalaxyClient) UpdateRoleGrants(ctx context.Context, roleID string, gran
 	}
 
 	return c.UpdateRole(ctx, roleID, body)
+}
+
+// getRoleMutex returns a per-role mutex, creating one if needed.
+func (c *GalaxyClient) getRoleMutex(roleID string) *sync.Mutex {
+	mu, _ := c.roleMu.LoadOrStore(roleID, &sync.Mutex{})
+	return mu.(*sync.Mutex)
+}
+
+// LockRole acquires a per-role mutex to serialize read-modify-write operations.
+func (c *GalaxyClient) LockRole(roleID string) {
+	c.getRoleMutex(roleID).Lock()
+}
+
+// UnlockRole releases the per-role mutex.
+func (c *GalaxyClient) UnlockRole(roleID string) {
+	if mu, ok := c.roleMu.Load(roleID); ok {
+		mu.(*sync.Mutex).Unlock()
+	}
 }
 
 // UpdateServiceAccountPassword updates a service account password
