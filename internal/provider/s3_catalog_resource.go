@@ -276,10 +276,19 @@ func (r *s3_catalogResource) modelToCreateRequest(ctx context.Context, model *re
 		}
 	}
 
-	// Region field for glue metastores
+	// Region and glue-specific auth fields for glue metastores per OpenAPI spec
 	if metastoreType == "glue" {
 		if !model.Region.IsNull() && !model.Region.IsUnknown() && model.Region.ValueString() != "" {
 			request["region"] = model.Region.ValueString()
+		}
+		if !model.GlueAccessKey.IsNull() && !model.GlueAccessKey.IsUnknown() && model.GlueAccessKey.ValueString() != "" {
+			request["glueAccessKey"] = model.GlueAccessKey.ValueString()
+		}
+		if !model.GlueSecretKey.IsNull() && !model.GlueSecretKey.IsUnknown() && model.GlueSecretKey.ValueString() != "" {
+			request["glueSecretKey"] = model.GlueSecretKey.ValueString()
+		}
+		if !model.GlueRoleArn.IsNull() && !model.GlueRoleArn.IsUnknown() && model.GlueRoleArn.ValueString() != "" {
+			request["glueRoleArn"] = model.GlueRoleArn.ValueString()
 		}
 	}
 

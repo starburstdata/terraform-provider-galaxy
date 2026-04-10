@@ -258,10 +258,16 @@ func (r *snowflake_catalogResource) modelToCreateRequest(ctx context.Context, mo
 		request["description"] = model.Description.ValueString()
 	}
 
-	// SKIP optional fields that cause "Unrecognized entity" error:
-	// - cloudKind (server will default to AWS)
-	// - role (not needed for basic authentication)
-	// - warehouse (not needed for basic authentication)
+	// Optional fields per OpenAPI spec (omitted when not set by user)
+	if !model.CloudKind.IsNull() && !model.CloudKind.IsUnknown() && model.CloudKind.ValueString() != "" {
+		request["cloudKind"] = model.CloudKind.ValueString()
+	}
+	if !model.Warehouse.IsNull() && !model.Warehouse.IsUnknown() && model.Warehouse.ValueString() != "" {
+		request["warehouse"] = model.Warehouse.ValueString()
+	}
+	if !model.Role.IsNull() && !model.Role.IsUnknown() && model.Role.ValueString() != "" {
+		request["role"] = model.Role.ValueString()
+	}
 
 	// Authentication: auto-set type to "key" when private_key is provided
 	privateKeySet := !model.PrivateKey.IsNull() && !model.PrivateKey.IsUnknown() && model.PrivateKey.ValueString() != ""
