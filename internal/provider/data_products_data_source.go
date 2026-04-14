@@ -298,7 +298,13 @@ func (d *data_productsDataSource) mapModifiedByObject(ctx context.Context, dataP
 }
 
 func (d *data_productsDataSource) mapContactsList(ctx context.Context, dataProductMap map[string]interface{}) types.List {
-	if contactsData, ok := dataProductMap["contacts"].([]interface{}); ok {
+	elementType := datasource_data_products.ContactsType{
+		ObjectType: types.ObjectType{
+			AttrTypes: datasource_data_products.ContactsValue{}.AttributeTypes(ctx),
+		},
+	}
+
+	if contactsData, ok := dataProductMap["contacts"].([]interface{}); ok && len(contactsData) > 0 {
 		contactsList := make([]datasource_data_products.ContactsValue, 0, len(contactsData))
 
 		for _, contactInterface := range contactsData {
@@ -306,47 +312,43 @@ func (d *data_productsDataSource) mapContactsList(ctx context.Context, dataProdu
 				attributeTypes := datasource_data_products.ContactsValue{}.AttributeTypes(ctx)
 				attributes := map[string]attr.Value{}
 
-				if contactType, ok := contactMap["type"].(string); ok {
-					attributes["type"] = types.StringValue(contactType)
+				if email, ok := contactMap["email"].(string); ok {
+					attributes["email"] = types.StringValue(email)
 				} else {
-					attributes["type"] = types.StringNull()
+					attributes["email"] = types.StringNull()
 				}
 
-				if value, ok := contactMap["value"].(string); ok {
-					attributes["value"] = types.StringValue(value)
+				if userId, ok := contactMap["userId"].(string); ok {
+					attributes["user_id"] = types.StringValue(userId)
 				} else {
-					attributes["value"] = types.StringNull()
+					attributes["user_id"] = types.StringNull()
 				}
 
 				contactValue, diags := datasource_data_products.NewContactsValue(attributeTypes, attributes)
-				if !diags.HasError() {
+				if diags.HasError() {
+					tflog.Error(ctx, fmt.Sprintf("Error creating contact value: %v", diags))
+				} else {
 					contactsList = append(contactsList, contactValue)
 				}
 			}
 		}
 
-		elementType := datasource_data_products.ContactsType{
-			ObjectType: types.ObjectType{
-				AttrTypes: datasource_data_products.ContactsValue{}.AttributeTypes(ctx),
-			},
-		}
-
-		if len(contactsList) > 0 {
-			listValue, _ := types.ListValueFrom(ctx, elementType, contactsList)
-			return listValue
-		}
+		listValue, _ := types.ListValueFrom(ctx, elementType, contactsList)
+		return listValue
 	}
 
-	elementType := datasource_data_products.ContactsType{
-		ObjectType: types.ObjectType{
-			AttrTypes: datasource_data_products.ContactsValue{}.AttributeTypes(ctx),
-		},
-	}
-	return types.ListNull(elementType)
+	emptyList, _ := types.ListValueFrom(ctx, elementType, []datasource_data_products.ContactsValue{})
+	return emptyList
 }
 
 func (d *data_productsDataSource) mapLinksList(ctx context.Context, dataProductMap map[string]interface{}) types.List {
-	if linksData, ok := dataProductMap["links"].([]interface{}); ok {
+	elementType := datasource_data_products.LinksType{
+		ObjectType: types.ObjectType{
+			AttrTypes: datasource_data_products.LinksValue{}.AttributeTypes(ctx),
+		},
+	}
+
+	if linksData, ok := dataProductMap["links"].([]interface{}); ok && len(linksData) > 0 {
 		linksList := make([]datasource_data_products.LinksValue, 0, len(linksData))
 
 		for _, linkInterface := range linksData {
@@ -354,47 +356,31 @@ func (d *data_productsDataSource) mapLinksList(ctx context.Context, dataProductM
 				attributeTypes := datasource_data_products.LinksValue{}.AttributeTypes(ctx)
 				attributes := map[string]attr.Value{}
 
-				if linkType, ok := linkMap["type"].(string); ok {
-					attributes["type"] = types.StringValue(linkType)
+				if name, ok := linkMap["name"].(string); ok {
+					attributes["name"] = types.StringValue(name)
 				} else {
-					attributes["type"] = types.StringNull()
+					attributes["name"] = types.StringNull()
 				}
 
-				if url, ok := linkMap["url"].(string); ok {
-					attributes["url"] = types.StringValue(url)
+				if uri, ok := linkMap["uri"].(string); ok {
+					attributes["uri"] = types.StringValue(uri)
 				} else {
-					attributes["url"] = types.StringNull()
-				}
-
-				if description, ok := linkMap["description"].(string); ok {
-					attributes["description"] = types.StringValue(description)
-				} else {
-					attributes["description"] = types.StringNull()
+					attributes["uri"] = types.StringNull()
 				}
 
 				linkValue, diags := datasource_data_products.NewLinksValue(attributeTypes, attributes)
-				if !diags.HasError() {
+				if diags.HasError() {
+					tflog.Error(ctx, fmt.Sprintf("Error creating link value: %v", diags))
+				} else {
 					linksList = append(linksList, linkValue)
 				}
 			}
 		}
 
-		elementType := datasource_data_products.LinksType{
-			ObjectType: types.ObjectType{
-				AttrTypes: datasource_data_products.LinksValue{}.AttributeTypes(ctx),
-			},
-		}
-
-		if len(linksList) > 0 {
-			listValue, _ := types.ListValueFrom(ctx, elementType, linksList)
-			return listValue
-		}
+		listValue, _ := types.ListValueFrom(ctx, elementType, linksList)
+		return listValue
 	}
 
-	elementType := datasource_data_products.LinksType{
-		ObjectType: types.ObjectType{
-			AttrTypes: datasource_data_products.LinksValue{}.AttributeTypes(ctx),
-		},
-	}
-	return types.ListNull(elementType)
+	emptyList, _ := types.ListValueFrom(ctx, elementType, []datasource_data_products.LinksValue{})
+	return emptyList
 }

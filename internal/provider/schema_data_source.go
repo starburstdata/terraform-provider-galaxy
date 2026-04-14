@@ -151,8 +151,31 @@ func (d *schemaDataSource) updateModelFromResponse(ctx context.Context, model *d
 					resultItem.Tags = types.ListNull(datasource_schema.TagsType{}.ValueType(ctx).Type(ctx))
 				}
 
-				// Map links - initially set to null list
-				resultItem.Links = types.ListNull(types.StringType)
+				// Map links
+				if links, ok := itemMap["links"].([]interface{}); ok {
+					linkList := make([]datasource_schema.LinksValue, 0, len(links))
+					for _, link := range links {
+						if linkMap, ok := link.(map[string]interface{}); ok {
+							linkName := types.StringNull()
+							if name, ok := linkMap["name"].(string); ok {
+								linkName = types.StringValue(name)
+							}
+							linkUri := types.StringNull()
+							if uri, ok := linkMap["uri"].(string); ok {
+								linkUri = types.StringValue(uri)
+							}
+							linkItem := datasource_schema.LinksValue{
+								Name: linkName,
+								Uri:  linkUri,
+							}
+							linkList = append(linkList, linkItem)
+						}
+					}
+					linkListValue, _ := types.ListValueFrom(ctx, datasource_schema.LinksType{}.ValueType(ctx).Type(ctx), linkList)
+					resultItem.Links = linkListValue
+				} else {
+					resultItem.Links = types.ListNull(datasource_schema.LinksType{}.ValueType(ctx).Type(ctx))
+				}
 
 				resultList = append(resultList, resultItem)
 			}

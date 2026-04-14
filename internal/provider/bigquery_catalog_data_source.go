@@ -102,4 +102,13 @@ func (d *bigquery_catalogDataSource) updateModelFromResponse(ctx context.Context
 	if credentialsKey, ok := response["credentialsKey"].(string); ok {
 		model.CredentialsKey = types.StringValue(credentialsKey)
 	}
+	if parentProjectId, ok := response["parentProjectId"].(string); ok {
+		model.ParentProjectId = types.StringValue(parentProjectId)
+	}
+	if projectId, ok := response["projectId"].(string); ok {
+		model.ProjectId = types.StringValue(projectId)
+	}
+	if validate, ok := response["validate"].(bool); ok {
+		model.Validate = types.BoolValue(validate)
+	}
 }

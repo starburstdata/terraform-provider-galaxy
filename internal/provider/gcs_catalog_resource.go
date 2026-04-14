@@ -225,13 +225,23 @@ func (r *gcs_catalogResource) modelToCreateRequest(ctx context.Context, model *r
 	request["metastoreType"] = model.MetastoreType.ValueString()
 	request["credentialsKey"] = model.CredentialsKey.ValueString()
 
-	// Fields required for galaxy metastore
+	// Metastore-type-specific fields per OpenAPI spec
 	if model.MetastoreType.ValueString() == "galaxy" {
 		if !model.DefaultBucket.IsNull() && !model.DefaultBucket.IsUnknown() && model.DefaultBucket.ValueString() != "" {
 			request["defaultBucket"] = model.DefaultBucket.ValueString()
 		}
 		if !model.DefaultDataLocation.IsNull() && !model.DefaultDataLocation.IsUnknown() && model.DefaultDataLocation.ValueString() != "" {
 			request["defaultDataLocation"] = model.DefaultDataLocation.ValueString()
+		}
+	} else if model.MetastoreType.ValueString() == "hive" {
+		if !model.HiveMetastoreHost.IsNull() && !model.HiveMetastoreHost.IsUnknown() && model.HiveMetastoreHost.ValueString() != "" {
+			request["hiveMetastoreHost"] = model.HiveMetastoreHost.ValueString()
+		}
+		if !model.HiveMetastorePort.IsNull() && !model.HiveMetastorePort.IsUnknown() {
+			request["hiveMetastorePort"] = model.HiveMetastorePort.ValueInt64()
+		}
+		if !model.SshTunnelId.IsNull() && !model.SshTunnelId.IsUnknown() && model.SshTunnelId.ValueString() != "" {
+			request["sshTunnelId"] = model.SshTunnelId.ValueString()
 		}
 	}
 

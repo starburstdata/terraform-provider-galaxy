@@ -41,11 +41,11 @@ resource "galaxy_role" "data_engineer" {
   role_description       = "Role for data engineers"
 }
 
-# Note: Using hardcoded user values to avoid data source type conversion issues
-# In production, you would use data.galaxy_user to look up existing users
+# Look up a real user for data product contacts
+data "galaxy_users" "all" {}
+
 locals {
-  admin_user_id = "u-9639270557"
-  admin_email   = "admin@example.com"
+  admin_user = data.galaxy_users.all.result[0]
 }
 
 # Create required S3 catalog
@@ -71,8 +71,8 @@ resource "galaxy_data_product" "customer_analytics" {
 
   contacts = [
     {
-      user_id = local.admin_user_id
-      email   = local.admin_email
+      user_id = local.admin_user.user_id
+      email   = local.admin_user.email
     }
   ]
 }
@@ -142,7 +142,7 @@ resource "galaxy_policy" "read_all" {
 
 # Data sources for governance objects
 data "galaxy_data_product" "customer_analytics" {
-  depends_on = [galaxy_data_product.customer_analytics]
+  depends_on      = [galaxy_data_product.customer_analytics]
   data_product_id = galaxy_data_product.customer_analytics.data_product_id
 }
 
@@ -150,20 +150,20 @@ data "galaxy_data_products" "all" {}
 
 data "galaxy_tag" "pii" {
   depends_on = [galaxy_tag.pii]
-  tag_id = galaxy_tag.pii.tag_id
+  tag_id     = galaxy_tag.pii.tag_id
 }
 
 data "galaxy_tags" "all" {}
 
 data "galaxy_row_filter" "region_filter" {
-  depends_on = [galaxy_row_filter.customer_region_filter]
+  depends_on    = [galaxy_row_filter.customer_region_filter]
   row_filter_id = galaxy_row_filter.customer_region_filter.row_filter_id
 }
 
 data "galaxy_row_filters" "all" {}
 
 data "galaxy_column_mask" "ssn" {
-  depends_on = [galaxy_column_mask.ssn_mask]
+  depends_on     = [galaxy_column_mask.ssn_mask]
   column_mask_id = galaxy_column_mask.ssn_mask.column_mask_id
 }
 

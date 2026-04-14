@@ -78,11 +78,11 @@ resource "galaxy_role" "data_product_role" {
   role_description       = "Role for data product owner"
 }
 
-# Note: Using hardcoded user values to avoid data source type conversion issues
-# In production, you would use data.galaxy_user to look up existing users
+# Look up a real user for data product contacts
+data "galaxy_users" "all" {}
+
 locals {
-  data_product_owner_user_id = "u-9639270557"
-  data_product_owner_email   = "dataowner@example.com"
+  data_product_owner = data.galaxy_users.all.result[0]
 }
 
 # Create tags for the data product
@@ -108,15 +108,15 @@ resource "galaxy_data_product" "customer_360" {
 
   contacts = [
     {
-      email   = local.data_product_owner_email
-      user_id = local.data_product_owner_user_id
+      email   = local.data_product_owner.email
+      user_id = local.data_product_owner.user_id
     }
   ]
 }
 
 # Data source to read the data product
 data "galaxy_data_product" "customer_360" {
-  depends_on = [galaxy_data_product.customer_360]
+  depends_on      = [galaxy_data_product.customer_360]
   data_product_id = galaxy_data_product.customer_360.data_product_id
 }
 

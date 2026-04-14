@@ -162,6 +162,35 @@ func (d *bigquery_catalogsDataSource) mapSingleBigqueryCatalog(ctx context.Conte
 	} else {
 		attributes["validate"] = types.BoolNull()
 	}
+
+	// Map credentials key
+	if credentialsKey, ok := catalogMap["credentialsKey"].(string); ok {
+		attributes["credentials_key"] = types.StringValue(credentialsKey)
+	} else {
+		attributes["credentials_key"] = types.StringNull()
+	}
+
+	// Map parent project ID
+	if parentProjectId, ok := catalogMap["parentProjectId"].(string); ok {
+		attributes["parent_project_id"] = types.StringValue(parentProjectId)
+	} else {
+		attributes["parent_project_id"] = types.StringNull()
+	}
+
+	// Map project ID
+	if projectId, ok := catalogMap["projectId"].(string); ok {
+		attributes["project_id"] = types.StringValue(projectId)
+	} else {
+		attributes["project_id"] = types.StringNull()
+	}
+
+	// Map read only
+	if readOnly, ok := catalogMap["readOnly"].(bool); ok {
+		attributes["read_only"] = types.BoolValue(readOnly)
+	} else {
+		attributes["read_only"] = types.BoolNull()
+	}
+
 	// Create the ResultValue using the constructor
 	catalog, diags := datasource_bigquery_catalogs.NewResultValue(attributeTypes, attributes)
 	if diags.HasError() {
