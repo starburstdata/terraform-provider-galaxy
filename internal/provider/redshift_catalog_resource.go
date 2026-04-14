@@ -233,8 +233,33 @@ func (r *redshift_catalogResource) modelToCreateRequest(ctx context.Context, mod
 	// Use endpoint directly (includes host:port/database)
 	request["endpoint"] = model.Endpoint.ValueString()
 
-	request["username"] = model.Username.ValueString()
-	request["password"] = model.Password.ValueString()
+	// Handle authentication based on authType per OpenAPI discriminator
+	switch model.AuthType.ValueString() {
+	case "basic":
+		request["username"] = model.Username.ValueString()
+		if !model.Password.IsNull() && !model.Password.IsUnknown() && model.Password.ValueString() != "" {
+			request["password"] = model.Password.ValueString()
+		}
+	case "accessKey":
+		request["username"] = model.Username.ValueString()
+		if !model.AccessKey.IsNull() && !model.AccessKey.IsUnknown() && model.AccessKey.ValueString() != "" {
+			request["accessKey"] = model.AccessKey.ValueString()
+		}
+		if !model.SecretKey.IsNull() && !model.SecretKey.IsUnknown() && model.SecretKey.ValueString() != "" {
+			request["secretKey"] = model.SecretKey.ValueString()
+		}
+		if !model.Region.IsNull() && !model.Region.IsUnknown() && model.Region.ValueString() != "" {
+			request["region"] = model.Region.ValueString()
+		}
+	case "role":
+		request["username"] = model.Username.ValueString()
+		if !model.RoleArn.IsNull() && !model.RoleArn.IsUnknown() && model.RoleArn.ValueString() != "" {
+			request["roleArn"] = model.RoleArn.ValueString()
+		}
+		if !model.Region.IsNull() && !model.Region.IsUnknown() && model.Region.ValueString() != "" {
+			request["region"] = model.Region.ValueString()
+		}
+	}
 
 	// Optional fields
 	if !model.Description.IsNull() && !model.Description.IsUnknown() && model.Description.ValueString() != "" {

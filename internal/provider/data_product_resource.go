@@ -13,6 +13,7 @@ import (
 	"context"
 	"fmt"
 
+	"github.com/hashicorp/terraform-plugin-framework/attr"
 	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
@@ -81,8 +82,6 @@ func (r *data_productResource) Create(ctx context.Context, req resource.CreateRe
 	delete(request, "modifiedBy")
 	delete(request, "catalog")
 
-	// Debug logging to see what we're sending to API
-	tflog.Info(ctx, "DATA_PRODUCT API REQUEST", map[string]interface{}{"request": request})
 	tflog.Debug(ctx, "Creating data_product")
 	response, err := r.client.CreateDataProduct(ctx, request)
 	if err != nil {
@@ -228,13 +227,26 @@ func (r *data_productResource) modelToCreateRequest(ctx context.Context, model *
 		request["defaultClusterId"] = model.DefaultClusterId.ValueString()
 	}
 
-	// Handle contacts list - send empty array to API since contacts field might be required
-	// The API accepts contacts but doesn't return them consistently
+	// Handle contacts list
 	if !model.Contacts.IsNull() && !model.Contacts.IsUnknown() {
-		tflog.Info(ctx, "CONTACTS: Sending empty contacts array to API")
-		request["contacts"] = []map[string]interface{}{}
+		contactsList := []map[string]interface{}{}
+		elements := model.Contacts.Elements()
+		for _, elem := range elements {
+			if !elem.IsNull() && !elem.IsUnknown() {
+				if contactVal, ok := elem.(resource_data_product.ContactsValue); ok {
+					contact := map[string]interface{}{}
+					if !contactVal.Email.IsNull() {
+						contact["email"] = contactVal.Email.ValueString()
+					}
+					if !contactVal.UserId.IsNull() {
+						contact["userId"] = contactVal.UserId.ValueString()
+					}
+					contactsList = append(contactsList, contact)
+				}
+			}
+		}
+		request["contacts"] = contactsList
 	} else {
-		// Even if no contacts are specified in plan, send empty array
 		request["contacts"] = []map[string]interface{}{}
 	}
 
@@ -272,19 +284,9 @@ func (r *data_productResource) modelToUpdateRequest(ctx context.Context, model *
 }
 
 func (r *data_productResource) updateModelFromResponse(ctx context.Context, model *resource_data_product.DataProductModel, response map[string]interface{}, diags *diag.Diagnostics) {
-	tflog.Info(ctx, "DATA_PRODUCT updateModelFromResponse", map[string]interface{}{
-		"full_response":          response,
-		"response_contacts":      response["contacts"],
-		"model_contacts_null":    model.Contacts.IsNull(),
-		"model_contacts_unknown": model.Contacts.IsUnknown(),
-	})
 	// Map response fields to model
 	if id, ok := response["dataProductId"].(string); ok {
 		model.DataProductId = types.StringValue(id)
-	}
-
-	if dataProductId, ok := response["dataProductId"].(string); ok {
-		model.DataProductId = types.StringValue(dataProductId)
 	}
 
 	if name, ok := response["name"].(string); ok {
@@ -334,70 +336,79 @@ func (r *data_productResource) updateModelFromResponse(ctx context.Context, mode
 	model.CreatedBy = resource_data_product.NewCreatedByValueNull()
 	model.ModifiedBy = resource_data_product.NewModifiedByValueNull()
 
-	// Handle contacts from response - preserve existing contacts if API doesn't return any
+	// Handle contacts from response
 	if contacts, ok := response["contacts"].([]interface{}); ok && len(contacts) > 0 {
 		contactsList := make([]resource_data_product.ContactsValue, 0, len(contacts))
 		for _, contactInterface := range contacts {
 			if contactMap, ok := contactInterface.(map[string]interface{}); ok {
-				contact := resource_data_product.ContactsValue{
-					Email:  types.StringNull(),
-					UserId: types.StringNull(),
-				}
+				attrTypes := resource_data_product.ContactsValue{}.AttributeTypes(ctx)
+				attrs := map[string]attr.Value{}
 				if email, ok := contactMap["email"].(string); ok {
-					contact.Email = types.StringValue(email)
+					attrs["email"] = types.StringValue(email)
+				} else {
+					attrs["email"] = types.StringNull()
 				}
 				if userId, ok := contactMap["userId"].(string); ok {
-					contact.UserId = types.StringValue(userId)
+					attrs["user_id"] = types.StringValue(userId)
+				} else {
+					attrs["user_id"] = types.StringNull()
 				}
-				contactsList = append(contactsList, contact)
+				contactValue, d := resource_data_product.NewContactsValue(attrTypes, attrs)
+				diags.Append(d...)
+				if d.HasError() {
+					continue
+				}
+				contactsList = append(contactsList, contactValue)
 			}
 		}
-		if len(contactsList) > 0 {
-			contactsListValue, diag := types.ListValueFrom(ctx, resource_data_product.ContactsValue{}.Type(ctx), contactsList)
-			if !diag.HasError() {
-				model.Contacts = contactsListValue
-			} else {
-				tflog.Error(ctx, "Error creating contacts list", map[string]interface{}{"diag": diag})
-				// Don't overwrite with null - preserve existing contacts
-			}
+		contactsListValue, d := types.ListValueFrom(ctx, resource_data_product.ContactsValue{}.Type(ctx), contactsList)
+		diags.Append(d...)
+		if !d.HasError() {
+			model.Contacts = contactsListValue
 		}
 	} else {
-		// API didn't return contacts - preserve the contacts from the plan/model
-		tflog.Info(ctx, "DATA_PRODUCT: API returned no contacts, preserving existing model state")
-		// Keep the existing contacts value unchanged to maintain consistency
-		// The model.Contacts already contains the correct values from the plan
+		contactsListValue, d := types.ListValueFrom(ctx, resource_data_product.ContactsValue{}.Type(ctx), []resource_data_product.ContactsValue{})
+		diags.Append(d...)
+		if !d.HasError() {
+			model.Contacts = contactsListValue
+		}
 	}
 
-	// Handle links from response - typically empty/null for newly created resources
+	// Handle links from response
 	if links, ok := response["links"].([]interface{}); ok && len(links) > 0 {
 		linksList := make([]resource_data_product.LinksValue, 0, len(links))
 		for _, linkInterface := range links {
 			if linkMap, ok := linkInterface.(map[string]interface{}); ok {
-				link := resource_data_product.LinksValue{
-					Name: types.StringNull(),
-					Uri:  types.StringNull(),
-				}
+				attrTypes := resource_data_product.LinksValue{}.AttributeTypes(ctx)
+				attrs := map[string]attr.Value{}
 				if name, ok := linkMap["name"].(string); ok {
-					link.Name = types.StringValue(name)
+					attrs["name"] = types.StringValue(name)
+				} else {
+					attrs["name"] = types.StringNull()
 				}
 				if uri, ok := linkMap["uri"].(string); ok {
-					link.Uri = types.StringValue(uri)
+					attrs["uri"] = types.StringValue(uri)
+				} else {
+					attrs["uri"] = types.StringNull()
 				}
-				linksList = append(linksList, link)
+				linkValue, d := resource_data_product.NewLinksValue(attrTypes, attrs)
+				diags.Append(d...)
+				if d.HasError() {
+					continue
+				}
+				linksList = append(linksList, linkValue)
 			}
 		}
-		if len(linksList) > 0 {
-			linksListValue, diag := types.ListValueFrom(ctx, resource_data_product.LinksValue{}.Type(ctx), linksList)
-			if !diag.HasError() {
-				model.Links = linksListValue
-			} else {
-				tflog.Error(ctx, "Error creating links list", map[string]interface{}{"diag": diag})
-				model.Links = types.ListNull(resource_data_product.LinksValue{}.Type(ctx))
-			}
-		} else {
-			model.Links = types.ListNull(resource_data_product.LinksValue{}.Type(ctx))
+		linksListValue, d := types.ListValueFrom(ctx, resource_data_product.LinksValue{}.Type(ctx), linksList)
+		diags.Append(d...)
+		if !d.HasError() {
+			model.Links = linksListValue
 		}
 	} else {
-		model.Links = types.ListNull(resource_data_product.LinksValue{}.Type(ctx))
+		linksListValue, d := types.ListValueFrom(ctx, resource_data_product.LinksValue{}.Type(ctx), []resource_data_product.LinksValue{})
+		diags.Append(d...)
+		if !d.HasError() {
+			model.Links = linksListValue
+		}
 	}
 }

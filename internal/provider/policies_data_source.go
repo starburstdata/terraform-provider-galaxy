@@ -232,11 +232,17 @@ func (d *policiesDataSource) mapSingleScope(ctx context.Context, scopeMap map[st
 	attributeTypes := datasource_policies.ScopesValue{}.AttributeTypes(ctx)
 	attributes := map[string]attr.Value{}
 
-	// Map column_mask_id
-	if columnMaskId, ok := scopeMap["columnMaskId"].(string); ok {
-		attributes["column_mask_id"] = types.StringValue(columnMaskId)
+	// Map column_mask_ids
+	if columnMaskIds, ok := scopeMap["columnMaskIds"].([]interface{}); ok && len(columnMaskIds) > 0 {
+		maskIds := make([]attr.Value, 0, len(columnMaskIds))
+		for _, id := range columnMaskIds {
+			if idStr, ok := id.(string); ok {
+				maskIds = append(maskIds, types.StringValue(idStr))
+			}
+		}
+		attributes["column_mask_ids"] = types.ListValueMust(types.StringType, maskIds)
 	} else {
-		attributes["column_mask_id"] = types.StringNull()
+		attributes["column_mask_ids"] = types.ListValueMust(types.StringType, []attr.Value{})
 	}
 
 	// Map column_name

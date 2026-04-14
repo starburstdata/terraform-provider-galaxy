@@ -105,13 +105,13 @@ func (d *catalog_metadataDataSource) updateModelFromResponse(ctx context.Context
 			for _, tag := range tags {
 				if tagMap, ok := tag.(map[string]interface{}); ok {
 					tagValue := datasource_catalog_metadata.TagsValue{
-						Name:  types.StringValue(""),
-						TagId: types.StringValue(""),
+						Name:  types.StringNull(),
+						TagId: types.StringNull(),
 					}
 					if name, ok := tagMap["name"].(string); ok {
 						tagValue.Name = types.StringValue(name)
 					}
-					if tagId, ok := tagMap["tag_id"].(string); ok {
+					if tagId, ok := tagMap["tagId"].(string); ok {
 						tagValue.TagId = types.StringValue(tagId)
 					}
 					tagElements = append(tagElements, tagValue)
@@ -149,13 +149,13 @@ func (d *catalog_metadataDataSource) updateModelFromResponse(ctx context.Context
 			for _, contact := range contacts {
 				if contactMap, ok := contact.(map[string]interface{}); ok {
 					contactValue := datasource_catalog_metadata.ContactsValue{
-						Email:  types.StringValue(""),
-						UserId: types.StringValue(""),
+						Email:  types.StringNull(),
+						UserId: types.StringNull(),
 					}
 					if email, ok := contactMap["email"].(string); ok {
 						contactValue.Email = types.StringValue(email)
 					}
-					if userId, ok := contactMap["user_id"].(string); ok {
+					if userId, ok := contactMap["userId"].(string); ok {
 						contactValue.UserId = types.StringValue(userId)
 					}
 					contactElements = append(contactElements, contactValue)

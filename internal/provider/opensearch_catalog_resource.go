@@ -242,13 +242,31 @@ func (r *opensearch_catalogResource) modelToCreateRequest(ctx context.Context, m
 		request["description"] = model.Description.ValueString()
 	}
 
-	// Handle authentication based on authType
-	if model.AuthType.ValueString() == "basic" {
+	// Handle authentication based on authType per OpenAPI discriminator
+	switch model.AuthType.ValueString() {
+	case "basic":
 		if !model.Username.IsNull() && !model.Username.IsUnknown() && model.Username.ValueString() != "" {
 			request["username"] = model.Username.ValueString()
 		}
 		if !model.Password.IsNull() && !model.Password.IsUnknown() && model.Password.ValueString() != "" {
 			request["password"] = model.Password.ValueString()
+		}
+	case "accessKey":
+		if !model.AccessKey.IsNull() && !model.AccessKey.IsUnknown() && model.AccessKey.ValueString() != "" {
+			request["accessKey"] = model.AccessKey.ValueString()
+		}
+		if !model.SecretKey.IsNull() && !model.SecretKey.IsUnknown() && model.SecretKey.ValueString() != "" {
+			request["secretKey"] = model.SecretKey.ValueString()
+		}
+		if !model.Region.IsNull() && !model.Region.IsUnknown() && model.Region.ValueString() != "" {
+			request["region"] = model.Region.ValueString()
+		}
+	case "role":
+		if !model.RoleArn.IsNull() && !model.RoleArn.IsUnknown() && model.RoleArn.ValueString() != "" {
+			request["roleArn"] = model.RoleArn.ValueString()
+		}
+		if !model.Region.IsNull() && !model.Region.IsUnknown() && model.Region.ValueString() != "" {
+			request["region"] = model.Region.ValueString()
 		}
 	}
 

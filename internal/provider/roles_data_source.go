@@ -182,10 +182,10 @@ func (d *rolesDataSource) mapSingleRole(ctx context.Context, roleMap map[string]
 	}
 
 	// Map all roles list
-	attributes["all_roles"] = d.mapAllRolesList(roleMap)
+	attributes["all_roles"] = d.mapAllRolesList(ctx, roleMap)
 
 	// Map directly granted roles list
-	attributes["directly_granted_roles"] = d.mapDirectlyGrantedRolesList(roleMap)
+	attributes["directly_granted_roles"] = d.mapDirectlyGrantedRolesList(ctx, roleMap)
 
 	// Create the ResultValue using the constructor
 	role, diags := datasource_roles.NewResultValue(attributeTypes, attributes)
@@ -197,32 +197,112 @@ func (d *rolesDataSource) mapSingleRole(ctx context.Context, roleMap map[string]
 	return role
 }
 
-func (d *rolesDataSource) mapAllRolesList(roleMap map[string]interface{}) types.List {
+func (d *rolesDataSource) mapAllRolesList(ctx context.Context, roleMap map[string]interface{}) types.List {
+	elementType := datasource_roles.AllRolesType{
+		ObjectType: types.ObjectType{
+			AttrTypes: datasource_roles.AllRolesValue{}.AttributeTypes(ctx),
+		},
+	}
 	if allRoles, ok := roleMap["allRoles"].([]interface{}); ok {
-		allRolesList := make([]attr.Value, 0, len(allRoles))
-		for _, roleIdInterface := range allRoles {
-			if roleIdStr, ok := roleIdInterface.(string); ok {
-				allRolesList = append(allRolesList, types.StringValue(roleIdStr))
+		allRolesList := make([]datasource_roles.AllRolesValue, 0, len(allRoles))
+		for _, roleInterface := range allRoles {
+			if rm, ok := roleInterface.(map[string]interface{}); ok {
+				roleValue := datasource_roles.AllRolesValue{
+					RoleId:      types.StringNull(),
+					RoleName:    types.StringNull(),
+					AdminOption: types.BoolNull(),
+					Principal:   types.ObjectNull(datasource_roles.PrincipalValue{}.AttributeTypes(ctx)),
+				}
+				if roleId, ok := rm["roleId"].(string); ok {
+					roleValue.RoleId = types.StringValue(roleId)
+				}
+				if roleName, ok := rm["roleName"].(string); ok {
+					roleValue.RoleName = types.StringValue(roleName)
+				}
+				if adminOption, ok := rm["adminOption"].(bool); ok {
+					roleValue.AdminOption = types.BoolValue(adminOption)
+				}
+				if principal, ok := rm["principal"].(map[string]interface{}); ok {
+					principalValue := datasource_roles.PrincipalValue{
+						Id:            types.StringNull(),
+						PrincipalType: types.StringNull(),
+					}
+					if id, ok := principal["id"].(string); ok {
+						principalValue.Id = types.StringValue(id)
+					}
+					if pType, ok := principal["type"].(string); ok {
+						principalValue.PrincipalType = types.StringValue(pType)
+					}
+					principalObj, d := principalValue.ToObjectValue(ctx)
+					if !d.HasError() {
+						roleValue.Principal = principalObj
+					}
+				}
+				allRolesList = append(allRolesList, roleValue)
 			}
 		}
-		allRolesListValue, _ := types.ListValue(types.StringType, allRolesList)
-		return allRolesListValue
-	} else {
-		return types.ListNull(types.StringType)
+		listValue, d := types.ListValueFrom(ctx, elementType, allRolesList)
+		if d.HasError() {
+			tflog.Error(ctx, fmt.Sprintf("Error creating all_roles list: %v", d))
+		} else {
+			return listValue
+		}
 	}
+	emptyList, _ := types.ListValueFrom(ctx, elementType, []datasource_roles.AllRolesValue{})
+	return emptyList
 }
 
-func (d *rolesDataSource) mapDirectlyGrantedRolesList(roleMap map[string]interface{}) types.List {
-	if directlyGrantedRoles, ok := roleMap["directlyGrantedRoles"].([]interface{}); ok {
-		directlyGrantedRolesList := make([]attr.Value, 0, len(directlyGrantedRoles))
-		for _, roleIdInterface := range directlyGrantedRoles {
-			if roleIdStr, ok := roleIdInterface.(string); ok {
-				directlyGrantedRolesList = append(directlyGrantedRolesList, types.StringValue(roleIdStr))
+func (d *rolesDataSource) mapDirectlyGrantedRolesList(ctx context.Context, roleMap map[string]interface{}) types.List {
+	elementType := datasource_roles.DirectlyGrantedRolesType{
+		ObjectType: types.ObjectType{
+			AttrTypes: datasource_roles.DirectlyGrantedRolesValue{}.AttributeTypes(ctx),
+		},
+	}
+	if directRoles, ok := roleMap["directlyGrantedRoles"].([]interface{}); ok {
+		directRolesList := make([]datasource_roles.DirectlyGrantedRolesValue, 0, len(directRoles))
+		for _, roleInterface := range directRoles {
+			if rm, ok := roleInterface.(map[string]interface{}); ok {
+				roleValue := datasource_roles.DirectlyGrantedRolesValue{
+					RoleId:      types.StringNull(),
+					RoleName:    types.StringNull(),
+					AdminOption: types.BoolNull(),
+					Principal:   types.ObjectNull(datasource_roles.PrincipalValue{}.AttributeTypes(ctx)),
+				}
+				if roleId, ok := rm["roleId"].(string); ok {
+					roleValue.RoleId = types.StringValue(roleId)
+				}
+				if roleName, ok := rm["roleName"].(string); ok {
+					roleValue.RoleName = types.StringValue(roleName)
+				}
+				if adminOption, ok := rm["adminOption"].(bool); ok {
+					roleValue.AdminOption = types.BoolValue(adminOption)
+				}
+				if principal, ok := rm["principal"].(map[string]interface{}); ok {
+					principalValue := datasource_roles.PrincipalValue{
+						Id:            types.StringNull(),
+						PrincipalType: types.StringNull(),
+					}
+					if id, ok := principal["id"].(string); ok {
+						principalValue.Id = types.StringValue(id)
+					}
+					if pType, ok := principal["type"].(string); ok {
+						principalValue.PrincipalType = types.StringValue(pType)
+					}
+					principalObj, d := principalValue.ToObjectValue(ctx)
+					if !d.HasError() {
+						roleValue.Principal = principalObj
+					}
+				}
+				directRolesList = append(directRolesList, roleValue)
 			}
 		}
-		directlyGrantedRolesListValue, _ := types.ListValue(types.StringType, directlyGrantedRolesList)
-		return directlyGrantedRolesListValue
-	} else {
-		return types.ListNull(types.StringType)
+		listValue, d := types.ListValueFrom(ctx, elementType, directRolesList)
+		if d.HasError() {
+			tflog.Error(ctx, fmt.Sprintf("Error creating directly_granted_roles list: %v", d))
+		} else {
+			return listValue
+		}
 	}
+	emptyList, _ := types.ListValueFrom(ctx, elementType, []datasource_roles.DirectlyGrantedRolesValue{})
+	return emptyList
 }

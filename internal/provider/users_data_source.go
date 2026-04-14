@@ -167,20 +167,117 @@ func (d *usersDataSource) mapSingleUser(ctx context.Context, userMap map[string]
 		attributes["scim_managed"] = types.BoolNull()
 	}
 
-	// Map role lists - simplified to null for now to get basic functionality working
+	// Map all roles
 	allRolesElementType := datasource_users.AllRolesType{
 		ObjectType: types.ObjectType{
 			AttrTypes: datasource_users.AllRolesValue{}.AttributeTypes(ctx),
 		},
 	}
-	attributes["all_roles"] = types.ListNull(allRolesElementType)
+	if allRoles, ok := userMap["allRoles"].([]interface{}); ok {
+		allRolesList := make([]datasource_users.AllRolesValue, 0, len(allRoles))
+		for _, roleInterface := range allRoles {
+			if roleMap, ok := roleInterface.(map[string]interface{}); ok {
+				roleValue := datasource_users.AllRolesValue{
+					RoleId:      types.StringNull(),
+					RoleName:    types.StringNull(),
+					AdminOption: types.BoolNull(),
+					Principal:   types.ObjectNull(datasource_users.PrincipalValue{}.AttributeTypes(ctx)),
+				}
+				if roleId, ok := roleMap["roleId"].(string); ok {
+					roleValue.RoleId = types.StringValue(roleId)
+				}
+				if roleName, ok := roleMap["roleName"].(string); ok {
+					roleValue.RoleName = types.StringValue(roleName)
+				}
+				if adminOption, ok := roleMap["adminOption"].(bool); ok {
+					roleValue.AdminOption = types.BoolValue(adminOption)
+				}
+				if principal, ok := roleMap["principal"].(map[string]interface{}); ok {
+					principalValue := datasource_users.PrincipalValue{
+						Id:            types.StringNull(),
+						PrincipalType: types.StringNull(),
+					}
+					if id, ok := principal["id"].(string); ok {
+						principalValue.Id = types.StringValue(id)
+					}
+					if pType, ok := principal["type"].(string); ok {
+						principalValue.PrincipalType = types.StringValue(pType)
+					}
+					principalObj, d := principalValue.ToObjectValue(ctx)
+					if !d.HasError() {
+						roleValue.Principal = principalObj
+					}
+				}
+				allRolesList = append(allRolesList, roleValue)
+			}
+		}
+		allRolesListValue, d := types.ListValueFrom(ctx, allRolesElementType, allRolesList)
+		if d.HasError() {
+			tflog.Error(ctx, fmt.Sprintf("Error creating all_roles list: %v", d))
+		} else {
+			attributes["all_roles"] = allRolesListValue
+		}
+	}
+	if _, ok := attributes["all_roles"]; !ok {
+		emptyList, _ := types.ListValueFrom(ctx, allRolesElementType, []datasource_users.AllRolesValue{})
+		attributes["all_roles"] = emptyList
+	}
 
+	// Map directly granted roles
 	directRolesElementType := datasource_users.DirectlyGrantedRolesType{
 		ObjectType: types.ObjectType{
 			AttrTypes: datasource_users.DirectlyGrantedRolesValue{}.AttributeTypes(ctx),
 		},
 	}
-	attributes["directly_granted_roles"] = types.ListNull(directRolesElementType)
+	if directRoles, ok := userMap["directlyGrantedRoles"].([]interface{}); ok {
+		directRolesList := make([]datasource_users.DirectlyGrantedRolesValue, 0, len(directRoles))
+		for _, roleInterface := range directRoles {
+			if roleMap, ok := roleInterface.(map[string]interface{}); ok {
+				roleValue := datasource_users.DirectlyGrantedRolesValue{
+					RoleId:      types.StringNull(),
+					RoleName:    types.StringNull(),
+					AdminOption: types.BoolNull(),
+					Principal:   types.ObjectNull(datasource_users.PrincipalValue{}.AttributeTypes(ctx)),
+				}
+				if roleId, ok := roleMap["roleId"].(string); ok {
+					roleValue.RoleId = types.StringValue(roleId)
+				}
+				if roleName, ok := roleMap["roleName"].(string); ok {
+					roleValue.RoleName = types.StringValue(roleName)
+				}
+				if adminOption, ok := roleMap["adminOption"].(bool); ok {
+					roleValue.AdminOption = types.BoolValue(adminOption)
+				}
+				if principal, ok := roleMap["principal"].(map[string]interface{}); ok {
+					principalValue := datasource_users.PrincipalValue{
+						Id:            types.StringNull(),
+						PrincipalType: types.StringNull(),
+					}
+					if id, ok := principal["id"].(string); ok {
+						principalValue.Id = types.StringValue(id)
+					}
+					if pType, ok := principal["type"].(string); ok {
+						principalValue.PrincipalType = types.StringValue(pType)
+					}
+					principalObj, d := principalValue.ToObjectValue(ctx)
+					if !d.HasError() {
+						roleValue.Principal = principalObj
+					}
+				}
+				directRolesList = append(directRolesList, roleValue)
+			}
+		}
+		directRolesListValue, d := types.ListValueFrom(ctx, directRolesElementType, directRolesList)
+		if d.HasError() {
+			tflog.Error(ctx, fmt.Sprintf("Error creating directly_granted_roles list: %v", d))
+		} else {
+			attributes["directly_granted_roles"] = directRolesListValue
+		}
+	}
+	if _, ok := attributes["directly_granted_roles"]; !ok {
+		emptyList, _ := types.ListValueFrom(ctx, directRolesElementType, []datasource_users.DirectlyGrantedRolesValue{})
+		attributes["directly_granted_roles"] = emptyList
+	}
 
 	// Create the ResultValue using the constructor
 	user, diags := datasource_users.NewResultValue(attributeTypes, attributes)

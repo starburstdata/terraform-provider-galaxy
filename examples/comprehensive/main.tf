@@ -113,11 +113,11 @@ resource "galaxy_role" "admin" {
   role_description       = "Administrative role with full access"
 }
 
-# Note: Using hardcoded user values to avoid data source type conversion issues
-# In production, you would use data.galaxy_user to look up existing users
+# Look up a real user for data product contacts
+data "galaxy_users" "all" {}
+
 locals {
-  admin_user_id = "u-9639270557"
-  admin_email   = "admin@example.com"
+  admin_user = data.galaxy_users.all.result[0]
 }
 
 # ==========================================
@@ -191,13 +191,12 @@ resource "galaxy_data_product" "customer_360" {
   schema_name = "customeranalytics"
   catalog_id  = galaxy_mysql_catalog.transactional.catalog_id
 
-  contacts = []
-  # contacts = [
-  #   {
-  #     email   = local.admin_email
-  #     user_id = local.admin_user_id
-  #   }
-  # ]
+  contacts = [
+    {
+      email   = local.admin_user.email
+      user_id = local.admin_user.user_id
+    }
+  ]
 }
 
 # ==========================================
