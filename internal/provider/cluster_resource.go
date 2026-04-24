@@ -13,11 +13,14 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"strings"
 
 	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/booldefault"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/boolplanmodifier"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
 
@@ -41,7 +44,27 @@ func (r *clusterResource) Metadata(ctx context.Context, req resource.MetadataReq
 }
 
 func (r *clusterResource) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
-	resp.Schema = resource_cluster.ClusterResourceSchema(ctx)
+	s := resource_cluster.ClusterResourceSchema(ctx)
+
+	// warp_resiliency_enabled is a zombie field: the Galaxy API's CreateClusterConfiguration still
+	// requires it at the request boundary (primitive boolean, 400s on null), but ClusterDao hardcodes
+	// it to false on INSERT/UPDATE and the response model never returns it. Until the server contract
+	// is cleaned up, keep the attribute in the schema so existing HCL keeps working, default to false
+	// so omitted configs satisfy the API constraint, warn users via DeprecationMessage, and ignore
+	// their value in request-building (we always send false - see modelToCreateRequest).
+	if attr, ok := s.Attributes["warp_resiliency_enabled"].(schema.BoolAttribute); ok {
+		attr.Required = false
+		attr.Optional = true
+		attr.Computed = true
+		attr.Default = booldefault.StaticBool(false)
+		attr.DeprecationMessage = "warp_resiliency_enabled is no longer honored by the Galaxy API and will be removed in a future release. Please remove this field from your configuration."
+		attr.PlanModifiers = []planmodifier.Bool{
+			boolplanmodifier.UseStateForUnknown(),
+		}
+		s.Attributes["warp_resiliency_enabled"] = attr
+	}
+
+	resp.Schema = s
 }
 
 func (r *clusterResource) Configure(ctx context.Context, req resource.ConfigureRequest, resp *resource.ConfigureResponse) {
@@ -66,12 +89,6 @@ func (r *clusterResource) Create(ctx context.Context, req resource.CreateRequest
 
 	// Read Terraform plan data into the model
 	resp.Diagnostics.Append(req.Plan.Get(ctx, &plan)...)
-	if resp.Diagnostics.HasError() {
-		return
-	}
-
-	// Apply edge case logic before creating
-	r.applyEdgeCaseLogic(&plan, &resp.Diagnostics)
 	if resp.Diagnostics.HasError() {
 		return
 	}
@@ -174,12 +191,6 @@ func (r *clusterResource) Update(ctx context.Context, req resource.UpdateRequest
 		return
 	}
 
-	// Apply edge case logic before updating
-	r.applyEdgeCaseLogic(&plan, &resp.Diagnostics)
-	if resp.Diagnostics.HasError() {
-		return
-	}
-
 	clusterID := state.ClusterId.ValueString()
 
 	// Convert plan to API request
@@ -252,22 +263,6 @@ func (r *clusterResource) ImportState(ctx context.Context, req resource.ImportSt
 	resource.ImportStatePassthroughID(ctx, path.Root("cluster_id"), req, resp)
 }
 
-// applyEdgeCaseLogic applies business logic edge cases to the cluster model
-func (r *clusterResource) applyEdgeCaseLogic(model *resource_cluster.ClusterModel, diags *diag.Diagnostics) {
-	// Edge case: WarpResiliencyEnabled should always be set to true if processing_mode includes "WarpSpeed"
-	if !model.ProcessingMode.IsNull() && strings.Contains(model.ProcessingMode.ValueString(), "WarpSpeed") {
-		model.WarpResiliencyEnabled = types.BoolValue(true)
-	}
-
-	// Edge case: result_cache_default_visibility_seconds should only be set if result_cache_enabled is true
-	if !model.ResultCacheEnabled.IsNull() && !model.ResultCacheEnabled.ValueBool() {
-		if !model.ResultCacheDefaultVisibilitySeconds.IsNull() && !model.ResultCacheDefaultVisibilitySeconds.IsUnknown() {
-			// Reset the value if result cache is disabled
-			model.ResultCacheDefaultVisibilitySeconds = types.Int64Null()
-		}
-	}
-}
-
 // modelToCreateRequest converts the Terraform model to API create request
 func (r *clusterResource) modelToCreateRequest(ctx context.Context, model *resource_cluster.ClusterModel, diags *diag.Diagnostics) map[string]interface{} {
 	request := make(map[string]interface{})
@@ -291,9 +286,12 @@ func (r *clusterResource) modelToCreateRequest(ctx context.Context, model *resou
 	if !model.ResultCacheEnabled.IsNull() {
 		request["resultCacheEnabled"] = model.ResultCacheEnabled.ValueBool()
 	}
-	if !model.WarpResiliencyEnabled.IsNull() {
-		request["warpResiliencyEnabled"] = model.WarpResiliencyEnabled.ValueBool()
-	}
+	// warp_resiliency_enabled is deprecated and ignored server-side (ClusterDao hardcodes false on
+	// INSERT/UPDATE, response model never returns it). We always send false regardless of the user's
+	// value - the request-boundary primitive-boolean contract requires a value, but the backend
+	// discards it. The user's configured value is preserved in state so plans don't drift; the
+	// schema DeprecationMessage handles warning them to remove the field.
+	request["warpResiliencyEnabled"] = false
 
 	// Optional fields
 	if !model.IdleStopMinutes.IsNull() && !model.IdleStopMinutes.IsUnknown() {
@@ -305,8 +303,17 @@ func (r *clusterResource) modelToCreateRequest(ctx context.Context, model *resou
 	if !model.Replicas.IsNull() && !model.Replicas.IsUnknown() && model.Replicas.ValueInt64() > 0 {
 		request["replicas"] = model.Replicas.ValueInt64()
 	}
-	if !model.ResultCacheDefaultVisibilitySeconds.IsNull() && !model.ResultCacheDefaultVisibilitySeconds.IsUnknown() {
-		request["resultCacheDefaultVisibilitySeconds"] = model.ResultCacheDefaultVisibilitySeconds.ValueInt64()
+	// resultCacheDefaultVisibilitySeconds must be absent/null when the cache is disabled, or the
+	// API rejects the request. Send explicit JSON null on disable so a prior stored value is cleared
+	// in the PATCH merge (omitting the field would preserve the old value and trip validation).
+	if !model.ResultCacheEnabled.IsNull() {
+		if model.ResultCacheEnabled.ValueBool() {
+			if !model.ResultCacheDefaultVisibilitySeconds.IsNull() && !model.ResultCacheDefaultVisibilitySeconds.IsUnknown() {
+				request["resultCacheDefaultVisibilitySeconds"] = model.ResultCacheDefaultVisibilitySeconds.ValueInt64()
+			}
+		} else {
+			request["resultCacheDefaultVisibilitySeconds"] = nil
+		}
 	}
 
 	// Handle catalog references
@@ -418,12 +425,20 @@ func (r *clusterResource) updateModelFromResponse(ctx context.Context, model *re
 
 	if resultCacheDefaultVisibilitySeconds, ok := response["resultCacheDefaultVisibilitySeconds"].(float64); ok {
 		model.ResultCacheDefaultVisibilitySeconds = types.Int64Value(int64(resultCacheDefaultVisibilitySeconds))
-	} else {
+	} else if model.ResultCacheDefaultVisibilitySeconds.IsUnknown() {
+		// Unknown only on first Create when the user omitted this Optional+Computed field. Safe to
+		// null. In other cases the plan value is already Known (either the user's integer, or null
+		// when they removed the field to disable the cache, or the prior state value on Read) and
+		// flows through unchanged - which is how disable-after-enable ends up as Null in state and
+		// how an explicit integer survives "inconsistent result after apply" when the API omits the
+		// field in its response.
 		model.ResultCacheDefaultVisibilitySeconds = types.Int64Null()
 	}
 
 	if warpResiliencyEnabled, ok := response["warpResiliencyEnabled"].(bool); ok {
 		model.WarpResiliencyEnabled = types.BoolValue(warpResiliencyEnabled)
+	} else if model.WarpResiliencyEnabled.IsUnknown() {
+		model.WarpResiliencyEnabled = types.BoolValue(false)
 	}
 
 	if replicas, ok := response["replicas"].(float64); ok {
