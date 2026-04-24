@@ -24,7 +24,6 @@ description: |-
 - `name` (String) Name of the cluster being created
 - `private_link_cluster` (Boolean) Private Link Enabled
 - `result_cache_enabled` (Boolean) Enable/Disable resultset caching
-- `warp_resiliency_enabled` (Boolean) Enable/Disable warp resiliency
 
 ### Optional
 
@@ -32,6 +31,7 @@ description: |-
 - `processing_mode` (String) Cluster query processing mode
 - `replicas` (Number) Number of replicas
 - `result_cache_default_visibility_seconds` (Number) Default visibility for resultset caching (in seconds)
+- `warp_resiliency_enabled` (Boolean, Deprecated) Enable/Disable warp resiliency
 
 ### Read-Only
 
