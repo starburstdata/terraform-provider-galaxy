@@ -80,6 +80,18 @@ func (r *gcs_catalogResource) Create(ctx context.Context, req resource.CreateReq
 		return
 	}
 
+	// credentials_key is required on create. modelToCreateRequest omits it when
+	// null/unknown/empty so updates after import succeed - validate here to give
+	// creates a clear Terraform diagnostic instead of a cryptic API 400. ENG-9975.
+	if plan.CredentialsKey.IsNull() || plan.CredentialsKey.IsUnknown() || plan.CredentialsKey.ValueString() == "" {
+		resp.Diagnostics.AddAttributeError(
+			path.Root("credentials_key"),
+			"Missing required credentials key",
+			"The credentials_key attribute must be set to a non-empty value when creating a GCS catalog.",
+		)
+		return
+	}
+
 	// Initialize optional computed fields to null if not provided in config (before API call)
 	if plan.HiveMetastoreHost.IsUnknown() {
 		plan.HiveMetastoreHost = types.StringNull()
@@ -223,7 +235,15 @@ func (r *gcs_catalogResource) modelToCreateRequest(ctx context.Context, model *r
 	request["name"] = model.Name.ValueString()
 	request["readOnly"] = model.ReadOnly.ValueBool()
 	request["metastoreType"] = model.MetastoreType.ValueString()
-	request["credentialsKey"] = model.CredentialsKey.ValueString()
+
+	// credentialsKey is write-only and not returned by the API. After import,
+	// state holds it as null, and any subsequent PATCH (e.g. description change)
+	// would otherwise send credentialsKey="" and fail with 400. Gate on three-part
+	// check so an absent value is omitted from the request, letting the server
+	// preserve the existing credential. ENG-9975.
+	if !model.CredentialsKey.IsNull() && !model.CredentialsKey.IsUnknown() && model.CredentialsKey.ValueString() != "" {
+		request["credentialsKey"] = model.CredentialsKey.ValueString()
+	}
 
 	// Metastore-type-specific fields per OpenAPI spec
 	if model.MetastoreType.ValueString() == "galaxy" {

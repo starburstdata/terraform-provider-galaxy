@@ -93,6 +93,14 @@ func (r *postgresql_catalogResource) Create(ctx context.Context, req resource.Cr
 		return
 	}
 
+	if plan.Password.IsNull() || plan.Password.IsUnknown() || plan.Password.ValueString() == "" {
+		resp.Diagnostics.AddError(
+			"Missing required field",
+			"password cannot be empty for PostgreSQL catalog",
+		)
+		return
+	}
+
 	request := r.modelToCreateRequest(ctx, &plan, &resp.Diagnostics)
 	if resp.Diagnostics.HasError() {
 		return
@@ -225,8 +233,13 @@ func (r *postgresql_catalogResource) modelToCreateRequest(ctx context.Context, m
 	request["name"] = model.Name.ValueString()
 	request["readOnly"] = model.ReadOnly.ValueBool()
 	request["username"] = model.Username.ValueString()
-	request["password"] = model.Password.ValueString()
 	request["databaseName"] = model.DatabaseName.ValueString()
+
+	// password is write-only and not returned by the API. Omit on empty so PATCH
+	// after import preserves the existing credential. Create enforces required. ENG-9975.
+	if !model.Password.IsNull() && !model.Password.IsUnknown() && model.Password.ValueString() != "" {
+		request["password"] = model.Password.ValueString()
+	}
 
 	// Validate that at least one of endpoint or privateLinkId is provided
 	hasEndpoint := model.Endpoint.ValueString() != ""

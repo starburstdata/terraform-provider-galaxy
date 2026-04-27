@@ -93,6 +93,14 @@ func (r *sqlserver_catalogResource) Create(ctx context.Context, req resource.Cre
 		return
 	}
 
+	if plan.Password.IsNull() || plan.Password.IsUnknown() || plan.Password.ValueString() == "" {
+		resp.Diagnostics.AddError(
+			"Missing required field",
+			"password cannot be empty for SQL Server catalog",
+		)
+		return
+	}
+
 	request := r.modelToCreateRequest(ctx, &plan, &resp.Diagnostics)
 	if resp.Diagnostics.HasError() {
 		return
@@ -226,7 +234,12 @@ func (r *sqlserver_catalogResource) modelToCreateRequest(ctx context.Context, mo
 	request["readOnly"] = model.ReadOnly.ValueBool()
 	request["databaseName"] = model.DatabaseName.ValueString()
 	request["username"] = model.Username.ValueString()
-	request["password"] = model.Password.ValueString()
+
+	// password is write-only and not returned by the API. Omit on empty so PATCH
+	// after import preserves the existing credential. Create enforces required. ENG-9975.
+	if !model.Password.IsNull() && !model.Password.IsUnknown() && model.Password.ValueString() != "" {
+		request["password"] = model.Password.ValueString()
+	}
 
 	// Validate that at least one of endpoint or privateLinkId is provided
 	hasEndpoint := model.Endpoint.ValueString() != ""
