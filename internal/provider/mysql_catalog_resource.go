@@ -88,6 +88,14 @@ func (r *mysql_catalogResource) Create(ctx context.Context, req resource.CreateR
 		plan.SshTunnelId = types.StringNull()
 	}
 
+	if plan.Password.IsNull() || plan.Password.IsUnknown() || plan.Password.ValueString() == "" {
+		resp.Diagnostics.AddError(
+			"Missing required field",
+			"password cannot be empty for MySQL catalog",
+		)
+		return
+	}
+
 	request := r.modelToCreateRequest(ctx, &plan, &resp.Diagnostics)
 	if resp.Diagnostics.HasError() {
 		return
@@ -220,7 +228,14 @@ func (r *mysql_catalogResource) modelToCreateRequest(ctx context.Context, model 
 	request["name"] = model.Name.ValueString()
 	request["readOnly"] = model.ReadOnly.ValueBool()
 	request["username"] = model.Username.ValueString()
-	request["password"] = model.Password.ValueString()
+
+	// password is write-only and not returned by the API. After import, state
+	// holds it as null; omit from the request when empty so the server preserves
+	// the existing credential on PATCH. Create-required validation is enforced
+	// in Create(). ENG-9975.
+	if !model.Password.IsNull() && !model.Password.IsUnknown() && model.Password.ValueString() != "" {
+		request["password"] = model.Password.ValueString()
+	}
 
 	// Determine connection type from provided fields
 	hasHost := model.Host.ValueString() != ""

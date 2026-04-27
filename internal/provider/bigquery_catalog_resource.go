@@ -78,6 +78,14 @@ func (r *bigquery_catalogResource) Create(ctx context.Context, req resource.Crea
 		return
 	}
 
+	if plan.CredentialsKey.IsNull() || plan.CredentialsKey.IsUnknown() || plan.CredentialsKey.ValueString() == "" {
+		resp.Diagnostics.AddError(
+			"Missing required field",
+			"credentials_key cannot be empty for BigQuery catalog",
+		)
+		return
+	}
+
 	request := r.modelToCreateRequest(ctx, &plan, &resp.Diagnostics)
 	if resp.Diagnostics.HasError() {
 		return
@@ -210,24 +218,14 @@ func (r *bigquery_catalogResource) modelToCreateRequest(ctx context.Context, mod
 	request["name"] = model.Name.ValueString()
 	request["readOnly"] = model.ReadOnly.ValueBool()
 
-	// Debug credentials_key
-	credentialsKey := model.CredentialsKey.ValueString()
-	tflog.Debug(ctx, "BigQuery catalog credentials_key", map[string]interface{}{
-		"credentialsKey": credentialsKey,
-		"isNull":         model.CredentialsKey.IsNull(),
-		"isUnknown":      model.CredentialsKey.IsUnknown(),
-		"isEmpty":        credentialsKey == "",
-	})
-
-	if credentialsKey == "" {
-		diags.AddError(
-			"Missing required field",
-			"credentials_key cannot be empty for BigQuery catalog",
-		)
-		return request
+	// credentialsKey is write-only and not returned by the API. After import,
+	// state holds it as null, and any subsequent PATCH would otherwise send
+	// credentialsKey="" and fail with 400. Gate on three-part check so an
+	// absent value is omitted, letting the server preserve the existing
+	// credential on update. Required-on-create is enforced in Create(). ENG-9975.
+	if !model.CredentialsKey.IsNull() && !model.CredentialsKey.IsUnknown() && model.CredentialsKey.ValueString() != "" {
+		request["credentialsKey"] = model.CredentialsKey.ValueString()
 	}
-
-	request["credentialsKey"] = credentialsKey
 
 	// Optional fields
 	if !model.Description.IsNull() && !model.Description.IsUnknown() && model.Description.ValueString() != "" {

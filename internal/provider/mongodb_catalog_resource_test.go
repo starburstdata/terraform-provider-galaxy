@@ -4,15 +4,56 @@
 package provider
 
 import (
+	"context"
 	"fmt"
 	"testing"
 
+	"github.com/hashicorp/terraform-plugin-framework/diag"
+	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/knownvalue"
 	"github.com/hashicorp/terraform-plugin-testing/statecheck"
 	"github.com/hashicorp/terraform-plugin-testing/tfjsonpath"
+
+	"github.com/starburstdata/terraform-provider-galaxy/internal/provider/resource_mongodb_catalog"
 )
+
+// TestMongodbCatalogModelToUpdateRequestOmitsEmptyPassword — ENG-9975 regression test.
+func TestMongodbCatalogModelToUpdateRequestOmitsEmptyPassword(t *testing.T) {
+	cases := []struct {
+		name  string
+		input types.String
+	}{
+		{"null password", types.StringNull()},
+		{"unknown password", types.StringUnknown()},
+		{"empty-string password", types.StringValue("")},
+	}
+	for _, tc := range cases {
+		t.Run(tc.name, func(t *testing.T) {
+			r := &mongodb_catalogResource{}
+			model := &MongodbCatalogModelExtended{
+				MongodbCatalogModel: resource_mongodb_catalog.MongodbCatalogModel{
+					Name:           types.StringValue("test"),
+					ReadOnly:       types.BoolValue(false),
+					Username:       types.StringValue("u"),
+					Password:       tc.input,
+					ConnectionType: types.StringValue("direct"),
+				},
+				Host:     types.StringValue("h:27017"),
+				Database: types.StringValue("admin"),
+			}
+			var diags diag.Diagnostics
+			request := r.modelToUpdateRequest(context.Background(), model, &diags)
+			if diags.HasError() {
+				t.Fatalf("unexpected diagnostics: %v", diags)
+			}
+			if _, ok := request["password"]; ok {
+				t.Errorf("expected password to be omitted from update request, got: %v", request["password"])
+			}
+		})
+	}
+}
 
 func TestAccResourceMongoDBCatalog_Basic(t *testing.T) {
 	// Generate a short random suffix to avoid conflicts with leftover resources

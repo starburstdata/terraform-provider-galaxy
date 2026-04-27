@@ -119,6 +119,14 @@ func (r *mongodb_catalogResource) Create(ctx context.Context, req resource.Creat
 		plan.SshTunnelId = types.StringNull()
 	}
 
+	if plan.Password.IsNull() || plan.Password.IsUnknown() || plan.Password.ValueString() == "" {
+		resp.Diagnostics.AddError(
+			"Missing required field",
+			"password cannot be empty for MongoDB catalog",
+		)
+		return
+	}
+
 	request := r.modelToCreateRequest(ctx, &plan, &resp.Diagnostics)
 	if resp.Diagnostics.HasError() {
 		return
@@ -251,7 +259,12 @@ func (r *mongodb_catalogResource) modelToCreateRequest(ctx context.Context, mode
 	request["name"] = model.Name.ValueString()
 	request["readOnly"] = model.ReadOnly.ValueBool()
 	request["username"] = model.Username.ValueString()
-	request["password"] = model.Password.ValueString()
+
+	// password is write-only and not returned by the API. Omit on empty so PATCH
+	// after import preserves the existing credential. Create enforces required. ENG-9975.
+	if !model.Password.IsNull() && !model.Password.IsUnknown() && model.Password.ValueString() != "" {
+		request["password"] = model.Password.ValueString()
+	}
 
 	// Determine connection type from provided fields
 	hasHost := model.Host.ValueString() != ""
