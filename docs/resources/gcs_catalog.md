@@ -17,7 +17,7 @@ description: |-
 
 ### Required
 
-- `credentials_key` (String)
+- `credentials_key` (String, Sensitive)
 - `metastore_type` (String)
 - `name` (String) Catalog name
 - `read_only` (Boolean) Is catalog read only

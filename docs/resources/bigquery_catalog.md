@@ -17,7 +17,7 @@ description: |-
 
 ### Required
 
-- `credentials_key` (String) Base64 encoded or plain text BigQuery JSON key
+- `credentials_key` (String, Sensitive) Base64 encoded or plain text BigQuery JSON key
 - `name` (String) Catalog name
 - `read_only` (Boolean) Is catalog read only
 

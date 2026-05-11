@@ -26,7 +26,7 @@ description: |-
 
 - `access_key` (String) AWS access key
 - `description` (String) Catalog description
-- `password` (String) Password
+- `password` (String, Sensitive) Password
 - `port` (Number) OpenSearch cluster port. Defaults to 443.
 - `region` (String) AWS region
 - `role_arn` (String) AWS cross account role ARN

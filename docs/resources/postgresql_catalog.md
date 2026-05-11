@@ -19,7 +19,7 @@ description: |-
 
 - `database_name` (String) PostgreSQL database name
 - `name` (String) Catalog name
-- `password` (String)
+- `password` (String, Sensitive)
 - `read_only` (Boolean) Is catalog read only
 - `username` (String) PostgreSQL database username
 

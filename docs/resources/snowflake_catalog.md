@@ -28,9 +28,9 @@ description: |-
 - `authentication_type` (String) Snowflake authentication type
 - `cloud_kind` (String) Snowflake cloud kind. Defaults to AWS.
 - `description` (String) Catalog description
-- `password` (String)
-- `private_key` (String)
-- `private_key_passphrase` (String)
+- `password` (String, Sensitive)
+- `private_key` (String, Sensitive)
+- `private_key_passphrase` (String, Sensitive)
 - `role` (String) Snowflake role
 - `validate` (Boolean) Validate catalog configuration before creation
 - `warehouse` (String) Snowflake warehouse name

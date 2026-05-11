@@ -26,7 +26,7 @@ description: |-
 
 - `access_key` (String)
 - `description` (String) Catalog description
-- `password` (String)
+- `password` (String, Sensitive)
 - `region` (String) AWS region
 - `role_arn` (String) AWS cross account role ARN
 - `secret_key` (String)

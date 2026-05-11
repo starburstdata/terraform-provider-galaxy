@@ -19,7 +19,7 @@ description: |-
 
 - `database_name` (String) SQL Server database name
 - `name` (String) Catalog name
-- `password` (String) SQL Server database password
+- `password` (String, Sensitive) SQL Server database password
 - `read_only` (Boolean) Is catalog read only
 - `username` (String) SQL Server database username
 

@@ -28,11 +28,11 @@ description: |-
 - `database_id` (String) AstraDB database ID
 - `description` (String) Catalog description
 - `local_datacenter` (String) Local datacenter
-- `password` (String)
+- `password` (String, Sensitive)
 - `port` (Number) Cassandra port. Defaults to 9042.
 - `region` (String) AstraDB region
 - `ssh_tunnel_id` (String) SSH tunnel identifier
-- `token` (String)
+- `token` (String, Sensitive)
 - `username` (String) Cassandra username
 - `validate` (Boolean) Validate catalog configuration before creation
 

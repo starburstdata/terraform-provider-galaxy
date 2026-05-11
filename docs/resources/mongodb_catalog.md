@@ -19,7 +19,7 @@ description: |-
 
 - `connection_type` (String)
 - `name` (String) Catalog name
-- `password` (String) MongoDB password
+- `password` (String, Sensitive) MongoDB password
 - `read_only` (Boolean) Is catalog read only
 - `regions` (List of String) MongoDB regions
 - `username` (String) MongoDB username

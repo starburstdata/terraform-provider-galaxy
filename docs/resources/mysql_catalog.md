@@ -19,7 +19,7 @@ description: |-
 
 - `connection_type` (String)
 - `name` (String) Catalog name
-- `password` (String) MySQL database password
+- `password` (String, Sensitive) MySQL database password
 - `read_only` (Boolean) Is catalog read only
 - `username` (String) MySQL database username
 
