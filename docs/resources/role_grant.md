@@ -24,3 +24,14 @@ Manages an individual role-to-role grant. This is a non-authoritative resource t
 ### Read-Only
 
 - `granted_role_name` (String) The name of the granted role, populated from the API.
+
+## Import
+
+Import is supported using the following syntax:
+
+The [`terraform import` command](https://developer.hashicorp.com/terraform/cli/commands/import) can be used, for example:
+
+```shell
+# Role grant can be imported by specifying the role ID and granted role ID separated by a slash.
+terraform import galaxy_role_grant.example <role_id>/<granted_role_id>
+```

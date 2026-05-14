@@ -19,6 +19,8 @@ func GcsCatalogResourceSchema(ctx context.Context) schema.Schema {
 			},
 			"credentials_key": schema.StringAttribute{
 				Required:            true,
+				Sensitive:           true,
+				WriteOnly:           true,
 				Description:         "",
 				MarkdownDescription: "",
 			},

@@ -81,6 +81,15 @@ func (r *cassandra_catalogResource) Create(ctx context.Context, req resource.Cre
 		return
 	}
 
+	// password and token are WriteOnly: read from req.Config.
+	var config CassandraCatalogModel
+	resp.Diagnostics.Append(req.Config.Get(ctx, &config)...)
+	if resp.Diagnostics.HasError() {
+		return
+	}
+	plan.Password = config.Password
+	plan.Token = config.Token
+
 	request := r.modelToCreateRequest(ctx, &plan, &resp.Diagnostics)
 	if resp.Diagnostics.HasError() {
 		return
@@ -151,6 +160,15 @@ func (r *cassandra_catalogResource) Update(ctx context.Context, req resource.Upd
 	if resp.Diagnostics.HasError() {
 		return
 	}
+
+	// password and token are WriteOnly: read from req.Config.
+	var config CassandraCatalogModel
+	resp.Diagnostics.Append(req.Config.Get(ctx, &config)...)
+	if resp.Diagnostics.HasError() {
+		return
+	}
+	plan.Password = config.Password
+	plan.Token = config.Token
 
 	id := state.CatalogId.ValueString()
 	request := r.modelToUpdateRequest(ctx, &plan, &resp.Diagnostics)

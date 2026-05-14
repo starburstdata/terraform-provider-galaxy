@@ -44,7 +44,8 @@ func RedshiftCatalogResourceSchema(ctx context.Context) schema.Schema {
 			},
 			"password": schema.StringAttribute{
 				Optional:            true,
-				Computed:            true,
+				Sensitive:           true,
+				WriteOnly:           true,
 				Description:         "",
 				MarkdownDescription: "",
 			},

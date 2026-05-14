@@ -80,9 +80,15 @@ func (r *gcs_catalogResource) Create(ctx context.Context, req resource.CreateReq
 		return
 	}
 
-	// credentials_key is required on create. modelToCreateRequest omits it when
-	// null/unknown/empty so updates after import succeed - validate here to give
-	// creates a clear Terraform diagnostic instead of a cryptic API 400. ENG-9975.
+	// credentials_key is WriteOnly: framework leaves it null in plan/state and
+	// keeps the value only in config. Read from req.Config to populate it.
+	var config resource_gcs_catalog.GcsCatalogModel
+	resp.Diagnostics.Append(req.Config.Get(ctx, &config)...)
+	if resp.Diagnostics.HasError() {
+		return
+	}
+	plan.CredentialsKey = config.CredentialsKey
+
 	if plan.CredentialsKey.IsNull() || plan.CredentialsKey.IsUnknown() || plan.CredentialsKey.ValueString() == "" {
 		resp.Diagnostics.AddAttributeError(
 			path.Root("credentials_key"),
@@ -173,6 +179,16 @@ func (r *gcs_catalogResource) Update(ctx context.Context, req resource.UpdateReq
 	if resp.Diagnostics.HasError() {
 		return
 	}
+
+	// credentials_key is WriteOnly: read from config so updates that change credentials
+	// (or rotate) work; absent in config means user is not changing the credential and
+	// modelToUpdateRequest omits the field so the server preserves the existing value.
+	var config resource_gcs_catalog.GcsCatalogModel
+	resp.Diagnostics.Append(req.Config.Get(ctx, &config)...)
+	if resp.Diagnostics.HasError() {
+		return
+	}
+	plan.CredentialsKey = config.CredentialsKey
 
 	id := state.CatalogId.ValueString()
 	request := r.modelToUpdateRequest(ctx, &plan, &resp.Diagnostics)

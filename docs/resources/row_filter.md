@@ -26,3 +26,14 @@ description: |-
 - `created` (String) Created on (read only)
 - `modified` (String) Modified on (read only)
 - `row_filter_id` (String) Row Filter ID (read only)
+
+## Import
+
+Import is supported using the following syntax:
+
+The [`terraform import` command](https://developer.hashicorp.com/terraform/cli/commands/import) can be used, for example:
+
+```shell
+# Row filter can be imported by specifying the row filter ID.
+terraform import galaxy_row_filter.example <row_filter_id>
+```

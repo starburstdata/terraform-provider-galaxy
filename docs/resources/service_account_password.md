@@ -30,3 +30,15 @@ description: |-
 - `password` (String) Service account password (read only)
 - `password_prefix` (String) Service account password prefix (read only)
 - `service_account_password_id` (String) Service account password ID (read only)
+
+## Import
+
+Import is supported using the following syntax:
+
+The [`terraform import` command](https://developer.hashicorp.com/terraform/cli/commands/import) can be used, for example:
+
+```shell
+# Service account password can be imported by specifying the service account ID
+# and password ID separated by a slash.
+terraform import galaxy_service_account_password.example <service_account_id>/<password_id>
+```
