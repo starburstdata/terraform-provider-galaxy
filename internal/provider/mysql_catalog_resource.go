@@ -88,6 +88,14 @@ func (r *mysql_catalogResource) Create(ctx context.Context, req resource.CreateR
 		plan.SshTunnelId = types.StringNull()
 	}
 
+	// password is WriteOnly: read from req.Config.
+	var config resource_mysql_catalog.MysqlCatalogModel
+	resp.Diagnostics.Append(req.Config.Get(ctx, &config)...)
+	if resp.Diagnostics.HasError() {
+		return
+	}
+	plan.Password = config.Password
+
 	if plan.Password.IsNull() || plan.Password.IsUnknown() || plan.Password.ValueString() == "" {
 		resp.Diagnostics.AddError(
 			"Missing required field",
@@ -166,6 +174,14 @@ func (r *mysql_catalogResource) Update(ctx context.Context, req resource.UpdateR
 	if resp.Diagnostics.HasError() {
 		return
 	}
+
+	// password is WriteOnly: read from req.Config.
+	var config resource_mysql_catalog.MysqlCatalogModel
+	resp.Diagnostics.Append(req.Config.Get(ctx, &config)...)
+	if resp.Diagnostics.HasError() {
+		return
+	}
+	plan.Password = config.Password
 
 	id := state.CatalogId.ValueString()
 	request := r.modelToUpdateRequest(ctx, &plan, &resp.Diagnostics)

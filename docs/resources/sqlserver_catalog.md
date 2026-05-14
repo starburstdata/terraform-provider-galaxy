@@ -17,9 +17,11 @@ description: |-
 
 ### Required
 
+> **NOTE**: [Write-only arguments](https://developer.hashicorp.com/terraform/language/resources/ephemeral#write-only-arguments) are supported in Terraform 1.11 and later.
+
 - `database_name` (String) SQL Server database name
 - `name` (String) Catalog name
-- `password` (String) SQL Server database password
+- `password` (String, Sensitive, [Write-only](https://developer.hashicorp.com/terraform/language/resources/ephemeral#write-only-arguments)) SQL Server database password
 - `read_only` (Boolean) Is catalog read only
 - `username` (String) SQL Server database username
 
@@ -36,3 +38,14 @@ description: |-
 ### Read-Only
 
 - `catalog_id` (String) SQL Server catalog identifier (read only)
+
+## Import
+
+Import is supported using the following syntax:
+
+The [`terraform import` command](https://developer.hashicorp.com/terraform/cli/commands/import) can be used, for example:
+
+```shell
+# SQL Server catalog can be imported by specifying the catalog ID.
+terraform import galaxy_sqlserver_catalog.example <catalog_id>
+```

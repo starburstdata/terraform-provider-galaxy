@@ -17,7 +17,9 @@ description: |-
 
 ### Required
 
-- `credentials_key` (String)
+> **NOTE**: [Write-only arguments](https://developer.hashicorp.com/terraform/language/resources/ephemeral#write-only-arguments) are supported in Terraform 1.11 and later.
+
+- `credentials_key` (String, Sensitive, [Write-only](https://developer.hashicorp.com/terraform/language/resources/ephemeral#write-only-arguments))
 - `metastore_type` (String)
 - `name` (String) Catalog name
 - `read_only` (Boolean) Is catalog read only
@@ -38,3 +40,14 @@ description: |-
 ### Read-Only
 
 - `catalog_id` (String) GCS catalog identifier (read only)
+
+## Import
+
+Import is supported using the following syntax:
+
+The [`terraform import` command](https://developer.hashicorp.com/terraform/cli/commands/import) can be used, for example:
+
+```shell
+# GCS catalog can be imported by specifying the catalog ID.
+terraform import galaxy_gcs_catalog.example <catalog_id>
+```

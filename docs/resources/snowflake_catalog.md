@@ -25,12 +25,14 @@ description: |-
 
 ### Optional
 
+> **NOTE**: [Write-only arguments](https://developer.hashicorp.com/terraform/language/resources/ephemeral#write-only-arguments) are supported in Terraform 1.11 and later.
+
 - `authentication_type` (String) Snowflake authentication type
 - `cloud_kind` (String) Snowflake cloud kind. Defaults to AWS.
 - `description` (String) Catalog description
-- `password` (String)
-- `private_key` (String)
-- `private_key_passphrase` (String)
+- `password` (String, Sensitive, [Write-only](https://developer.hashicorp.com/terraform/language/resources/ephemeral#write-only-arguments))
+- `private_key` (String, Sensitive, [Write-only](https://developer.hashicorp.com/terraform/language/resources/ephemeral#write-only-arguments))
+- `private_key_passphrase` (String, Sensitive, [Write-only](https://developer.hashicorp.com/terraform/language/resources/ephemeral#write-only-arguments))
 - `role` (String) Snowflake role
 - `validate` (Boolean) Validate catalog configuration before creation
 - `warehouse` (String) Snowflake warehouse name
@@ -38,3 +40,14 @@ description: |-
 ### Read-Only
 
 - `catalog_id` (String) Snowflake catalog identifier (read only)
+
+## Import
+
+Import is supported using the following syntax:
+
+The [`terraform import` command](https://developer.hashicorp.com/terraform/cli/commands/import) can be used, for example:
+
+```shell
+# Snowflake catalog can be imported by specifying the catalog ID.
+terraform import galaxy_snowflake_catalog.example <catalog_id>
+```

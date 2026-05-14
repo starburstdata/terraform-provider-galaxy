@@ -80,6 +80,14 @@ func (r *opensearch_catalogResource) Create(ctx context.Context, req resource.Cr
 		return
 	}
 
+	// password is WriteOnly: read from req.Config.
+	var config resource_opensearch_catalog.OpensearchCatalogModel
+	resp.Diagnostics.Append(req.Config.Get(ctx, &config)...)
+	if resp.Diagnostics.HasError() {
+		return
+	}
+	plan.Password = config.Password
+
 	// Initialize unknown values to null for optional fields
 	if plan.AccessKey.IsUnknown() {
 		plan.AccessKey = types.StringNull()
@@ -167,6 +175,14 @@ func (r *opensearch_catalogResource) Update(ctx context.Context, req resource.Up
 	if resp.Diagnostics.HasError() {
 		return
 	}
+
+	// password is WriteOnly: read from req.Config.
+	var config resource_opensearch_catalog.OpensearchCatalogModel
+	resp.Diagnostics.Append(req.Config.Get(ctx, &config)...)
+	if resp.Diagnostics.HasError() {
+		return
+	}
+	plan.Password = config.Password
 
 	id := state.CatalogId.ValueString()
 	request := r.modelToUpdateRequest(ctx, &plan, &resp.Diagnostics)

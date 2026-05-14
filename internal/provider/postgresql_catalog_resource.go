@@ -93,6 +93,14 @@ func (r *postgresql_catalogResource) Create(ctx context.Context, req resource.Cr
 		return
 	}
 
+	// password is WriteOnly: read from req.Config.
+	var config resource_postgresql_catalog.PostgresqlCatalogModel
+	resp.Diagnostics.Append(req.Config.Get(ctx, &config)...)
+	if resp.Diagnostics.HasError() {
+		return
+	}
+	plan.Password = config.Password
+
 	if plan.Password.IsNull() || plan.Password.IsUnknown() || plan.Password.ValueString() == "" {
 		resp.Diagnostics.AddError(
 			"Missing required field",
@@ -171,6 +179,14 @@ func (r *postgresql_catalogResource) Update(ctx context.Context, req resource.Up
 	if resp.Diagnostics.HasError() {
 		return
 	}
+
+	// password is WriteOnly: read from req.Config so credential rotation is honored.
+	var config resource_postgresql_catalog.PostgresqlCatalogModel
+	resp.Diagnostics.Append(req.Config.Get(ctx, &config)...)
+	if resp.Diagnostics.HasError() {
+		return
+	}
+	plan.Password = config.Password
 
 	id := state.CatalogId.ValueString()
 	request := r.modelToUpdateRequest(ctx, &plan, &resp.Diagnostics)
