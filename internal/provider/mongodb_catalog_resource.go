@@ -119,6 +119,14 @@ func (r *mongodb_catalogResource) Create(ctx context.Context, req resource.Creat
 		plan.SshTunnelId = types.StringNull()
 	}
 
+	// password is WriteOnly: read from req.Config.
+	var config MongodbCatalogModelExtended
+	resp.Diagnostics.Append(req.Config.Get(ctx, &config)...)
+	if resp.Diagnostics.HasError() {
+		return
+	}
+	plan.Password = config.Password
+
 	if plan.Password.IsNull() || plan.Password.IsUnknown() || plan.Password.ValueString() == "" {
 		resp.Diagnostics.AddError(
 			"Missing required field",
@@ -197,6 +205,14 @@ func (r *mongodb_catalogResource) Update(ctx context.Context, req resource.Updat
 	if resp.Diagnostics.HasError() {
 		return
 	}
+
+	// password is WriteOnly: read from req.Config.
+	var config MongodbCatalogModelExtended
+	resp.Diagnostics.Append(req.Config.Get(ctx, &config)...)
+	if resp.Diagnostics.HasError() {
+		return
+	}
+	plan.Password = config.Password
 
 	id := state.CatalogId.ValueString()
 	request := r.modelToUpdateRequest(ctx, &plan, &resp.Diagnostics)

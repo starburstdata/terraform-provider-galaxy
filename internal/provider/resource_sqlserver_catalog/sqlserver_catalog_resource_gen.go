@@ -56,6 +56,8 @@ func SqlserverCatalogResourceSchema(ctx context.Context) schema.Schema {
 			},
 			"password": schema.StringAttribute{
 				Required:            true,
+				Sensitive:           true,
+				WriteOnly:           true,
 				Description:         "SQL Server database password",
 				MarkdownDescription: "SQL Server database password",
 			},

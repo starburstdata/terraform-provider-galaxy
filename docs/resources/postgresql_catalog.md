@@ -17,9 +17,11 @@ description: |-
 
 ### Required
 
+> **NOTE**: [Write-only arguments](https://developer.hashicorp.com/terraform/language/resources/ephemeral#write-only-arguments) are supported in Terraform 1.11 and later.
+
 - `database_name` (String) PostgreSQL database name
 - `name` (String) Catalog name
-- `password` (String)
+- `password` (String, Sensitive, [Write-only](https://developer.hashicorp.com/terraform/language/resources/ephemeral#write-only-arguments))
 - `read_only` (Boolean) Is catalog read only
 - `username` (String) PostgreSQL database username
 
@@ -37,3 +39,14 @@ description: |-
 ### Read-Only
 
 - `catalog_id` (String) PostgreSQL catalog identifier (read only)
+
+## Import
+
+Import is supported using the following syntax:
+
+The [`terraform import` command](https://developer.hashicorp.com/terraform/cli/commands/import) can be used, for example:
+
+```shell
+# PostgreSQL catalog can be imported by specifying the catalog ID.
+terraform import galaxy_postgresql_catalog.example <catalog_id>
+```

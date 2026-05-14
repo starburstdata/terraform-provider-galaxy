@@ -23,19 +23,32 @@ description: |-
 
 ### Optional
 
+> **NOTE**: [Write-only arguments](https://developer.hashicorp.com/terraform/language/resources/ephemeral#write-only-arguments) are supported in Terraform 1.11 and later.
+
 - `cloud_kind` (String) Cassandra cloud kind. Defaults to AWS.
 - `contact_points` (String) Cassandra hosts
 - `database_id` (String) AstraDB database ID
 - `description` (String) Catalog description
 - `local_datacenter` (String) Local datacenter
-- `password` (String)
+- `password` (String, Sensitive, [Write-only](https://developer.hashicorp.com/terraform/language/resources/ephemeral#write-only-arguments))
 - `port` (Number) Cassandra port. Defaults to 9042.
 - `region` (String) AstraDB region
 - `ssh_tunnel_id` (String) SSH tunnel identifier
-- `token` (String)
+- `token` (String, Sensitive, [Write-only](https://developer.hashicorp.com/terraform/language/resources/ephemeral#write-only-arguments))
 - `username` (String) Cassandra username
 - `validate` (Boolean) Validate catalog configuration before creation
 
 ### Read-Only
 
 - `catalog_id` (String) Cassandra catalog identifier (read only)
+
+## Import
+
+Import is supported using the following syntax:
+
+The [`terraform import` command](https://developer.hashicorp.com/terraform/cli/commands/import) can be used, for example:
+
+```shell
+# Cassandra catalog can be imported by specifying the catalog ID.
+terraform import galaxy_cassandra_catalog.example <catalog_id>
+```

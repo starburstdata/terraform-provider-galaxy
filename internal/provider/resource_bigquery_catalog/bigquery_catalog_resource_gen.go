@@ -19,6 +19,8 @@ func BigqueryCatalogResourceSchema(ctx context.Context) schema.Schema {
 			},
 			"credentials_key": schema.StringAttribute{
 				Required:            true,
+				Sensitive:           true,
+				WriteOnly:           true,
 				Description:         "Base64 encoded or plain text BigQuery JSON key",
 				MarkdownDescription: "Base64 encoded or plain text BigQuery JSON key",
 			},

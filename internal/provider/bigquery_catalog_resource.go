@@ -78,6 +78,14 @@ func (r *bigquery_catalogResource) Create(ctx context.Context, req resource.Crea
 		return
 	}
 
+	// credentials_key is WriteOnly: read from req.Config.
+	var config resource_bigquery_catalog.BigqueryCatalogModel
+	resp.Diagnostics.Append(req.Config.Get(ctx, &config)...)
+	if resp.Diagnostics.HasError() {
+		return
+	}
+	plan.CredentialsKey = config.CredentialsKey
+
 	if plan.CredentialsKey.IsNull() || plan.CredentialsKey.IsUnknown() || plan.CredentialsKey.ValueString() == "" {
 		resp.Diagnostics.AddError(
 			"Missing required field",
@@ -156,6 +164,15 @@ func (r *bigquery_catalogResource) Update(ctx context.Context, req resource.Upda
 	if resp.Diagnostics.HasError() {
 		return
 	}
+
+	// credentials_key is WriteOnly: read from req.Config so credential rotation
+	// is honored; absent means user is not changing the credential.
+	var config resource_bigquery_catalog.BigqueryCatalogModel
+	resp.Diagnostics.Append(req.Config.Get(ctx, &config)...)
+	if resp.Diagnostics.HasError() {
+		return
+	}
+	plan.CredentialsKey = config.CredentialsKey
 
 	id := state.CatalogId.ValueString()
 	request := r.modelToUpdateRequest(ctx, &plan, &resp.Diagnostics)

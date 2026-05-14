@@ -41,3 +41,14 @@ description: |-
 - `enabled` (Boolean) Cluster enabled state (extended field) (read only)
 - `trino_uri` (String) Connection URL (read only)
 - `warp_speed_cluster` (Boolean) Supports warp speed mode (read only)
+
+## Import
+
+Import is supported using the following syntax:
+
+The [`terraform import` command](https://developer.hashicorp.com/terraform/cli/commands/import) can be used, for example:
+
+```shell
+# Cluster can be imported by specifying the cluster ID.
+terraform import galaxy_cluster.example <cluster_id>
+```
