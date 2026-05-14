@@ -100,7 +100,6 @@ func TestAccResourceMongoDBCatalog_Basic(t *testing.T) {
 				ImportStateIdFunc:                    importStateIdFunc("galaxy_mongodb_catalog.test", "catalog_id"),
 				ImportStateVerifyIdentifierAttribute: "catalog_id",
 				ImportStateVerifyIgnore: []string{
-					"password", // write-only, never returned by API
 					"validate", // request-only parameter, not returned by API
 				},
 			},
@@ -187,7 +186,6 @@ func TestAccResourceMongoDBCatalog_MinimalConfig(t *testing.T) {
 				ImportStateIdFunc:                    importStateIdFunc("galaxy_mongodb_catalog.test", "catalog_id"),
 				ImportStateVerifyIdentifierAttribute: "catalog_id",
 				ImportStateVerifyIgnore: []string{
-					"password", // write-only, never returned by API
 					"validate", // request-only parameter, not returned by API
 				},
 			},

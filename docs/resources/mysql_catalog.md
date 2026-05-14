@@ -17,9 +17,11 @@ description: |-
 
 ### Required
 
+> **NOTE**: [Write-only arguments](https://developer.hashicorp.com/terraform/language/resources/ephemeral#write-only-arguments) are supported in Terraform 1.11 and later.
+
 - `connection_type` (String)
 - `name` (String) Catalog name
-- `password` (String) MySQL database password
+- `password` (String, Sensitive, [Write-only](https://developer.hashicorp.com/terraform/language/resources/ephemeral#write-only-arguments)) MySQL database password
 - `read_only` (Boolean) Is catalog read only
 - `username` (String) MySQL database username
 
@@ -36,3 +38,14 @@ description: |-
 ### Read-Only
 
 - `catalog_id` (String) MySQL catalog identifier (read only)
+
+## Import
+
+Import is supported using the following syntax:
+
+The [`terraform import` command](https://developer.hashicorp.com/terraform/cli/commands/import) can be used, for example:
+
+```shell
+# MySQL catalog can be imported by specifying the catalog ID.
+terraform import galaxy_mysql_catalog.example <catalog_id>
+```

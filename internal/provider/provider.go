@@ -176,6 +176,7 @@ func (p *galaxyProvider) DataSources(ctx context.Context) []func() datasource.Da
 		NewPrivatelinksDataSource,
 		// Newly implemented list data source
 		NewDataQualitySummariesDataSource,
+		NewRolePrivilegeGrantDataSource,
 
 		// Catalog-specific data sources
 		NewS3CatalogDataSource,

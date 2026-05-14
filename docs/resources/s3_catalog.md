@@ -44,3 +44,14 @@ description: |-
 ### Read-Only
 
 - `catalog_id` (String) S3 catalog identifier (read only)
+
+## Import
+
+Import is supported using the following syntax:
+
+The [`terraform import` command](https://developer.hashicorp.com/terraform/cli/commands/import) can be used, for example:
+
+```shell
+# S3 catalog can be imported by specifying the catalog ID.
+terraform import galaxy_s3_catalog.example <catalog_id>
+```

@@ -24,9 +24,11 @@ description: |-
 
 ### Optional
 
+> **NOTE**: [Write-only arguments](https://developer.hashicorp.com/terraform/language/resources/ephemeral#write-only-arguments) are supported in Terraform 1.11 and later.
+
 - `access_key` (String)
 - `description` (String) Catalog description
-- `password` (String)
+- `password` (String, Sensitive, [Write-only](https://developer.hashicorp.com/terraform/language/resources/ephemeral#write-only-arguments))
 - `region` (String) AWS region
 - `role_arn` (String) AWS cross account role ARN
 - `secret_key` (String)
@@ -37,3 +39,14 @@ description: |-
 ### Read-Only
 
 - `catalog_id` (String) Redshift catalog identifier (read only)
+
+## Import
+
+Import is supported using the following syntax:
+
+The [`terraform import` command](https://developer.hashicorp.com/terraform/cli/commands/import) can be used, for example:
+
+```shell
+# Redshift catalog can be imported by specifying the catalog ID.
+terraform import galaxy_redshift_catalog.example <catalog_id>
+```

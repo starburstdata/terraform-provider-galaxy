@@ -23,3 +23,14 @@ description: |-
 ### Read-Only
 
 - `dependants` (List of String) List of catalogs or ingest sources attached to the role (read only)
+
+## Import
+
+Import is supported using the following syntax:
+
+The [`terraform import` command](https://developer.hashicorp.com/terraform/cli/commands/import) can be used, for example:
+
+```shell
+# Cross-account IAM role can be imported by specifying the alias name.
+terraform import galaxy_cross_account_iam_role.example <alias_name>
+```
