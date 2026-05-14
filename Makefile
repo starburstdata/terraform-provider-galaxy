@@ -44,13 +44,13 @@ lint:
 .PHONY: license
 license:
 	@go install github.com/google/addlicense@latest
-	@addlicense -check -f .license-header.txt -ignore '**/*.yml' -ignore '**/*.yaml' -ignore '**/*.tf' .
+	@addlicense -check -f .license-header.txt -ignore '**/*.yml' -ignore '**/*.yaml' -ignore '**/*.tf' -ignore '**/examples/**/*.sh' .
 
 # Add license headers to files missing them
 .PHONY: license-add
 license-add:
 	@go install github.com/google/addlicense@latest
-	@addlicense -f .license-header.txt -ignore '**/*.yml' -ignore '**/*.yaml' -ignore '**/*.tf' .
+	@addlicense -f .license-header.txt -ignore '**/*.yml' -ignore '**/*.yaml' -ignore '**/*.tf' -ignore '**/examples/**/*.sh' .
 
 # Run tests
 .PHONY: test

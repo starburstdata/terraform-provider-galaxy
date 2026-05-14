@@ -78,6 +78,16 @@ func (r *snowflake_catalogResource) Create(ctx context.Context, req resource.Cre
 		return
 	}
 
+	// password, private_key, private_key_passphrase are WriteOnly: read from req.Config.
+	var config resource_snowflake_catalog.SnowflakeCatalogModel
+	resp.Diagnostics.Append(req.Config.Get(ctx, &config)...)
+	if resp.Diagnostics.HasError() {
+		return
+	}
+	plan.Password = config.Password
+	plan.PrivateKey = config.PrivateKey
+	plan.PrivateKeyPassphrase = config.PrivateKeyPassphrase
+
 	request := r.modelToCreateRequest(ctx, &plan, &resp.Diagnostics)
 	if resp.Diagnostics.HasError() {
 		return
@@ -157,6 +167,16 @@ func (r *snowflake_catalogResource) Update(ctx context.Context, req resource.Upd
 	if resp.Diagnostics.HasError() {
 		return
 	}
+
+	// password, private_key, private_key_passphrase are WriteOnly: read from req.Config.
+	var config resource_snowflake_catalog.SnowflakeCatalogModel
+	resp.Diagnostics.Append(req.Config.Get(ctx, &config)...)
+	if resp.Diagnostics.HasError() {
+		return
+	}
+	plan.Password = config.Password
+	plan.PrivateKey = config.PrivateKey
+	plan.PrivateKeyPassphrase = config.PrivateKeyPassphrase
 
 	// Get catalog ID from state
 	id := state.CatalogId.ValueString()
