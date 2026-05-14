@@ -57,3 +57,14 @@ Required:
 
 - `grant_kind` (String) Grant kind (read only)
 - `privilege` (List of String) Privileges (read only)
+
+## Import
+
+Import is supported using the following syntax:
+
+The [`terraform import` command](https://developer.hashicorp.com/terraform/cli/commands/import) can be used, for example:
+
+```shell
+# Policy can be imported by specifying the policy ID.
+terraform import galaxy_policy.example <policy_id>
+```

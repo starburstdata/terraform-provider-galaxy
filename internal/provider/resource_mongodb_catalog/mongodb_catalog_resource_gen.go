@@ -66,6 +66,8 @@ func MongodbCatalogResourceSchema(ctx context.Context) schema.Schema {
 			},
 			"password": schema.StringAttribute{
 				Required:            true,
+				Sensitive:           true,
+				WriteOnly:           true,
 				Description:         "MongoDB password",
 				MarkdownDescription: "MongoDB password",
 			},

@@ -17,9 +17,11 @@ description: |-
 
 ### Required
 
+> **NOTE**: [Write-only arguments](https://developer.hashicorp.com/terraform/language/resources/ephemeral#write-only-arguments) are supported in Terraform 1.11 and later.
+
 - `connection_type` (String)
 - `name` (String) Catalog name
-- `password` (String) MongoDB password
+- `password` (String, Sensitive, [Write-only](https://developer.hashicorp.com/terraform/language/resources/ephemeral#write-only-arguments)) MongoDB password
 - `read_only` (Boolean) Is catalog read only
 - `regions` (List of String) MongoDB regions
 - `username` (String) MongoDB username
@@ -41,3 +43,14 @@ description: |-
 ### Read-Only
 
 - `catalog_id` (String) MongoDB catalog identifier (read only)
+
+## Import
+
+Import is supported using the following syntax:
+
+The [`terraform import` command](https://developer.hashicorp.com/terraform/cli/commands/import) can be used, for example:
+
+```shell
+# MongoDB catalog can be imported by specifying the catalog ID.
+terraform import galaxy_mongodb_catalog.example <catalog_id>
+```
