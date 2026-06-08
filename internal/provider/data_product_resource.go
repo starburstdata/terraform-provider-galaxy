@@ -17,6 +17,9 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
 
@@ -41,7 +44,19 @@ func (r *data_productResource) Metadata(ctx context.Context, req resource.Metada
 }
 
 func (r *data_productResource) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
-	resp.Schema = resource_data_product.DataProductResourceSchema(ctx)
+	s := resource_data_product.DataProductResourceSchema(ctx)
+
+	// catalog_id and schema_name are immutable at the API level; changing them
+	// requires destroying and recreating the data product.
+	catalogIDAttr := s.Attributes["catalog_id"].(schema.StringAttribute)
+	catalogIDAttr.PlanModifiers = []planmodifier.String{stringplanmodifier.RequiresReplace()}
+	s.Attributes["catalog_id"] = catalogIDAttr
+
+	schemaNameAttr := s.Attributes["schema_name"].(schema.StringAttribute)
+	schemaNameAttr.PlanModifiers = []planmodifier.String{stringplanmodifier.RequiresReplace()}
+	s.Attributes["schema_name"] = schemaNameAttr
+
+	resp.Schema = s
 }
 
 func (r *data_productResource) Configure(ctx context.Context, req resource.ConfigureRequest, resp *resource.ConfigureResponse) {
