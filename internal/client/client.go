@@ -830,14 +830,9 @@ func (c *GalaxyClient) ListRolePrivileges(ctx context.Context, roleID string) (m
 // Returns the grant map if found, nil if not found after retries, or an error.
 func (c *GalaxyClient) FindRolePrivilegeGrant(ctx context.Context, roleID, entityID, privilege, grantKind, schemaName, tableName, columnName string) (map[string]interface{}, error) {
 	for attempt := 0; attempt < 3; attempt++ {
-		result, err := c.ListRolePrivileges(ctx, roleID)
+		grants, err := c.GetAllPaginatedResults(ctx, "/public/api/v1/role/"+roleID+"/privilege")
 		if err != nil {
 			return nil, err
-		}
-
-		grants, ok := result["result"].([]interface{})
-		if !ok {
-			return nil, fmt.Errorf("unexpected response format: result is not an array")
 		}
 
 		for _, g := range grants {

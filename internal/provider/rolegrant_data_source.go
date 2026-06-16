@@ -69,13 +69,18 @@ func (d *rolegrantDataSource) Read(ctx context.Context, req datasource.ReadReque
 	roleID := config.RoleId.ValueString()
 	tflog.Debug(ctx, "Reading role grants", map[string]interface{}{"roleId": roleID})
 
-	response, err := d.client.ListRoleGrants(ctx, roleID)
+	grants, err := d.client.GetAllPaginatedResults(ctx, "/public/api/v1/role/"+roleID+"/rolegrant")
 	if err != nil {
 		resp.Diagnostics.AddError(
 			"Error reading role grants",
 			"Could not read role grants for role "+roleID+": "+err.Error(),
 		)
 		return
+	}
+
+	// Wrap paginated results in response format expected by updateModelFromResponse
+	response := map[string]interface{}{
+		"result": grants,
 	}
 
 	// Map response to model
