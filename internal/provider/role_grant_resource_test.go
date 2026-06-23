@@ -7,7 +7,6 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/knownvalue"
 	"github.com/hashicorp/terraform-plugin-testing/statecheck"
@@ -16,10 +15,7 @@ import (
 )
 
 func TestAccResourceRoleGrant_Basic(t *testing.T) {
-	uniqueId := id.UniqueId()
-	if len(uniqueId) > 8 {
-		uniqueId = uniqueId[len(uniqueId)-8:]
-	}
+	uniqueId := testSuffix
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { testAccPreCheck(t) },
@@ -55,10 +51,7 @@ func TestAccResourceRoleGrant_Basic(t *testing.T) {
 }
 
 func TestAccResourceRoleGrant_WithAdminOption(t *testing.T) {
-	uniqueId := id.UniqueId()
-	if len(uniqueId) > 8 {
-		uniqueId = uniqueId[len(uniqueId)-8:]
-	}
+	uniqueId := testSuffix
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { testAccPreCheck(t) },
@@ -94,10 +87,7 @@ func TestAccResourceRoleGrant_WithAdminOption(t *testing.T) {
 }
 
 func TestAccResourceRoleGrant_ImportState(t *testing.T) {
-	uniqueId := id.UniqueId()
-	if len(uniqueId) > 8 {
-		uniqueId = uniqueId[len(uniqueId)-8:]
-	}
+	uniqueId := testSuffix
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { testAccPreCheck(t) },
@@ -129,10 +119,7 @@ func TestAccResourceRoleGrant_ImportState(t *testing.T) {
 }
 
 func TestAccResourceRoleGrant_ConcurrentGrants(t *testing.T) {
-	uniqueId := id.UniqueId()
-	if len(uniqueId) > 8 {
-		uniqueId = uniqueId[len(uniqueId)-8:]
-	}
+	uniqueId := testSuffix
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { testAccPreCheck(t) },

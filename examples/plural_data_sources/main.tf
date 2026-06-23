@@ -81,12 +81,6 @@ data "galaxy_row_filters" "all" {}
 # Get all cross account IAM roles
 data "galaxy_cross_account_iam_roles" "all" {}
 
-# Get all Kafka ingest sources
-data "galaxy_kafka_ingest_sources" "all" {}
-
-# Get all file ingest sources
-data "galaxy_file_ingest_sources" "all" {}
-
 # ==========================================
 # OUTPUTS
 # ==========================================
@@ -201,16 +195,6 @@ output "cross_account_iam_roles_count" {
   description = "Total number of cross account IAM roles"
 }
 
-output "kafka_ingest_sources_count" {
-  value       = length(data.galaxy_kafka_ingest_sources.all.result)
-  description = "Total number of Kafka ingest sources"
-}
-
-output "file_ingest_sources_count" {
-  value       = length(data.galaxy_file_ingest_sources.all.result)
-  description = "Total number of file ingest sources"
-}
-
 # Example of accessing specific attributes from the first cluster (if any)
 output "first_cluster_info" {
   value = length(data.galaxy_clusters.all.result) > 0 ? {
@@ -230,25 +214,3 @@ output "first_user_info" {
   description = "Information about the first user (if any exists)"
 }
 
-# Example of accessing specific attributes from the first Kafka ingest source (if any)
-output "first_kafka_ingest_source_info" {
-  value = length(data.galaxy_kafka_ingest_sources.all.result) > 0 ? {
-    kafka_ingest_source_id = data.galaxy_kafka_ingest_sources.all.result[0].kafka_ingest_source_id
-    name                   = data.galaxy_kafka_ingest_sources.all.result[0].name
-    description            = data.galaxy_kafka_ingest_sources.all.result[0].description
-    kafka_brokers          = data.galaxy_kafka_ingest_sources.all.result[0].kafka_brokers
-  } : null
-  description = "Information about the first Kafka ingest source (if any exists)"
-}
-
-# Example of accessing specific attributes from the first file ingest source (if any)
-output "first_file_ingest_source_info" {
-  value = length(data.galaxy_file_ingest_sources.all.result) > 0 ? {
-    file_ingest_source_id = data.galaxy_file_ingest_sources.all.result[0].file_ingest_source_id
-    name                  = data.galaxy_file_ingest_sources.all.result[0].name
-    description           = data.galaxy_file_ingest_sources.all.result[0].description
-    bucket                = data.galaxy_file_ingest_sources.all.result[0].bucket
-    prefix                = data.galaxy_file_ingest_sources.all.result[0].prefix
-  } : null
-  description = "Information about the first file ingest source (if any exists)"
-}
