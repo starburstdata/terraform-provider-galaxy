@@ -7,7 +7,6 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/knownvalue"
 	"github.com/hashicorp/terraform-plugin-testing/statecheck"
@@ -33,12 +32,7 @@ func serviceAccountPasswordCompositeImportStateIdFunc(resourceName string) resou
 }
 
 func TestAccResourceServiceAccountPassword_Basic(t *testing.T) {
-	// Generate a short random suffix to avoid conflicts with leftover resources
-	uniqueId := id.UniqueId()
-	if len(uniqueId) > 8 {
-		uniqueId = uniqueId[len(uniqueId)-8:]
-	}
-	suffix := uniqueId
+	suffix := testSuffix
 	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { testAccPreCheck(t) },
 		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
@@ -91,12 +85,7 @@ func TestAccResourceServiceAccountPassword_Basic(t *testing.T) {
 }
 
 func TestAccResourceServiceAccountPassword_MultiplePasswords(t *testing.T) {
-	// Generate a short random suffix to avoid conflicts with leftover resources
-	uniqueId := id.UniqueId()
-	if len(uniqueId) > 8 {
-		uniqueId = uniqueId[len(uniqueId)-8:]
-	}
-	suffix := uniqueId
+	suffix := testSuffix
 	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { testAccPreCheck(t) },
 		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
@@ -182,11 +171,7 @@ resource "galaxy_service_account_password" "rotation" {
 // TestAccResourceServiceAccountPassword_MinimalConfig tests creating a service account password with only required fields,
 // omitting all optional parameters like description.
 func TestAccResourceServiceAccountPassword_MinimalConfig(t *testing.T) {
-	uniqueId := id.UniqueId()
-	if len(uniqueId) > 8 {
-		uniqueId = uniqueId[len(uniqueId)-8:]
-	}
-	suffix := uniqueId
+	suffix := testSuffix
 	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { testAccPreCheck(t) },
 		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,

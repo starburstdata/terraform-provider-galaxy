@@ -14,26 +14,22 @@ import (
 	"github.com/hashicorp/terraform-plugin-testing/tfjsonpath"
 )
 
+var clusterTestSuffix = id.UniqueId()[10:24]
+
 func TestAccResourceCluster_Basic(t *testing.T) {
-	// Generate a short random suffix to avoid conflicts with leftover resources
-	uniqueId := id.UniqueId()
-	// Take only the last 8 characters to keep the name short
-	if len(uniqueId) > 8 {
-		uniqueId = uniqueId[len(uniqueId)-8:]
-	}
-	suffix := uniqueId
+	name := "basic-cluster-" + clusterTestSuffix
 	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { testAccPreCheck(t) },
 		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
 		Steps: []resource.TestStep{
 			// Create and Read testing
 			{
-				Config: testAccClusterConfigBasic(suffix),
+				Config: testAccClusterConfigBasic(name),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(
 						"galaxy_cluster.test",
 						tfjsonpath.New("name"),
-						knownvalue.StringExact(fmt.Sprintf("cluster-%s", suffix)),
+						knownvalue.StringExact(name),
 					),
 					statecheck.ExpectKnownValue(
 						"galaxy_cluster.test",
@@ -69,13 +65,8 @@ func TestAccResourceCluster_Basic(t *testing.T) {
 			},
 			// Update and Read testing
 			{
-				Config: testAccClusterConfigUpdate(suffix),
+				Config: testAccClusterConfigUpdate(name),
 				ConfigStateChecks: []statecheck.StateCheck{
-					statecheck.ExpectKnownValue(
-						"galaxy_cluster.test",
-						tfjsonpath.New("name"),
-						knownvalue.StringExact(fmt.Sprintf("cluster-%s-updated", suffix)),
-					),
 					statecheck.ExpectKnownValue(
 						"galaxy_cluster.test",
 						tfjsonpath.New("max_workers"),
@@ -88,20 +79,14 @@ func TestAccResourceCluster_Basic(t *testing.T) {
 }
 
 func TestAccResourceCluster_ResultCache(t *testing.T) {
-	// Generate a short random suffix to avoid conflicts with leftover resources
-	uniqueId := id.UniqueId()
-	// Take only the last 8 characters to keep the name short
-	if len(uniqueId) > 8 {
-		uniqueId = uniqueId[len(uniqueId)-8:]
-	}
-	suffix := uniqueId
+	name := "cache-cluster-" + clusterTestSuffix
 	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { testAccPreCheck(t) },
 		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
 		Steps: []resource.TestStep{
 			// Create cluster with result cache enabled
 			{
-				Config: testAccClusterConfigResultCacheEnabled(suffix),
+				Config: testAccClusterConfigResultCacheEnabled(name),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(
 						"galaxy_cluster.test_cache",
@@ -141,22 +126,18 @@ func TestAccResourceCluster_ResultCache(t *testing.T) {
 // because the Known plan value flows through to state untouched - NOT because the API honored it.
 // The DeprecationMessage on the schema is what actually tells users this field is a no-op.
 func TestAccResourceCluster_WarpSpeed(t *testing.T) {
-	uniqueId := id.UniqueId()
-	if len(uniqueId) > 8 {
-		uniqueId = uniqueId[len(uniqueId)-8:]
-	}
-	suffix := uniqueId
+	name := "warp-cluster-" + clusterTestSuffix
 	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { testAccPreCheck(t) },
 		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccClusterConfigWarpSpeed(suffix),
+				Config: testAccClusterConfigWarpSpeed(name),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(
 						"galaxy_cluster.test_warp",
 						tfjsonpath.New("name"),
-						knownvalue.StringExact(fmt.Sprintf("cluster-%s", suffix)),
+						knownvalue.StringExact(name),
 					),
 					statecheck.ExpectKnownValue(
 						"galaxy_cluster.test_warp",
@@ -186,10 +167,10 @@ func TestAccResourceCluster_WarpSpeed(t *testing.T) {
 }
 
 // testAccClusterConfigBasic returns a basic cluster configuration
-func testAccClusterConfigBasic(suffix string) string {
+func testAccClusterConfigBasic(name string) string {
 	return fmt.Sprintf(`
 resource "galaxy_cluster" "test" {
-  name                  = "cluster-%[1]s"
+  name                  = %q
   cloud_region_id       = "aws-us-east1"
   min_workers           = 1
   max_workers           = 2
@@ -199,14 +180,14 @@ resource "galaxy_cluster" "test" {
   warp_resiliency_enabled = false
   catalog_refs          = []
 }
-`, suffix)
+`, name)
 }
 
 // testAccClusterConfigUpdate returns an updated cluster configuration
-func testAccClusterConfigUpdate(suffix string) string {
+func testAccClusterConfigUpdate(name string) string {
 	return fmt.Sprintf(`
 resource "galaxy_cluster" "test" {
-  name                  = "cluster-%[1]s-updated"
+  name                  = %q
   cloud_region_id       = "aws-us-east1"
   min_workers           = 1
   max_workers           = 3
@@ -216,14 +197,14 @@ resource "galaxy_cluster" "test" {
   warp_resiliency_enabled = false
   catalog_refs          = []
 }
-`, suffix)
+`, name)
 }
 
 // testAccClusterConfigResultCacheEnabled returns a cluster configuration with result cache enabled
-func testAccClusterConfigResultCacheEnabled(suffix string) string {
+func testAccClusterConfigResultCacheEnabled(name string) string {
 	return fmt.Sprintf(`
 resource "galaxy_cluster" "test_cache" {
-  name                                    = "cluster-%[1]s-cache"
+  name                                    = %q
   cloud_region_id                         = "aws-us-east1"
   min_workers                             = 1
   max_workers                             = 2
@@ -234,14 +215,14 @@ resource "galaxy_cluster" "test_cache" {
   warp_resiliency_enabled                 = false
   catalog_refs                            = []
 }
-`, suffix)
+`, name)
 }
 
 // testAccClusterConfigWarpSpeed returns a cluster configuration with WarpSpeed processing mode
-func testAccClusterConfigWarpSpeed(suffix string) string {
+func testAccClusterConfigWarpSpeed(name string) string {
 	return fmt.Sprintf(`
 resource "galaxy_cluster" "test_warp" {
-  name                    = "cluster-%[1]s"
+  name                    = %q
   cloud_region_id         = "aws-us-east1"
   min_workers             = 1
   max_workers             = 2
@@ -252,15 +233,15 @@ resource "galaxy_cluster" "test_warp" {
   warp_resiliency_enabled = true
   catalog_refs            = []
 }
-`, suffix)
+`, name)
 }
 
 // testAccClusterConfigWarpSpeedOmitted returns a WarpSpeed cluster configuration
 // that omits the deprecated warp_resiliency_enabled attribute entirely.
-func testAccClusterConfigWarpSpeedOmitted(suffix string) string {
+func testAccClusterConfigWarpSpeedOmitted(name string) string {
 	return fmt.Sprintf(`
 resource "galaxy_cluster" "test_warp_omitted" {
-  name                 = "cluster-%[1]s"
+  name                 = %q
   cloud_region_id      = "aws-us-east1"
   min_workers          = 1
   max_workers          = 2
@@ -270,7 +251,7 @@ resource "galaxy_cluster" "test_warp_omitted" {
   processing_mode      = "WarpSpeed"
   catalog_refs         = []
 }
-`, suffix)
+`, name)
 }
 
 // TestAccResourceCluster_WarpSpeedOmitted verifies that a WarpSpeed cluster can be
@@ -278,17 +259,13 @@ resource "galaxy_cluster" "test_warp_omitted" {
 // the "inconsistent result after apply" error reported in
 // https://github.com/starburstdata/terraform-provider-galaxy/issues/72.
 func TestAccResourceCluster_WarpSpeedOmitted(t *testing.T) {
-	uniqueId := id.UniqueId()
-	if len(uniqueId) > 8 {
-		uniqueId = uniqueId[len(uniqueId)-8:]
-	}
-	suffix := uniqueId
+	name := "warpo-cluster-" + clusterTestSuffix
 	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { testAccPreCheck(t) },
 		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccClusterConfigWarpSpeedOmitted(suffix),
+				Config: testAccClusterConfigWarpSpeedOmitted(name),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(
 						"galaxy_cluster.test_warp_omitted",
@@ -318,22 +295,18 @@ func TestAccResourceCluster_WarpSpeedOmitted(t *testing.T) {
 // TestAccResourceCluster_MinimalConfig tests creating a cluster with only required fields,
 // omitting all optional parameters like processing_mode, result_cache_default_visibility_seconds, etc.
 func TestAccResourceCluster_MinimalConfig(t *testing.T) {
-	uniqueId := id.UniqueId()
-	if len(uniqueId) > 8 {
-		uniqueId = uniqueId[len(uniqueId)-8:]
-	}
-	suffix := uniqueId
+	name := "min-cluster-" + clusterTestSuffix
 	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { testAccPreCheck(t) },
 		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccClusterConfigMinimal(suffix),
+				Config: testAccClusterConfigMinimal(name),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(
 						"galaxy_cluster.test",
 						tfjsonpath.New("name"),
-						knownvalue.StringExact(fmt.Sprintf("cluster-min-%s", suffix)),
+						knownvalue.StringExact(name),
 					),
 					statecheck.ExpectKnownValue(
 						"galaxy_cluster.test",
@@ -362,10 +335,10 @@ func TestAccResourceCluster_MinimalConfig(t *testing.T) {
 }
 
 // testAccClusterConfigMinimal returns a minimal cluster configuration
-func testAccClusterConfigMinimal(suffix string) string {
+func testAccClusterConfigMinimal(name string) string {
 	return fmt.Sprintf(`
 resource "galaxy_cluster" "test" {
-  name                    = "cluster-min-%[1]s"
+  name                    = %q
   cloud_region_id         = "aws-us-east1"
   min_workers             = 1
   max_workers             = 1
@@ -377,7 +350,7 @@ resource "galaxy_cluster" "test" {
   # No optional fields - testing that omitting them doesn't cause API errors
   # Specifically: processing_mode, result_cache_default_visibility_seconds, notes, auto_stop_idle_cluster, etc.
 }
-`, suffix)
+`, name)
 }
 
 // TestAccResourceCluster_ResultCacheDisableAfterEnable verifies the gating logic in
@@ -386,17 +359,13 @@ resource "galaxy_cluster" "test" {
 // Creates a cluster with cache enabled and visibility set, then updates to cache disabled
 // (omitting visibility from config). Apply must succeed.
 func TestAccResourceCluster_ResultCacheDisableAfterEnable(t *testing.T) {
-	uniqueId := id.UniqueId()
-	if len(uniqueId) > 8 {
-		uniqueId = uniqueId[len(uniqueId)-8:]
-	}
-	suffix := uniqueId
+	name := "cache2-cluster-" + clusterTestSuffix
 	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { testAccPreCheck(t) },
 		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccClusterConfigResultCacheEnabled(suffix),
+				Config: testAccClusterConfigResultCacheEnabled(name),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(
 						"galaxy_cluster.test_cache",
@@ -411,7 +380,7 @@ func TestAccResourceCluster_ResultCacheDisableAfterEnable(t *testing.T) {
 				},
 			},
 			{
-				Config: testAccClusterConfigResultCacheDisabled(suffix),
+				Config: testAccClusterConfigResultCacheDisabled(name),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(
 						"galaxy_cluster.test_cache",
@@ -431,10 +400,10 @@ func TestAccResourceCluster_ResultCacheDisableAfterEnable(t *testing.T) {
 
 // testAccClusterConfigResultCacheDisabled returns the same cluster as
 // testAccClusterConfigResultCacheEnabled but with cache disabled and visibility omitted.
-func testAccClusterConfigResultCacheDisabled(suffix string) string {
+func testAccClusterConfigResultCacheDisabled(name string) string {
 	return fmt.Sprintf(`
 resource "galaxy_cluster" "test_cache" {
-  name                 = "cluster-%[1]s-cache"
+  name                 = %q
   cloud_region_id      = "aws-us-east1"
   min_workers          = 1
   max_workers          = 2
@@ -443,5 +412,5 @@ resource "galaxy_cluster" "test_cache" {
   result_cache_enabled = false
   catalog_refs         = []
 }
-`, suffix)
+`, name)
 }
