@@ -5,6 +5,7 @@ package provider
 
 import (
 	"fmt"
+	"regexp"
 	"testing"
 
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
@@ -55,7 +56,7 @@ func TestAccResourceServiceAccountPassword_Basic(t *testing.T) {
 					statecheck.ExpectKnownValue(
 						"galaxy_service_account_password.test",
 						tfjsonpath.New("password"),
-						knownvalue.NotNull(),
+						knownvalue.StringRegexp(regexp.MustCompile(`^GXY\$`)),
 					),
 					statecheck.ExpectKnownValue(
 						"galaxy_service_account_password.test",
@@ -192,7 +193,7 @@ func TestAccResourceServiceAccountPassword_MinimalConfig(t *testing.T) {
 					statecheck.ExpectKnownValue(
 						"galaxy_service_account_password.test",
 						tfjsonpath.New("password"),
-						knownvalue.NotNull(),
+						knownvalue.StringRegexp(regexp.MustCompile(`^GXY\$`)),
 					),
 				},
 			},

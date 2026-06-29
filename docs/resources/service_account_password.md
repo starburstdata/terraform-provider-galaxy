@@ -27,7 +27,7 @@ description: |-
 
 - `created` (String) Creation time (read only)
 - `last_login` (String) Last login time (read only)
-- `password` (String) Service account password (read only)
+- `password` (String, Sensitive) The fully-constructed service account password credential (`GXY$<prefix><password>`), ready to use for authentication
 - `password_prefix` (String) Service account password prefix (read only)
 - `service_account_password_id` (String) Service account password ID (read only)
 

@@ -62,6 +62,25 @@ func (r *service_account_passwordResource) Schema(ctx context.Context, req resou
 		},
 	}
 
+	baseSchema.Attributes["password"] = schema.StringAttribute{
+		Computed:            true,
+		Sensitive:           true,
+		Description:         "The fully-constructed service account password credential (GXY$<prefix><password>), ready to use for authentication",
+		MarkdownDescription: "The fully-constructed service account password credential (`GXY$<prefix><password>`), ready to use for authentication",
+		PlanModifiers: []planmodifier.String{
+			stringplanmodifier.UseStateForUnknown(),
+		},
+	}
+
+	baseSchema.Attributes["password_prefix"] = schema.StringAttribute{
+		Computed:            true,
+		Description:         "Service account password prefix (read only)",
+		MarkdownDescription: "Service account password prefix (read only)",
+		PlanModifiers: []planmodifier.String{
+			stringplanmodifier.UseStateForUnknown(),
+		},
+	}
+
 	resp.Schema = baseSchema
 }
 
@@ -129,10 +148,9 @@ func (r *service_account_passwordResource) Read(ctx context.Context, req resourc
 	serviceAccountID := state.ServiceAccountId.ValueString()
 	passwordID := state.ServiceAccountPasswordId.ValueString()
 
-	tflog.Debug(ctx, "Reading service_account_password - DEBUG IDs", map[string]interface{}{
+	tflog.Debug(ctx, "Reading service_account_password", map[string]interface{}{
 		"service_account_id": serviceAccountID,
 		"password_id":        passwordID,
-		"state_dump":         fmt.Sprintf("%+v", state),
 	})
 	response, err := r.client.GetServiceAccountPassword(ctx, serviceAccountID, passwordID)
 	if err != nil {
@@ -275,15 +293,22 @@ func (r *service_account_passwordResource) updateModelFromResponse(ctx context.C
 		model.Description = types.StringNull()
 	}
 
-	if password, ok := response["password"].(string); ok {
-		model.Password = types.StringValue(password)
-	} else {
+	passwordRaw, hasPassword := response["password"].(string)
+	passwordPrefix, hasPrefix := response["passwordPrefix"].(string)
+	prefixPresent := hasPrefix && passwordPrefix != ""
+
+	if hasPassword && prefixPresent {
+		model.Password = types.StringValue("GXY$" + passwordPrefix + passwordRaw)
+	} else if hasPassword {
+		diags.AddError("Unexpected API response", "service_account_password: received password without passwordPrefix")
+		return
+	} else if model.Password.IsUnknown() {
 		model.Password = types.StringNull()
 	}
 
-	if passwordPrefix, ok := response["passwordPrefix"].(string); ok {
+	if prefixPresent {
 		model.PasswordPrefix = types.StringValue(passwordPrefix)
-	} else {
+	} else if model.PasswordPrefix.IsUnknown() {
 		model.PasswordPrefix = types.StringNull()
 	}
 

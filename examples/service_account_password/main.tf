@@ -51,13 +51,15 @@ output "password_id" {
 }
 
 output "password_prefix" {
-  value     = galaxy_service_account_password.example_password.password_prefix
-  sensitive = false
+  value       = galaxy_service_account_password.example_password.password_prefix
+  sensitive   = false
+  description = "The password prefix (also usable as the client_id for authentication)"
 }
 
 output "password" {
-  value     = galaxy_service_account_password.example_password.password
-  sensitive = true
+  value       = galaxy_service_account_password.example_password.password
+  sensitive   = true
+  description = "The fully-constructed credential (GXY$<prefix><password>), ready to use directly for authentication"
 }
 
 output "rotation_password_id" {
