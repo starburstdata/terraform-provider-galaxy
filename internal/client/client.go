@@ -16,13 +16,35 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
+	"math/rand"
 	"net/http"
 	"net/url"
+	"strconv"
 	"strings"
 	"sync"
 	"time"
 
 	"github.com/hashicorp/terraform-plugin-log/tflog"
+	"golang.org/x/time/rate"
+)
+
+// Client-side rate limits mirror the Cloudflare enforcement defined in
+// infra-automation/global-stack/src/cloudflare/rateLimits.ts so callers do
+// not generate 429s. Backoff base matches CF's 10s default window.
+// Cluster path has its own stricter bucket (20 per 60s on the backend).
+const (
+	maxRequestRetries      = 5
+	backoffBase            = 10 * time.Second
+	backoffCap             = 60 * time.Second
+	requestRateLimitPerSec = 1.5
+	requestBurstLimit      = 10
+	clusterRateLimitPerSec = 0.3
+	clusterBurstLimit      = 5
+
+	// clusterPathPrefix matches CF's 20/60s cluster rate-limit bucket for v1.
+	// POST /cluster (create, no trailing ID) falls under the global limiter.
+	// Update this constant if v2+ cluster APIs are added.
+	clusterPathPrefix = "/public/api/v1/cluster/"
 )
 
 type GalaxyClient struct {
@@ -31,6 +53,9 @@ type GalaxyClient struct {
 	ClientSecret    string
 	HTTPClient      *http.Client
 	ProviderVersion string
+
+	limiter        *rate.Limiter
+	clusterLimiter *rate.Limiter
 
 	tokenMu     sync.RWMutex
 	accessToken string
@@ -64,6 +89,8 @@ func NewGalaxyClient(baseURL, clientID, clientSecret, providerVersion string) *G
 		HTTPClient: &http.Client{
 			Timeout: 30 * time.Second,
 		},
+		limiter:        rate.NewLimiter(rate.Limit(requestRateLimitPerSec), requestBurstLimit),
+		clusterLimiter: rate.NewLimiter(rate.Limit(clusterRateLimitPerSec), clusterBurstLimit),
 	}
 }
 
@@ -124,12 +151,67 @@ func (c *GalaxyClient) ensureValidToken(ctx context.Context) error {
 }
 
 func (c *GalaxyClient) doRequest(ctx context.Context, method, path string, body interface{}, result interface{}) error {
-	return c.doRequestWithRetry(ctx, method, path, body, result, 3)
+	return c.doRequestWithRetry(ctx, method, path, body, result, maxRequestRetries)
+}
+
+func sleepCtx(ctx context.Context, d time.Duration) error {
+	if d <= 0 {
+		return nil
+	}
+	t := time.NewTimer(d)
+	defer t.Stop()
+	select {
+	case <-t.C:
+		return nil
+	case <-ctx.Done():
+		return ctx.Err()
+	}
+}
+
+// Honors Retry-After; otherwise exponential with +/-50% jitter, capped at backoffCap.
+func computeRetryBackoff(resp *http.Response, attempt int) time.Duration {
+	if retryAfter := resp.Header.Get("Retry-After"); retryAfter != "" {
+		if seconds, err := strconv.Atoi(retryAfter); err == nil && seconds >= 0 {
+			if seconds >= int(backoffCap/time.Second) {
+				return backoffCap
+			}
+			return time.Duration(seconds) * time.Second
+		}
+		if t, err := http.ParseTime(retryAfter); err == nil {
+			if d := time.Until(t); d > 0 {
+				return min(d, backoffCap)
+			}
+		}
+	}
+	base := min(backoffBase<<attempt, backoffCap)
+	return min(base/2+time.Duration(rand.Int63n(int64(base))), backoffCap)
 }
 
 func (c *GalaxyClient) doRequestWithRetry(ctx context.Context, method, path string, body interface{}, result interface{}, retries int) error {
 	if err := c.ensureValidToken(ctx); err != nil {
-		return err
+		if ctx.Err() != nil || retries <= 0 {
+			return err
+		}
+		attempt := maxRequestRetries - retries
+		waitTime := computeRetryBackoff(&http.Response{Header: http.Header{}}, attempt)
+		tflog.Warn(ctx, "Encountered retriable error on token fetch, retrying after backoff", map[string]interface{}{
+			"error":        err.Error(),
+			"wait_time":    waitTime.String(),
+			"retries_left": retries - 1,
+		})
+		if sleepErr := sleepCtx(ctx, waitTime); sleepErr != nil {
+			return sleepErr
+		}
+		return c.doRequestWithRetry(ctx, method, path, body, result, retries-1)
+	}
+
+	if err := c.limiter.Wait(ctx); err != nil {
+		return fmt.Errorf("rate limiter wait: %w", err)
+	}
+	if strings.HasPrefix(path, clusterPathPrefix) {
+		if err := c.clusterLimiter.Wait(ctx); err != nil {
+			return fmt.Errorf("cluster rate limiter wait: %w", err)
+		}
 	}
 
 	var bodyReader io.Reader
@@ -162,7 +244,22 @@ func (c *GalaxyClient) doRequestWithRetry(ctx context.Context, method, path stri
 
 	resp, err := c.HTTPClient.Do(req)
 	if err != nil {
-		return fmt.Errorf("request failed: %w", err)
+		if ctx.Err() != nil || retries <= 0 {
+			return fmt.Errorf("request failed: %w", err)
+		}
+		attempt := maxRequestRetries - retries
+		waitTime := computeRetryBackoff(&http.Response{Header: http.Header{}}, attempt)
+		tflog.Warn(ctx, "Encountered retriable error, retrying after backoff", map[string]interface{}{
+			"error":        err.Error(),
+			"wait_time":    waitTime.String(),
+			"retries_left": retries - 1,
+			"endpoint":     path,
+			"method":       method,
+		})
+		if sleepErr := sleepCtx(ctx, waitTime); sleepErr != nil {
+			return sleepErr
+		}
+		return c.doRequestWithRetry(ctx, method, path, body, result, retries-1)
 	}
 	defer func() {
 		if closeErr := resp.Body.Close(); closeErr != nil {
@@ -173,26 +270,25 @@ func (c *GalaxyClient) doRequestWithRetry(ctx context.Context, method, path stri
 		}
 	}()
 
-	// Handle token expiry
+	// Token expiry: clear cache and retry; the refresh is the fix.
 	if (resp.StatusCode == http.StatusUnauthorized || resp.StatusCode == http.StatusForbidden) && retries > 0 {
 		c.tokenMu.Lock()
 		c.accessToken = ""
 		c.tokenMu.Unlock()
 
-		// Exponential backoff for auth failures
-		time.Sleep(time.Duration(4-retries) * time.Second)
+		if err := sleepCtx(ctx, time.Duration(maxRequestRetries-retries)*time.Second); err != nil {
+			return err
+		}
 		return c.doRequestWithRetry(ctx, method, path, body, result, retries-1)
 	}
 
-	// Handle retryable errors with exponential backoff
-	// - 429 Too Many Requests (rate limiting) - all endpoints
-	// - 500 Internal Server Error (conflicting transactions) - specific endpoints only
-	shouldRetry := resp.StatusCode == http.StatusTooManyRequests ||
-		(resp.StatusCode == http.StatusInternalServerError && isRetryable500Endpoint(path))
-
-	if retries > 0 && shouldRetry {
-		waitTime := time.Duration(4-retries) * 15 * time.Second
-
+	// 429: retry within budget — context expiry also terminates.
+	if resp.StatusCode == http.StatusTooManyRequests {
+		if retries <= 0 {
+			return fmt.Errorf("request %s %s rate limited: retry budget exhausted", method, path)
+		}
+		attempt := maxRequestRetries - retries
+		waitTime := computeRetryBackoff(resp, attempt)
 		tflog.Warn(ctx, "Encountered retriable error, retrying after backoff", map[string]interface{}{
 			"status_code":  resp.StatusCode,
 			"wait_time":    waitTime.String(),
@@ -200,8 +296,26 @@ func (c *GalaxyClient) doRequestWithRetry(ctx context.Context, method, path stri
 			"endpoint":     path,
 			"method":       method,
 		})
+		if err := sleepCtx(ctx, waitTime); err != nil {
+			return err
+		}
+		return c.doRequestWithRetry(ctx, method, path, body, result, retries-1)
+	}
 
-		time.Sleep(waitTime)
+	// 500 on known-transient endpoints: retry within budget.
+	if retries > 0 && resp.StatusCode == http.StatusInternalServerError && isRetryable500Endpoint(path) {
+		attempt := maxRequestRetries - retries
+		waitTime := computeRetryBackoff(resp, attempt)
+		tflog.Warn(ctx, "Encountered retriable error, retrying after backoff", map[string]interface{}{
+			"status_code":  resp.StatusCode,
+			"wait_time":    waitTime.String(),
+			"retries_left": retries - 1,
+			"endpoint":     path,
+			"method":       method,
+		})
+		if err := sleepCtx(ctx, waitTime); err != nil {
+			return err
+		}
 		return c.doRequestWithRetry(ctx, method, path, body, result, retries-1)
 	}
 

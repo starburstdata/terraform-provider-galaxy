@@ -10,7 +10,6 @@ import (
 
 	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/types"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/knownvalue"
 	"github.com/hashicorp/terraform-plugin-testing/statecheck"
@@ -56,12 +55,7 @@ func TestMongodbCatalogModelToUpdateRequestOmitsEmptyPassword(t *testing.T) {
 }
 
 func TestAccResourceMongoDBCatalog_Basic(t *testing.T) {
-	// Generate a short random suffix to avoid conflicts with leftover resources
-	uniqueId := id.UniqueId()
-	if len(uniqueId) > 8 {
-		uniqueId = uniqueId[len(uniqueId)-8:]
-	}
-	suffix := uniqueId
+	suffix := testSuffix
 	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { testAccPreCheck(t) },
 		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
@@ -154,11 +148,7 @@ resource "galaxy_mongodb_catalog" "test" {
 
 // TestAccResourceMongoDBCatalog_MinimalConfig tests creating a MongoDB catalog with only required fields
 func TestAccResourceMongoDBCatalog_MinimalConfig(t *testing.T) {
-	uniqueId := id.UniqueId()
-	if len(uniqueId) > 8 {
-		uniqueId = uniqueId[len(uniqueId)-8:]
-	}
-	suffix := uniqueId
+	suffix := testSuffix
 	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { testAccPreCheck(t) },
 		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
