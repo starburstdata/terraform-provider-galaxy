@@ -260,17 +260,103 @@ func (r *role_privilege_grantResource) Delete(ctx context.Context, req resource.
 	})
 }
 
+// knownEntityKinds and knownGrantKinds mirror the Galaxy API enum values used to anchor the
+// import ID parser. EntityKind is the io.starburst.stargate.portal.server.api.privilege.model
+// enum; GrantKind is Allow/Deny.
+var knownEntityKinds = map[string]bool{
+	"Account": true, "AiModel": true, "Cluster": true, "Catalog": true,
+	"Schema": true, "Table": true, "Column": true, "Location": true,
+	"Function": true, "Tag": true, "Policy": true, "RowFilter": true, "DataProduct": true,
+}
+
+var knownGrantKinds = map[string]bool{"Allow": true, "Deny": true}
+
+// validScopeLen reports whether n is a valid number of trailing scope parts:
+// 0 (5-part), 1 (6-part, Schema scope), or 3 (8-part, Schema+Table+Column scope).
+func validScopeLen(n int) bool {
+	return n == 0 || n == 1 || n == 3
+}
+
+// parsedImportID holds the structured pieces of a role_privilege_grant import ID.
+// SchemaName/TableName/ColumnName are empty strings when not present.
+type parsedImportID struct {
+	RoleID     string
+	EntityID   string
+	EntityKind string
+	Privilege  string
+	GrantKind  string
+	SchemaName string
+	TableName  string
+	ColumnName string
+}
+
+// parseRolePrivilegeGrantImportID parses an import ID into its components.
+// The ID format is: role_id/entity_id/entity_kind/privilege/grant_kind[/schema_name[/table_name/column_name]]
+//
+// Parsing is anchored on grant_kind (Allow/Deny - a closed two-value enum) scanned right-to-left.
+// A candidate position matches when (a) it equals Allow or Deny, (b) the position two slots
+// earlier is a known entity_kind, and (c) the trailing field count is a valid scope length
+// (0, 1, or 3). The rightmost match wins, so any matching values that appear earlier inside
+// entity_id (e.g. a Location s3://Allow/... path) are ignored. role_id is fixed at parts[0];
+// everything between role_id and the anchor is rejoined as entity_id. No user-side encoding
+// is needed for entity IDs that contain slashes.
+func parseRolePrivilegeGrantImportID(id string) (parsedImportID, error) {
+	parts := strings.Split(id, "/")
+
+	anchor := -1
+	for i := len(parts) - 1; i >= 3; i-- {
+		if !knownGrantKinds[parts[i]] {
+			continue
+		}
+		entityKindIdx := i - 2
+		if entityKindIdx < 2 || !knownEntityKinds[parts[entityKindIdx]] {
+			continue
+		}
+		if !validScopeLen(len(parts) - 1 - i) {
+			continue
+		}
+		anchor = i
+		break
+	}
+
+	if anchor < 0 {
+		return parsedImportID{}, fmt.Errorf("expected format: role_id/entity_id/entity_kind/privilege/grant_kind[/schema_name[/table_name/column_name]], got: %s", id)
+	}
+
+	entityKindIdx := anchor - 2
+	entityID := strings.Join(parts[1:entityKindIdx], "/")
+	if entityID == "" {
+		return parsedImportID{}, fmt.Errorf("entity_id cannot be empty in import ID: %s", id)
+	}
+
+	scopeParts := parts[anchor+1:]
+	for _, p := range scopeParts {
+		if p == "" {
+			return parsedImportID{}, fmt.Errorf("scope fields (schema_name, table_name, column_name) cannot be empty in import ID: %s", id)
+		}
+	}
+
+	out := parsedImportID{
+		RoleID:     parts[0],
+		EntityID:   entityID,
+		EntityKind: parts[entityKindIdx],
+		Privilege:  parts[entityKindIdx+1],
+		GrantKind:  parts[anchor],
+	}
+	if len(scopeParts) >= 1 {
+		out.SchemaName = scopeParts[0]
+	}
+	if len(scopeParts) == 3 {
+		out.TableName = scopeParts[1]
+		out.ColumnName = scopeParts[2]
+	}
+	return out, nil
+}
+
 func (r *role_privilege_grantResource) ImportState(ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse) {
-	// Import formats:
-	//   basic:    role_id/entity_id/entity_kind/privilege/grant_kind
-	//   extended: role_id/entity_id/entity_kind/privilege/grant_kind/schema_name/table_name/column_name
-	// The extended format disambiguates when multiple grants share the same entity/privilege/grantKind.
-	parts := strings.Split(req.ID, "/")
-	if len(parts) != 5 && len(parts) != 8 {
-		resp.Diagnostics.AddError(
-			"Invalid Import ID",
-			fmt.Sprintf("Expected format: role_id/entity_id/entity_kind/privilege/grant_kind[/schema_name/table_name/column_name], got: %s", req.ID),
-		)
+	parsed, err := parseRolePrivilegeGrantImportID(req.ID)
+	if err != nil {
+		resp.Diagnostics.AddError("Invalid Import ID", err.Error())
 		return
 	}
 
@@ -278,18 +364,20 @@ func (r *role_privilege_grantResource) ImportState(ctx context.Context, req reso
 		name  string
 		value string
 	}{
-		{"role_id", parts[0]},
-		{"entity_id", parts[1]},
-		{"entity_kind", parts[2]},
-		{"privilege", parts[3]},
-		{"grant_kind", parts[4]},
+		{"role_id", parsed.RoleID},
+		{"entity_id", parsed.EntityID},
+		{"entity_kind", parsed.EntityKind},
+		{"privilege", parsed.Privilege},
+		{"grant_kind", parsed.GrantKind},
 	}
-	if len(parts) == 8 {
-		fields = append(fields,
-			struct{ name, value string }{"schema_name", parts[5]},
-			struct{ name, value string }{"table_name", parts[6]},
-			struct{ name, value string }{"column_name", parts[7]},
-		)
+	if parsed.SchemaName != "" {
+		fields = append(fields, struct{ name, value string }{"schema_name", parsed.SchemaName})
+	}
+	if parsed.TableName != "" {
+		fields = append(fields, struct{ name, value string }{"table_name", parsed.TableName})
+	}
+	if parsed.ColumnName != "" {
+		fields = append(fields, struct{ name, value string }{"column_name", parsed.ColumnName})
 	}
 
 	for _, f := range fields {
