@@ -11,77 +11,11 @@ package client
 
 import (
 	"context"
-	"net/http"
-	"strconv"
 	"testing"
 	"time"
 )
 
-func TestComputeRetryBackoff_RetryAfterSeconds(t *testing.T) {
-	resp := &http.Response{Header: http.Header{"Retry-After": []string{"7"}}}
-	got := computeRetryBackoff(resp, 0)
-	if got != 7*time.Second {
-		t.Fatalf("Retry-After=7 should yield 7s, got %v", got)
-	}
-}
-
-func TestComputeRetryBackoff_RetryAfterSecondsCappedAtBackoffCap(t *testing.T) {
-	resp := &http.Response{Header: http.Header{"Retry-After": []string{"3600"}}}
-	got := computeRetryBackoff(resp, 0)
-	if got != backoffCap {
-		t.Fatalf("Retry-After=3600 should be capped at %v, got %v", backoffCap, got)
-	}
-}
-
-func TestComputeRetryBackoff_RetryAfterHTTPDateCappedAtBackoffCap(t *testing.T) {
-	far := time.Now().Add(1 * time.Hour).UTC().Format(http.TimeFormat)
-	resp := &http.Response{Header: http.Header{"Retry-After": []string{far}}}
-	got := computeRetryBackoff(resp, 0)
-	if got != backoffCap {
-		t.Fatalf("Retry-After HTTP-date +1h should be capped at %v, got %v", backoffCap, got)
-	}
-}
-
-func TestComputeRetryBackoff_RetryAfterHTTPDate(t *testing.T) {
-	future := time.Now().Add(5 * time.Second).UTC().Format(http.TimeFormat)
-	resp := &http.Response{Header: http.Header{"Retry-After": []string{future}}}
-	got := computeRetryBackoff(resp, 0)
-	// Allow generous slack: http.TimeFormat has second precision, so the
-	// returned duration is between ~4s and ~5s in practice.
-	if got <= 3*time.Second || got > 6*time.Second {
-		t.Fatalf("Retry-After HTTP-date +5s should be ~5s, got %v", got)
-	}
-}
-
-func TestComputeRetryBackoff_RetryAfterPastDateFallsThrough(t *testing.T) {
-	past := time.Now().Add(-1 * time.Hour).UTC().Format(http.TimeFormat)
-	resp := &http.Response{Header: http.Header{"Retry-After": []string{past}}}
-	got := computeRetryBackoff(resp, 0)
-	// Past date is ignored, falls through to exponential backoff at attempt 0:
-	// base = backoffBase = 10s, jitter range [5s, 15s).
-	if got < backoffBase/2 || got >= 3*backoffBase/2 {
-		t.Fatalf("past Retry-After should fall through to exponential, got %v", got)
-	}
-}
-
-func TestComputeRetryBackoff_RetryAfterNegativeFallsThrough(t *testing.T) {
-	resp := &http.Response{Header: http.Header{"Retry-After": []string{"-5"}}}
-	got := computeRetryBackoff(resp, 0)
-	if got < backoffBase/2 || got >= 3*backoffBase/2 {
-		t.Fatalf("negative Retry-After should fall through to exponential, got %v", got)
-	}
-}
-
-func TestComputeRetryBackoff_RetryAfterGarbageFallsThrough(t *testing.T) {
-	resp := &http.Response{Header: http.Header{"Retry-After": []string{"not-a-thing"}}}
-	got := computeRetryBackoff(resp, 0)
-	if got < backoffBase/2 || got >= 3*backoffBase/2 {
-		t.Fatalf("unparseable Retry-After should fall through to exponential, got %v", got)
-	}
-}
-
 func TestComputeRetryBackoff_ExponentialWithJitterByAttempt(t *testing.T) {
-	resp := &http.Response{Header: http.Header{}}
 	cases := []struct {
 		attempt  int
 		wantBase time.Duration
@@ -93,14 +27,23 @@ func TestComputeRetryBackoff_ExponentialWithJitterByAttempt(t *testing.T) {
 		{4, backoffCap},       // capped
 	}
 	for _, c := range cases {
-		// Run several iterations because of randomness in jitter; assert range.
 		for i := 0; i < 50; i++ {
-			got := computeRetryBackoff(resp, c.attempt)
+			got := computeRetryBackoff(c.attempt, backoffBase)
 			minWait := c.wantBase / 2
 			maxWait := 3 * c.wantBase / 2
 			if got < minWait || got >= maxWait {
 				t.Fatalf("attempt %d: got %v, want range [%v, %v)", c.attempt, got, minWait, maxWait)
 			}
+		}
+	}
+}
+
+func TestComputeRetryBackoff_ClusterBase(t *testing.T) {
+	// clusterBackoffBase=60s means attempt 0 yields [30s, 60s), capped at backoffCap.
+	for i := 0; i < 50; i++ {
+		got := computeRetryBackoff(0, clusterBackoffBase)
+		if got < clusterBackoffBase/2 || got > backoffCap {
+			t.Fatalf("cluster attempt 0: got %v, want [%v, %v]", got, clusterBackoffBase/2, backoffCap)
 		}
 	}
 }
@@ -143,8 +86,3 @@ func TestSleepCtx_RespectsContextCancellation(t *testing.T) {
 		t.Fatalf("sleepCtx did not return promptly on cancel: %v", elapsed)
 	}
 }
-
-// Compile-time guard: ensure strconv stays imported via the test file even if
-// the package code later stops using it (the production code uses it for
-// Retry-After parsing; this is a defensive pin).
-var _ = strconv.Atoi
