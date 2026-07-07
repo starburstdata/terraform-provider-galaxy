@@ -23,814 +23,109 @@ func TableDataSourceSchema(ctx context.Context) schema.Schema {
 				Description:         "- A catalog\n- This parameter can be looked up using `name` instead of its Id. Use `name=value` instead of an Id to lookup/search using the `value`. `value` must be encoded ([see RFC](https://www.rfc-editor.org/rfc/rfc3986#section-2.2) including `=`)\n",
 				MarkdownDescription: "- A catalog\n- This parameter can be looked up using `name` instead of its Id. Use `name=value` instead of an Id to lookup/search using the `value`. `value` must be encoded ([see RFC](https://www.rfc-editor.org/rfc/rfc3986#section-2.2) including `=`)\n",
 			},
-			"result": schema.ListNestedAttribute{
+			"contacts": schema.ListNestedAttribute{
 				NestedObject: schema.NestedAttributeObject{
 					Attributes: map[string]schema.Attribute{
-						"contacts": schema.ListNestedAttribute{
-							NestedObject: schema.NestedAttributeObject{
-								Attributes: map[string]schema.Attribute{
-									"email": schema.StringAttribute{
-										Computed:            true,
-										Description:         "User email (read only)",
-										MarkdownDescription: "User email (read only)",
-									},
-									"user_id": schema.StringAttribute{
-										Computed:            true,
-										Description:         "User ID (read only)",
-										MarkdownDescription: "User ID (read only)",
-									},
-								},
-								CustomType: ContactsType{
-									ObjectType: types.ObjectType{
-										AttrTypes: ContactsValue{}.AttributeTypes(ctx),
-									},
-								},
-							},
+						"email": schema.StringAttribute{
 							Computed:            true,
-							Description:         "Any contacts set for this table (read only)",
-							MarkdownDescription: "Any contacts set for this table (read only)",
+							Description:         "User email",
+							MarkdownDescription: "User email",
 						},
-						"description": schema.StringAttribute{
+						"user_id": schema.StringAttribute{
 							Computed:            true,
-							Description:         "Any description set for this table (read only)",
-							MarkdownDescription: "Any description set for this table (read only)",
-						},
-						"owner": schema.SingleNestedAttribute{
-							Attributes: map[string]schema.Attribute{
-								"role_id": schema.StringAttribute{
-									Computed:            true,
-									Description:         "Role ID (read only)",
-									MarkdownDescription: "Role ID (read only)",
-								},
-								"role_name": schema.StringAttribute{
-									Computed:            true,
-									Description:         "Role name (read only)",
-									MarkdownDescription: "Role name (read only)",
-								},
-							},
-							CustomType: OwnerType{
-								ObjectType: types.ObjectType{
-									AttrTypes: OwnerValue{}.AttributeTypes(ctx),
-								},
-							},
-							Computed:            true,
-							Description:         "The role that owns this catalog (read only)",
-							MarkdownDescription: "The role that owns this catalog (read only)",
-						},
-						"table_id": schema.StringAttribute{
-							Computed:            true,
-							Description:         "Table ID (read only)",
-							MarkdownDescription: "Table ID (read only)",
-						},
-						"table_type": schema.StringAttribute{
-							Computed:            true,
-							Description:         "Any table type returned from the data source (read only)",
-							MarkdownDescription: "Any table type returned from the data source (read only)",
-						},
-						"tags": schema.ListNestedAttribute{
-							NestedObject: schema.NestedAttributeObject{
-								Attributes: map[string]schema.Attribute{
-									"name": schema.StringAttribute{
-										Computed:            true,
-										Description:         "Tag name (read only)",
-										MarkdownDescription: "Tag name (read only)",
-									},
-									"tag_id": schema.StringAttribute{
-										Computed:            true,
-										Description:         "Tag ID (read only)",
-										MarkdownDescription: "Tag ID (read only)",
-									},
-								},
-								CustomType: TagsType{
-									ObjectType: types.ObjectType{
-										AttrTypes: TagsValue{}.AttributeTypes(ctx),
-									},
-								},
-							},
-							Computed:            true,
-							Description:         "Any tags set for this table (read only)",
-							MarkdownDescription: "Any tags set for this table (read only)",
+							Description:         "User ID",
+							MarkdownDescription: "User ID",
 						},
 					},
-					CustomType: ResultType{
+					CustomType: ContactsType{
 						ObjectType: types.ObjectType{
-							AttrTypes: ResultValue{}.AttributeTypes(ctx),
+							AttrTypes: ContactsValue{}.AttributeTypes(ctx),
 						},
 					},
 				},
 				Computed:            true,
-				Description:         "A page of results.",
-				MarkdownDescription: "A page of results.",
+				Description:         "Any contacts set for this table (read only)",
+				MarkdownDescription: "Any contacts set for this table (read only)",
+			},
+			"description": schema.StringAttribute{
+				Computed:            true,
+				Description:         "Any description set for this table (read only)",
+				MarkdownDescription: "Any description set for this table (read only)",
+			},
+			"owner": schema.SingleNestedAttribute{
+				Attributes: map[string]schema.Attribute{
+					"role_id": schema.StringAttribute{
+						Computed:            true,
+						Description:         "Role ID (read only)",
+						MarkdownDescription: "Role ID (read only)",
+					},
+					"role_name": schema.StringAttribute{
+						Computed:            true,
+						Description:         "Role name (read only)",
+						MarkdownDescription: "Role name (read only)",
+					},
+				},
+				CustomType: OwnerType{
+					ObjectType: types.ObjectType{
+						AttrTypes: OwnerValue{}.AttributeTypes(ctx),
+					},
+				},
+				Computed:            true,
+				Description:         "The role that owns this catalog (read only)",
+				MarkdownDescription: "The role that owns this catalog (read only)",
 			},
 			"schema_id": schema.StringAttribute{
 				Required:            true,
 				Description:         "A schema from a catalog",
 				MarkdownDescription: "A schema from a catalog",
 			},
+			"table_id": schema.StringAttribute{
+				Required:            true,
+				Description:         "A table from a catalog",
+				MarkdownDescription: "A table from a catalog",
+			},
+			"table_type": schema.StringAttribute{
+				Computed:            true,
+				Description:         "Any table type returned from the data source (read only)",
+				MarkdownDescription: "Any table type returned from the data source (read only)",
+			},
+			"tags": schema.ListNestedAttribute{
+				NestedObject: schema.NestedAttributeObject{
+					Attributes: map[string]schema.Attribute{
+						"name": schema.StringAttribute{
+							Computed:            true,
+							Description:         "Tag name (read only)",
+							MarkdownDescription: "Tag name (read only)",
+						},
+						"tag_id": schema.StringAttribute{
+							Computed:            true,
+							Description:         "Tag ID (read only)",
+							MarkdownDescription: "Tag ID (read only)",
+						},
+					},
+					CustomType: TagsType{
+						ObjectType: types.ObjectType{
+							AttrTypes: TagsValue{}.AttributeTypes(ctx),
+						},
+					},
+				},
+				Computed:            true,
+				Description:         "Any tags set for this table (read only)",
+				MarkdownDescription: "Any tags set for this table (read only)",
+			},
 		},
 	}
 }
 
 type TableModel struct {
-	CatalogId types.String `tfsdk:"catalog_id"`
-	Result    types.List   `tfsdk:"result"`
-	SchemaId  types.String `tfsdk:"schema_id"`
-}
-
-var _ basetypes.ObjectTypable = ResultType{}
-
-type ResultType struct {
-	basetypes.ObjectType
-}
-
-func (t ResultType) Equal(o attr.Type) bool {
-	other, ok := o.(ResultType)
-
-	if !ok {
-		return false
-	}
-
-	return t.ObjectType.Equal(other.ObjectType)
-}
-
-func (t ResultType) String() string {
-	return "ResultType"
-}
-
-func (t ResultType) ValueFromObject(ctx context.Context, in basetypes.ObjectValue) (basetypes.ObjectValuable, diag.Diagnostics) {
-	var diags diag.Diagnostics
-
-	attributes := in.Attributes()
-
-	contactsAttribute, ok := attributes["contacts"]
-
-	if !ok {
-		diags.AddError(
-			"Attribute Missing",
-			`contacts is missing from object`)
-
-		return nil, diags
-	}
-
-	contactsVal, ok := contactsAttribute.(basetypes.ListValue)
-
-	if !ok {
-		diags.AddError(
-			"Attribute Wrong Type",
-			fmt.Sprintf(`contacts expected to be basetypes.ListValue, was: %T`, contactsAttribute))
-	}
-
-	descriptionAttribute, ok := attributes["description"]
-
-	if !ok {
-		diags.AddError(
-			"Attribute Missing",
-			`description is missing from object`)
-
-		return nil, diags
-	}
-
-	descriptionVal, ok := descriptionAttribute.(basetypes.StringValue)
-
-	if !ok {
-		diags.AddError(
-			"Attribute Wrong Type",
-			fmt.Sprintf(`description expected to be basetypes.StringValue, was: %T`, descriptionAttribute))
-	}
-
-	ownerAttribute, ok := attributes["owner"]
-
-	if !ok {
-		diags.AddError(
-			"Attribute Missing",
-			`owner is missing from object`)
-
-		return nil, diags
-	}
-
-	ownerVal, ok := ownerAttribute.(basetypes.ObjectValue)
-
-	if !ok {
-		diags.AddError(
-			"Attribute Wrong Type",
-			fmt.Sprintf(`owner expected to be basetypes.ObjectValue, was: %T`, ownerAttribute))
-	}
-
-	tableIdAttribute, ok := attributes["table_id"]
-
-	if !ok {
-		diags.AddError(
-			"Attribute Missing",
-			`table_id is missing from object`)
-
-		return nil, diags
-	}
-
-	tableIdVal, ok := tableIdAttribute.(basetypes.StringValue)
-
-	if !ok {
-		diags.AddError(
-			"Attribute Wrong Type",
-			fmt.Sprintf(`table_id expected to be basetypes.StringValue, was: %T`, tableIdAttribute))
-	}
-
-	tableTypeAttribute, ok := attributes["table_type"]
-
-	if !ok {
-		diags.AddError(
-			"Attribute Missing",
-			`table_type is missing from object`)
-
-		return nil, diags
-	}
-
-	tableTypeVal, ok := tableTypeAttribute.(basetypes.StringValue)
-
-	if !ok {
-		diags.AddError(
-			"Attribute Wrong Type",
-			fmt.Sprintf(`table_type expected to be basetypes.StringValue, was: %T`, tableTypeAttribute))
-	}
-
-	tagsAttribute, ok := attributes["tags"]
-
-	if !ok {
-		diags.AddError(
-			"Attribute Missing",
-			`tags is missing from object`)
-
-		return nil, diags
-	}
-
-	tagsVal, ok := tagsAttribute.(basetypes.ListValue)
-
-	if !ok {
-		diags.AddError(
-			"Attribute Wrong Type",
-			fmt.Sprintf(`tags expected to be basetypes.ListValue, was: %T`, tagsAttribute))
-	}
-
-	if diags.HasError() {
-		return nil, diags
-	}
-
-	return ResultValue{
-		Contacts:    contactsVal,
-		Description: descriptionVal,
-		Owner:       ownerVal,
-		TableId:     tableIdVal,
-		TableType:   tableTypeVal,
-		Tags:        tagsVal,
-		state:       attr.ValueStateKnown,
-	}, diags
-}
-
-func NewResultValueNull() ResultValue {
-	return ResultValue{
-		state: attr.ValueStateNull,
-	}
-}
-
-func NewResultValueUnknown() ResultValue {
-	return ResultValue{
-		state: attr.ValueStateUnknown,
-	}
-}
-
-func NewResultValue(attributeTypes map[string]attr.Type, attributes map[string]attr.Value) (ResultValue, diag.Diagnostics) {
-	var diags diag.Diagnostics
-
-	// Reference: https://github.com/hashicorp/terraform-plugin-framework/issues/521
-	ctx := context.Background()
-
-	for name, attributeType := range attributeTypes {
-		attribute, ok := attributes[name]
-
-		if !ok {
-			diags.AddError(
-				"Missing ResultValue Attribute Value",
-				"While creating a ResultValue value, a missing attribute value was detected. "+
-					"A ResultValue must contain values for all attributes, even if null or unknown. "+
-					"This is always an issue with the provider and should be reported to the provider developers.\n\n"+
-					fmt.Sprintf("ResultValue Attribute Name (%s) Expected Type: %s", name, attributeType.String()),
-			)
-
-			continue
-		}
-
-		if !attributeType.Equal(attribute.Type(ctx)) {
-			diags.AddError(
-				"Invalid ResultValue Attribute Type",
-				"While creating a ResultValue value, an invalid attribute value was detected. "+
-					"A ResultValue must use a matching attribute type for the value. "+
-					"This is always an issue with the provider and should be reported to the provider developers.\n\n"+
-					fmt.Sprintf("ResultValue Attribute Name (%s) Expected Type: %s\n", name, attributeType.String())+
-					fmt.Sprintf("ResultValue Attribute Name (%s) Given Type: %s", name, attribute.Type(ctx)),
-			)
-		}
-	}
-
-	for name := range attributes {
-		_, ok := attributeTypes[name]
-
-		if !ok {
-			diags.AddError(
-				"Extra ResultValue Attribute Value",
-				"While creating a ResultValue value, an extra attribute value was detected. "+
-					"A ResultValue must not contain values beyond the expected attribute types. "+
-					"This is always an issue with the provider and should be reported to the provider developers.\n\n"+
-					fmt.Sprintf("Extra ResultValue Attribute Name: %s", name),
-			)
-		}
-	}
-
-	if diags.HasError() {
-		return NewResultValueUnknown(), diags
-	}
-
-	contactsAttribute, ok := attributes["contacts"]
-
-	if !ok {
-		diags.AddError(
-			"Attribute Missing",
-			`contacts is missing from object`)
-
-		return NewResultValueUnknown(), diags
-	}
-
-	contactsVal, ok := contactsAttribute.(basetypes.ListValue)
-
-	if !ok {
-		diags.AddError(
-			"Attribute Wrong Type",
-			fmt.Sprintf(`contacts expected to be basetypes.ListValue, was: %T`, contactsAttribute))
-	}
-
-	descriptionAttribute, ok := attributes["description"]
-
-	if !ok {
-		diags.AddError(
-			"Attribute Missing",
-			`description is missing from object`)
-
-		return NewResultValueUnknown(), diags
-	}
-
-	descriptionVal, ok := descriptionAttribute.(basetypes.StringValue)
-
-	if !ok {
-		diags.AddError(
-			"Attribute Wrong Type",
-			fmt.Sprintf(`description expected to be basetypes.StringValue, was: %T`, descriptionAttribute))
-	}
-
-	ownerAttribute, ok := attributes["owner"]
-
-	if !ok {
-		diags.AddError(
-			"Attribute Missing",
-			`owner is missing from object`)
-
-		return NewResultValueUnknown(), diags
-	}
-
-	ownerVal, ok := ownerAttribute.(basetypes.ObjectValue)
-
-	if !ok {
-		diags.AddError(
-			"Attribute Wrong Type",
-			fmt.Sprintf(`owner expected to be basetypes.ObjectValue, was: %T`, ownerAttribute))
-	}
-
-	tableIdAttribute, ok := attributes["table_id"]
-
-	if !ok {
-		diags.AddError(
-			"Attribute Missing",
-			`table_id is missing from object`)
-
-		return NewResultValueUnknown(), diags
-	}
-
-	tableIdVal, ok := tableIdAttribute.(basetypes.StringValue)
-
-	if !ok {
-		diags.AddError(
-			"Attribute Wrong Type",
-			fmt.Sprintf(`table_id expected to be basetypes.StringValue, was: %T`, tableIdAttribute))
-	}
-
-	tableTypeAttribute, ok := attributes["table_type"]
-
-	if !ok {
-		diags.AddError(
-			"Attribute Missing",
-			`table_type is missing from object`)
-
-		return NewResultValueUnknown(), diags
-	}
-
-	tableTypeVal, ok := tableTypeAttribute.(basetypes.StringValue)
-
-	if !ok {
-		diags.AddError(
-			"Attribute Wrong Type",
-			fmt.Sprintf(`table_type expected to be basetypes.StringValue, was: %T`, tableTypeAttribute))
-	}
-
-	tagsAttribute, ok := attributes["tags"]
-
-	if !ok {
-		diags.AddError(
-			"Attribute Missing",
-			`tags is missing from object`)
-
-		return NewResultValueUnknown(), diags
-	}
-
-	tagsVal, ok := tagsAttribute.(basetypes.ListValue)
-
-	if !ok {
-		diags.AddError(
-			"Attribute Wrong Type",
-			fmt.Sprintf(`tags expected to be basetypes.ListValue, was: %T`, tagsAttribute))
-	}
-
-	if diags.HasError() {
-		return NewResultValueUnknown(), diags
-	}
-
-	return ResultValue{
-		Contacts:    contactsVal,
-		Description: descriptionVal,
-		Owner:       ownerVal,
-		TableId:     tableIdVal,
-		TableType:   tableTypeVal,
-		Tags:        tagsVal,
-		state:       attr.ValueStateKnown,
-	}, diags
-}
-
-func NewResultValueMust(attributeTypes map[string]attr.Type, attributes map[string]attr.Value) ResultValue {
-	object, diags := NewResultValue(attributeTypes, attributes)
-
-	if diags.HasError() {
-		// This could potentially be added to the diag package.
-		diagsStrings := make([]string, 0, len(diags))
-
-		for _, diagnostic := range diags {
-			diagsStrings = append(diagsStrings, fmt.Sprintf(
-				"%s | %s | %s",
-				diagnostic.Severity(),
-				diagnostic.Summary(),
-				diagnostic.Detail()))
-		}
-
-		panic("NewResultValueMust received error(s): " + strings.Join(diagsStrings, "\n"))
-	}
-
-	return object
-}
-
-func (t ResultType) ValueFromTerraform(ctx context.Context, in tftypes.Value) (attr.Value, error) {
-	if in.Type() == nil {
-		return NewResultValueNull(), nil
-	}
-
-	if !in.Type().Equal(t.TerraformType(ctx)) {
-		return nil, fmt.Errorf("expected %s, got %s", t.TerraformType(ctx), in.Type())
-	}
-
-	if !in.IsKnown() {
-		return NewResultValueUnknown(), nil
-	}
-
-	if in.IsNull() {
-		return NewResultValueNull(), nil
-	}
-
-	attributes := map[string]attr.Value{}
-
-	val := map[string]tftypes.Value{}
-
-	err := in.As(&val)
-
-	if err != nil {
-		return nil, err
-	}
-
-	for k, v := range val {
-		a, err := t.AttrTypes[k].ValueFromTerraform(ctx, v)
-
-		if err != nil {
-			return nil, err
-		}
-
-		attributes[k] = a
-	}
-
-	return NewResultValueMust(ResultValue{}.AttributeTypes(ctx), attributes), nil
-}
-
-func (t ResultType) ValueType(ctx context.Context) attr.Value {
-	return ResultValue{}
-}
-
-var _ basetypes.ObjectValuable = ResultValue{}
-
-type ResultValue struct {
-	Contacts    basetypes.ListValue   `tfsdk:"contacts"`
-	Description basetypes.StringValue `tfsdk:"description"`
-	Owner       basetypes.ObjectValue `tfsdk:"owner"`
-	TableId     basetypes.StringValue `tfsdk:"table_id"`
-	TableType   basetypes.StringValue `tfsdk:"table_type"`
-	Tags        basetypes.ListValue   `tfsdk:"tags"`
-	state       attr.ValueState
-}
-
-func (v ResultValue) ToTerraformValue(ctx context.Context) (tftypes.Value, error) {
-	attrTypes := make(map[string]tftypes.Type, 6)
-
-	var val tftypes.Value
-	var err error
-
-	attrTypes["contacts"] = basetypes.ListType{
-		ElemType: ContactsValue{}.Type(ctx),
-	}.TerraformType(ctx)
-	attrTypes["description"] = basetypes.StringType{}.TerraformType(ctx)
-	attrTypes["owner"] = basetypes.ObjectType{
-		AttrTypes: OwnerValue{}.AttributeTypes(ctx),
-	}.TerraformType(ctx)
-	attrTypes["table_id"] = basetypes.StringType{}.TerraformType(ctx)
-	attrTypes["table_type"] = basetypes.StringType{}.TerraformType(ctx)
-	attrTypes["tags"] = basetypes.ListType{
-		ElemType: TagsValue{}.Type(ctx),
-	}.TerraformType(ctx)
-
-	objectType := tftypes.Object{AttributeTypes: attrTypes}
-
-	switch v.state {
-	case attr.ValueStateKnown:
-		vals := make(map[string]tftypes.Value, 6)
-
-		val, err = v.Contacts.ToTerraformValue(ctx)
-
-		if err != nil {
-			return tftypes.NewValue(objectType, tftypes.UnknownValue), err
-		}
-
-		vals["contacts"] = val
-
-		val, err = v.Description.ToTerraformValue(ctx)
-
-		if err != nil {
-			return tftypes.NewValue(objectType, tftypes.UnknownValue), err
-		}
-
-		vals["description"] = val
-
-		val, err = v.Owner.ToTerraformValue(ctx)
-
-		if err != nil {
-			return tftypes.NewValue(objectType, tftypes.UnknownValue), err
-		}
-
-		vals["owner"] = val
-
-		val, err = v.TableId.ToTerraformValue(ctx)
-
-		if err != nil {
-			return tftypes.NewValue(objectType, tftypes.UnknownValue), err
-		}
-
-		vals["table_id"] = val
-
-		val, err = v.TableType.ToTerraformValue(ctx)
-
-		if err != nil {
-			return tftypes.NewValue(objectType, tftypes.UnknownValue), err
-		}
-
-		vals["table_type"] = val
-
-		val, err = v.Tags.ToTerraformValue(ctx)
-
-		if err != nil {
-			return tftypes.NewValue(objectType, tftypes.UnknownValue), err
-		}
-
-		vals["tags"] = val
-
-		if err := tftypes.ValidateValue(objectType, vals); err != nil {
-			return tftypes.NewValue(objectType, tftypes.UnknownValue), err
-		}
-
-		return tftypes.NewValue(objectType, vals), nil
-	case attr.ValueStateNull:
-		return tftypes.NewValue(objectType, nil), nil
-	case attr.ValueStateUnknown:
-		return tftypes.NewValue(objectType, tftypes.UnknownValue), nil
-	default:
-		panic(fmt.Sprintf("unhandled Object state in ToTerraformValue: %s", v.state))
-	}
-}
-
-func (v ResultValue) IsNull() bool {
-	return v.state == attr.ValueStateNull
-}
-
-func (v ResultValue) IsUnknown() bool {
-	return v.state == attr.ValueStateUnknown
-}
-
-func (v ResultValue) String() string {
-	return "ResultValue"
-}
-
-func (v ResultValue) ToObjectValue(ctx context.Context) (basetypes.ObjectValue, diag.Diagnostics) {
-	var diags diag.Diagnostics
-
-	contacts := types.ListValueMust(
-		ContactsType{
-			basetypes.ObjectType{
-				AttrTypes: ContactsValue{}.AttributeTypes(ctx),
-			},
-		},
-		v.Contacts.Elements(),
-	)
-
-	if v.Contacts.IsNull() {
-		contacts = types.ListNull(
-			ContactsType{
-				basetypes.ObjectType{
-					AttrTypes: ContactsValue{}.AttributeTypes(ctx),
-				},
-			},
-		)
-	}
-
-	if v.Contacts.IsUnknown() {
-		contacts = types.ListUnknown(
-			ContactsType{
-				basetypes.ObjectType{
-					AttrTypes: ContactsValue{}.AttributeTypes(ctx),
-				},
-			},
-		)
-	}
-
-	var owner basetypes.ObjectValue
-
-	if v.Owner.IsNull() {
-		owner = types.ObjectNull(
-			OwnerValue{}.AttributeTypes(ctx),
-		)
-	}
-
-	if v.Owner.IsUnknown() {
-		owner = types.ObjectUnknown(
-			OwnerValue{}.AttributeTypes(ctx),
-		)
-	}
-
-	if !v.Owner.IsNull() && !v.Owner.IsUnknown() {
-		owner = types.ObjectValueMust(
-			OwnerValue{}.AttributeTypes(ctx),
-			v.Owner.Attributes(),
-		)
-	}
-
-	tags := types.ListValueMust(
-		TagsType{
-			basetypes.ObjectType{
-				AttrTypes: TagsValue{}.AttributeTypes(ctx),
-			},
-		},
-		v.Tags.Elements(),
-	)
-
-	if v.Tags.IsNull() {
-		tags = types.ListNull(
-			TagsType{
-				basetypes.ObjectType{
-					AttrTypes: TagsValue{}.AttributeTypes(ctx),
-				},
-			},
-		)
-	}
-
-	if v.Tags.IsUnknown() {
-		tags = types.ListUnknown(
-			TagsType{
-				basetypes.ObjectType{
-					AttrTypes: TagsValue{}.AttributeTypes(ctx),
-				},
-			},
-		)
-	}
-
-	attributeTypes := map[string]attr.Type{
-		"contacts": basetypes.ListType{
-			ElemType: ContactsValue{}.Type(ctx),
-		},
-		"description": basetypes.StringType{},
-		"owner": basetypes.ObjectType{
-			AttrTypes: OwnerValue{}.AttributeTypes(ctx),
-		},
-		"table_id":   basetypes.StringType{},
-		"table_type": basetypes.StringType{},
-		"tags": basetypes.ListType{
-			ElemType: TagsValue{}.Type(ctx),
-		},
-	}
-
-	if v.IsNull() {
-		return types.ObjectNull(attributeTypes), diags
-	}
-
-	if v.IsUnknown() {
-		return types.ObjectUnknown(attributeTypes), diags
-	}
-
-	objVal, diags := types.ObjectValue(
-		attributeTypes,
-		map[string]attr.Value{
-			"contacts":    contacts,
-			"description": v.Description,
-			"owner":       owner,
-			"table_id":    v.TableId,
-			"table_type":  v.TableType,
-			"tags":        tags,
-		})
-
-	return objVal, diags
-}
-
-func (v ResultValue) Equal(o attr.Value) bool {
-	other, ok := o.(ResultValue)
-
-	if !ok {
-		return false
-	}
-
-	if v.state != other.state {
-		return false
-	}
-
-	if v.state != attr.ValueStateKnown {
-		return true
-	}
-
-	if !v.Contacts.Equal(other.Contacts) {
-		return false
-	}
-
-	if !v.Description.Equal(other.Description) {
-		return false
-	}
-
-	if !v.Owner.Equal(other.Owner) {
-		return false
-	}
-
-	if !v.TableId.Equal(other.TableId) {
-		return false
-	}
-
-	if !v.TableType.Equal(other.TableType) {
-		return false
-	}
-
-	if !v.Tags.Equal(other.Tags) {
-		return false
-	}
-
-	return true
-}
-
-func (v ResultValue) Type(ctx context.Context) attr.Type {
-	return ResultType{
-		basetypes.ObjectType{
-			AttrTypes: v.AttributeTypes(ctx),
-		},
-	}
-}
-
-func (v ResultValue) AttributeTypes(ctx context.Context) map[string]attr.Type {
-	return map[string]attr.Type{
-		"contacts": basetypes.ListType{
-			ElemType: ContactsValue{}.Type(ctx),
-		},
-		"description": basetypes.StringType{},
-		"owner": basetypes.ObjectType{
-			AttrTypes: OwnerValue{}.AttributeTypes(ctx),
-		},
-		"table_id":   basetypes.StringType{},
-		"table_type": basetypes.StringType{},
-		"tags": basetypes.ListType{
-			ElemType: TagsValue{}.Type(ctx),
-		},
-	}
+	CatalogId   types.String `tfsdk:"catalog_id"`
+	Contacts    types.List   `tfsdk:"contacts"`
+	Description types.String `tfsdk:"description"`
+	Owner       OwnerValue   `tfsdk:"owner"`
+	SchemaId    types.String `tfsdk:"schema_id"`
+	TableId     types.String `tfsdk:"table_id"`
+	TableType   types.String `tfsdk:"table_type"`
+	Tags        types.List   `tfsdk:"tags"`
 }
 
 var _ basetypes.ObjectTypable = ContactsType{}

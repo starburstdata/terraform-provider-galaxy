@@ -337,6 +337,12 @@ func (r *data_productResource) updateModelFromResponse(ctx context.Context, mode
 		model.DefaultClusterId = types.StringNull()
 	}
 
+	if businessContext, ok := response["businessContext"].(string); ok {
+		model.BusinessContext = types.StringValue(businessContext)
+	} else {
+		model.BusinessContext = types.StringNull()
+	}
+
 	if createdOn, ok := response["createdOn"].(string); ok {
 		model.CreatedOn = types.StringValue(createdOn)
 	}
