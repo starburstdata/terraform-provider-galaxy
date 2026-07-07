@@ -15,7 +15,6 @@ import (
 
 	"github.com/hashicorp/terraform-plugin-framework/attr"
 	"github.com/hashicorp/terraform-plugin-framework/datasource"
-	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
 
@@ -70,125 +69,114 @@ func (d *columnDataSource) Read(ctx context.Context, req datasource.ReadRequest,
 	catalogID := config.CatalogId.ValueString()
 	schemaID := config.SchemaId.ValueString()
 	tableID := config.TableId.ValueString()
-	tflog.Debug(ctx, "Reading columns", map[string]interface{}{"catalogId": catalogID, "schemaId": schemaID, "tableId": tableID})
+	columnID := config.ColumnId.ValueString()
+	tflog.Debug(ctx, "Reading column", map[string]interface{}{
+		"catalog_id": catalogID,
+		"schema_id":  schemaID,
+		"table_id":   tableID,
+		"column_id":  columnID,
+	})
 
 	response, err := d.client.ListColumns(ctx, catalogID, schemaID, tableID)
 	if err != nil {
 		resp.Diagnostics.AddError(
-			"Error reading columns",
-			"Could not read columns for catalog "+catalogID+" schema "+schemaID+" table "+tableID+": "+err.Error(),
+			"Error reading column",
+			"Could not read column: "+err.Error(),
 		)
 		return
 	}
 
-	// Debug: Log the raw response to help diagnose issues
-	tflog.Info(ctx, "ListColumns API response", map[string]interface{}{
-		"catalogId": catalogID,
-		"schemaId":  schemaID,
-		"tableId":   tableID,
-		"response":  fmt.Sprintf("%+v", response),
-	})
+	// Find the specific column by ID in the results
+	var columnData map[string]interface{}
+	if resultArray, ok := response["result"].([]interface{}); ok {
+		for _, item := range resultArray {
+			if itemMap, ok := item.(map[string]interface{}); ok {
+				if id, ok := itemMap["columnId"].(string); ok && id == columnID {
+					columnData = itemMap
+					break
+				}
+			}
+		}
+	}
 
-	// Map response to model
-	d.updateModelFromResponse(ctx, &config, response)
+	if columnData == nil {
+		resp.Diagnostics.AddError(
+			"Column not found",
+			fmt.Sprintf("Could not find column with ID %s in catalog %s, schema %s, table %s", columnID, catalogID, schemaID, tableID),
+		)
+		return
+	}
+
+	d.updateModelFromResponse(ctx, &config, columnData)
 
 	resp.Diagnostics.Append(resp.State.Set(ctx, &config)...)
 }
 
 func (d *columnDataSource) updateModelFromResponse(ctx context.Context, model *datasource_column.ColumnModel, response map[string]interface{}) {
-	// The catalogId, schemaId, and tableId are already set from the configuration
-	// Ensure they remain in known state (they should already be set from config)
+	if columnDefault, ok := response["columnDefault"].(string); ok {
+		model.ColumnDefault = types.StringValue(columnDefault)
+	} else {
+		model.ColumnDefault = types.StringNull()
+	}
 
-	// Define element types for custom types
+	if dataType, ok := response["dataType"].(string); ok {
+		model.DataType = types.StringValue(dataType)
+	} else {
+		model.DataType = types.StringNull()
+	}
+
+	if description, ok := response["description"].(string); ok {
+		model.Description = types.StringValue(description)
+	} else {
+		model.Description = types.StringNull()
+	}
+
+	if nullable, ok := response["nullable"].(bool); ok {
+		model.Nullable = types.BoolValue(nullable)
+	} else {
+		model.Nullable = types.BoolNull()
+	}
+
+	// Map tags list
 	tagElementType := datasource_column.TagsType{
 		ObjectType: types.ObjectType{
 			AttrTypes: datasource_column.TagsValue{}.AttributeTypes(ctx),
 		},
 	}
 
-	resultElementType := datasource_column.ResultType{
-		ObjectType: types.ObjectType{
-			AttrTypes: datasource_column.ResultValue{}.AttributeTypes(ctx),
-		},
-	}
-
-	// Map the result array
-	if resultArray, ok := response["result"].([]interface{}); ok {
-		resultList := make([]datasource_column.ResultValue, 0, len(resultArray))
-		for _, item := range resultArray {
-			if itemMap, ok := item.(map[string]interface{}); ok {
-				// Build tags list first
-				var tagListValue types.List
-				if tags, ok := itemMap["tags"].([]interface{}); ok && len(tags) > 0 {
-					tagList := make([]datasource_column.TagsValue, 0, len(tags))
-					for _, tag := range tags {
-						if tagMap, ok := tag.(map[string]interface{}); ok {
-							tagAttrs := map[string]attr.Value{
-								"tag_id": types.StringValue(getStringFromMap(tagMap, "tagId")),
-								"name":   types.StringValue(getStringFromMap(tagMap, "name")),
-							}
-							tagItem, tagDiags := datasource_column.NewTagsValue(
-								datasource_column.TagsValue{}.AttributeTypes(ctx),
-								tagAttrs,
-							)
-							if tagDiags.HasError() {
-								tflog.Error(ctx, "Error creating tag value", map[string]interface{}{"errors": tagDiags})
-								continue
-							}
-							tagList = append(tagList, tagItem)
-						}
-					}
-					var diags diag.Diagnostics
-					tagListValue, diags = types.ListValueFrom(ctx, tagElementType, tagList)
-					if diags.HasError() {
-						tflog.Error(ctx, "Error creating tags list", map[string]interface{}{"errors": diags})
-						tagListValue = types.ListNull(tagElementType)
-					}
-				} else {
-					// Set to empty list instead of null
-					var diags diag.Diagnostics
-					tagListValue, diags = types.ListValueFrom(ctx, tagElementType, []datasource_column.TagsValue{})
-					if diags.HasError() {
-						tagListValue = types.ListNull(tagElementType)
-					}
+	if tags, ok := response["tags"].([]interface{}); ok && len(tags) > 0 {
+		tagList := make([]datasource_column.TagsValue, 0, len(tags))
+		for _, tag := range tags {
+			if tagMap, ok := tag.(map[string]interface{}); ok {
+				tagAttrs := map[string]attr.Value{
+					"tag_id": types.StringNull(),
+					"name":   types.StringNull(),
+				}
+				if tagId, ok := tagMap["tagId"].(string); ok {
+					tagAttrs["tag_id"] = types.StringValue(tagId)
+				}
+				if name, ok := tagMap["name"].(string); ok {
+					tagAttrs["name"] = types.StringValue(name)
 				}
 
-				// Create ResultValue using the proper constructor
-				resultAttrs := map[string]attr.Value{
-					"column_id":      types.StringValue(getStringFromMap(itemMap, "columnId")),
-					"column_default": types.StringValue(getStringFromMap(itemMap, "columnDefault")),
-					"data_type":      types.StringValue(getStringFromMap(itemMap, "dataType")),
-					"description":    types.StringValue(getStringFromMap(itemMap, "description")),
-					"nullable":       types.BoolValue(getBoolFromMap(itemMap, "nullable")),
-					"tags":           tagListValue,
-				}
-
-				resultItem, resultDiags := datasource_column.NewResultValue(
-					datasource_column.ResultValue{}.AttributeTypes(ctx),
-					resultAttrs,
+				tagValue, diags := datasource_column.NewTagsValue(
+					datasource_column.TagsValue{}.AttributeTypes(ctx),
+					tagAttrs,
 				)
-				if resultDiags.HasError() {
-					tflog.Error(ctx, "Error creating result value", map[string]interface{}{"errors": resultDiags})
+				if diags.HasError() {
+					tflog.Error(ctx, fmt.Sprintf("Error creating tag value: %v", diags))
 					continue
 				}
-				resultList = append(resultList, resultItem)
+				tagList = append(tagList, tagValue)
 			}
 		}
-		resultListValue, diags := types.ListValueFrom(ctx, resultElementType, resultList)
-		if diags.HasError() {
-			tflog.Error(ctx, "Error creating result list", map[string]interface{}{"errors": diags})
-			model.Result = types.ListNull(resultElementType)
+		listValue, diags := types.ListValueFrom(ctx, tagElementType, tagList)
+		if !diags.HasError() {
+			model.Tags = listValue
 		} else {
-			model.Result = resultListValue
+			model.Tags, _ = types.ListValueFrom(ctx, tagElementType, []datasource_column.TagsValue{})
 		}
 	} else {
-		// No results or result is not an array - set to empty list instead of null
-		emptyList, diags := types.ListValueFrom(ctx, resultElementType, []datasource_column.ResultValue{})
-		if diags.HasError() {
-			tflog.Error(ctx, "Error creating empty result list", map[string]interface{}{"errors": diags})
-			model.Result = types.ListNull(resultElementType)
-		} else {
-			model.Result = emptyList
-		}
+		model.Tags, _ = types.ListValueFrom(ctx, tagElementType, []datasource_column.TagsValue{})
 	}
 }

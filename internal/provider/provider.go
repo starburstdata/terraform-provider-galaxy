@@ -177,6 +177,12 @@ func (p *galaxyProvider) DataSources(ctx context.Context) []func() datasource.Da
 		// Newly implemented list data source
 		NewDataQualitySummariesDataSource,
 		NewRolePrivilegeGrantDataSource,
+		NewGroupsDataSource,
+		NewUsageExampleDataSource,
+		NewDataQualityCheckDataSource,
+		NewDataQualityChecksDataSource,
+		NewEvaluationDataSource,
+		NewDataQualityScheduleDataSource,
 
 		// Catalog-specific data sources
 		NewS3CatalogDataSource,
@@ -236,6 +242,7 @@ func (p *galaxyProvider) Resources(ctx context.Context) []func() resource.Resour
 		NewDataProductResource,
 		NewTagResource,
 		NewCrossAccountIamRoleResource,
+		NewDataQualityCheckResource,
 
 		// Catalog resources
 		NewS3CatalogResource,

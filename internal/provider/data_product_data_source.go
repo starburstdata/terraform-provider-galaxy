@@ -111,6 +111,11 @@ func (d *data_productDataSource) updateModelFromResponse(ctx context.Context, mo
 	if defaultClusterId, ok := response["defaultClusterId"].(string); ok {
 		model.DefaultClusterId = types.StringValue(defaultClusterId)
 	}
+	if businessContext, ok := response["businessContext"].(string); ok {
+		model.BusinessContext = types.StringValue(businessContext)
+	} else {
+		model.BusinessContext = types.StringNull()
+	}
 
 	// Map nested objects - simplified mapping for now
 	if catalog, ok := response["catalog"].(map[string]interface{}); ok {

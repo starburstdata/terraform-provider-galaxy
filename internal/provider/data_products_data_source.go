@@ -184,6 +184,13 @@ func (d *data_productsDataSource) mapSingleDataProduct(ctx context.Context, data
 		attributes["modified_on"] = types.StringNull()
 	}
 
+	// Map business context
+	if businessContext, ok := dataProductMap["businessContext"].(string); ok {
+		attributes["business_context"] = types.StringValue(businessContext)
+	} else {
+		attributes["business_context"] = types.StringNull()
+	}
+
 	// Map complex nested objects
 	attributes["catalog"] = d.mapCatalogObject(ctx, dataProductMap)
 	attributes["created_by"] = d.mapCreatedByObject(ctx, dataProductMap)

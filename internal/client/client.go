@@ -164,6 +164,17 @@ func sleepCtx(ctx context.Context, d time.Duration) error {
 	}
 }
 
+// apiPath builds a URL path by PathEscape-ing every dynamic segment. This exists so callers
+// can't forget to escape - the Galaxy API accepts a "name=value" lookup form in path params
+// (per its OpenAPI spec) and unescaped '=' or other reserved chars produce malformed URLs.
+func apiPath(format string, segments ...string) string {
+	args := make([]interface{}, len(segments))
+	for i, s := range segments {
+		args[i] = url.PathEscape(s)
+	}
+	return fmt.Sprintf(format, args...)
+}
+
 // computeRetryBackoff returns exponential backoff with +/-50% jitter anchored to base, capped at backoffCap.
 func computeRetryBackoff(attempt int, base time.Duration) time.Duration {
 	b := min(base<<attempt, backoffCap)
@@ -1187,24 +1198,33 @@ func (c *GalaxyClient) ListDataQualitySummaries(ctx context.Context) (map[string
 // Table data source
 func (c *GalaxyClient) ListTables(ctx context.Context, catalogID, schemaID string) (map[string]interface{}, error) {
 	var result map[string]interface{}
-	path := fmt.Sprintf("/public/api/v1/catalog/%s/schema/%s/table", catalogID, schemaID)
-	err := c.doRequest(ctx, "GET", path, nil, &result)
+	err := c.doRequest(ctx, "GET", apiPath("/public/api/v1/catalog/%s/schema/%s/table", catalogID, schemaID), nil, &result)
+	return result, err
+}
+
+func (c *GalaxyClient) GetTable(ctx context.Context, catalogID, schemaID, tableID string) (map[string]interface{}, error) {
+	var result map[string]interface{}
+	err := c.doRequest(ctx, "GET", apiPath("/public/api/v1/catalog/%s/schema/%s/table/%s", catalogID, schemaID, tableID), nil, &result)
 	return result, err
 }
 
 // Schema data source
 func (c *GalaxyClient) ListSchemas(ctx context.Context, catalogID string) (map[string]interface{}, error) {
 	var result map[string]interface{}
-	path := fmt.Sprintf("/public/api/v1/catalog/%s/schema", catalogID)
-	err := c.doRequest(ctx, "GET", path, nil, &result)
+	err := c.doRequest(ctx, "GET", apiPath("/public/api/v1/catalog/%s/schema", catalogID), nil, &result)
+	return result, err
+}
+
+func (c *GalaxyClient) GetSchema(ctx context.Context, catalogID, schemaID string) (map[string]interface{}, error) {
+	var result map[string]interface{}
+	err := c.doRequest(ctx, "GET", apiPath("/public/api/v1/catalog/%s/schema/%s", catalogID, schemaID), nil, &result)
 	return result, err
 }
 
 // Column data source
 func (c *GalaxyClient) ListColumns(ctx context.Context, catalogID, schemaID, tableID string) (map[string]interface{}, error) {
 	var result map[string]interface{}
-	path := fmt.Sprintf("/public/api/v1/catalog/%s/schema/%s/table/%s/column", catalogID, schemaID, tableID)
-	err := c.doRequest(ctx, "GET", path, nil, &result)
+	err := c.doRequest(ctx, "GET", apiPath("/public/api/v1/catalog/%s/schema/%s/table/%s/column", catalogID, schemaID, tableID), nil, &result)
 	return result, err
 }
 
@@ -1212,5 +1232,56 @@ func (c *GalaxyClient) ListColumns(ctx context.Context, catalogID, schemaID, tab
 func (c *GalaxyClient) ListCrossAccountIamRoleMetadatas(ctx context.Context) (map[string]interface{}, error) {
 	var result map[string]interface{}
 	err := c.doRequest(ctx, "GET", "/public/api/v1/crossAccountIamRoleMetadata", nil, &result)
+	return result, err
+}
+
+// Data Quality Check resource
+func (c *GalaxyClient) CreateDataQualityCheck(ctx context.Context, check interface{}) (map[string]interface{}, error) {
+	var result map[string]interface{}
+	err := c.doRequest(ctx, "POST", "/public/api/v1/dataQualityCheck", check, &result)
+	return result, err
+}
+
+func (c *GalaxyClient) GetDataQualityCheck(ctx context.Context, checkID string) (map[string]interface{}, error) {
+	var result map[string]interface{}
+	err := c.doRequest(ctx, "GET", apiPath("/public/api/v1/dataQualityCheck/%s", checkID), nil, &result)
+	return result, err
+}
+
+func (c *GalaxyClient) UpdateDataQualityCheck(ctx context.Context, checkID string, check interface{}) (map[string]interface{}, error) {
+	var result map[string]interface{}
+	err := c.doRequest(ctx, "PATCH", apiPath("/public/api/v1/dataQualityCheck/%s", checkID), check, &result)
+	return result, err
+}
+
+func (c *GalaxyClient) DeleteDataQualityCheck(ctx context.Context, checkID string) error {
+	return c.doRequest(ctx, "DELETE", apiPath("/public/api/v1/dataQualityCheck/%s", checkID), nil, nil)
+}
+
+// Groups data source
+func (c *GalaxyClient) ListGroups(ctx context.Context) (map[string]interface{}, error) {
+	var result map[string]interface{}
+	err := c.doRequest(ctx, "GET", "/public/api/v1/group", nil, &result)
+	return result, err
+}
+
+// Usage Example data source
+func (c *GalaxyClient) ListUsageExamples(ctx context.Context, dataProductID string) (map[string]interface{}, error) {
+	var result map[string]interface{}
+	err := c.doRequest(ctx, "GET", apiPath("/public/api/v1/dataProduct/%s/usageExample", dataProductID), nil, &result)
+	return result, err
+}
+
+// Evaluation data source
+func (c *GalaxyClient) GetEvaluation(ctx context.Context, checkID string) (map[string]interface{}, error) {
+	var result map[string]interface{}
+	err := c.doRequest(ctx, "GET", apiPath("/public/api/v1/dataQualityCheck/%s/evaluation", checkID), nil, &result)
+	return result, err
+}
+
+// Data Quality Schedule data source
+func (c *GalaxyClient) GetDataQualitySchedule(ctx context.Context, catalogID, schemaID, tableID string) (map[string]interface{}, error) {
+	var result map[string]interface{}
+	err := c.doRequest(ctx, "GET", apiPath("/public/api/v1/catalog/%s/schema/%s/table/%s/dataQualitySchedule", catalogID, schemaID, tableID), nil, &result)
 	return result, err
 }

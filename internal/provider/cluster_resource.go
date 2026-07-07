@@ -13,6 +13,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"time"
 
 	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/path"
@@ -118,6 +119,39 @@ func (r *clusterResource) Create(ctx context.Context, req resource.CreateRequest
 		return
 	}
 
+	// CreateCluster has no "enabled" field - clusters are created disabled and never start
+	// until explicitly enabled via PATCH. Without this, waitForClusterRunning would poll
+	// forever since a disabled cluster never transitions out of its initial state.
+	clusterID, ok := clusterResp["clusterId"].(string)
+	if !ok || clusterID == "" {
+		resp.Diagnostics.AddError(
+			"Error creating cluster",
+			"Create response missing clusterId; cannot enable or poll for readiness.",
+		)
+		return
+	}
+	_, err = r.client.UpdateCluster(ctx, clusterID, map[string]interface{}{"enabled": true})
+	if err != nil {
+		resp.Diagnostics.AddError(
+			"Error enabling cluster",
+			"Could not enable cluster "+clusterID+": "+err.Error(),
+		)
+		return
+	}
+
+	// Terraform's dependency graph only waits for this Create call to return, not for the
+	// cluster to finish provisioning. Resources that depend on this cluster (e.g. data quality
+	// checks that run EXPLAIN against it) need the cluster in RUNNING state or the Galaxy API
+	// rejects them with "Cluster is disabled. Cannot execute queries on disabled cluster."
+	clusterResp, err = r.waitForClusterRunning(ctx, clusterID)
+	if err != nil {
+		resp.Diagnostics.AddError(
+			"Error waiting for cluster to become ready",
+			err.Error(),
+		)
+		return
+	}
+
 	// Update plan with response data
 	r.updateModelFromResponse(ctx, &plan, clusterResp, &resp.Diagnostics)
 	if resp.Diagnostics.HasError() {
@@ -130,6 +164,55 @@ func (r *clusterResource) Create(ctx context.Context, req resource.CreateRequest
 
 	// Save data into Terraform state
 	resp.Diagnostics.Append(resp.State.Set(ctx, &plan)...)
+}
+
+const (
+	clusterReadyPollInterval = 5 * time.Second
+	// Observed real-world startup time is ~80-90s; 10 minutes gives generous margin for variance.
+	clusterReadyTimeout = 10 * time.Minute
+)
+
+// clusterTerminalFailureStates lists cluster states that cannot transition to RUNNING.
+// Polling should fail fast when the cluster lands in one of these instead of waiting for timeout.
+var clusterTerminalFailureStates = map[string]struct{}{
+	"FAILED":      {},
+	"TERMINATED":  {},
+	"TERMINATING": {},
+	"ERROR":       {},
+	"STOPPED":     {},
+	"STOPPING":    {},
+}
+
+// waitForClusterRunning polls the cluster until it reaches RUNNING state, since only that
+// state guarantees the cluster has a live Trino URI that can serve queries. Returns early
+// if the cluster enters a terminal non-running state (e.g. FAILED, TERMINATED).
+func (r *clusterResource) waitForClusterRunning(ctx context.Context, clusterID string) (map[string]interface{}, error) {
+	ctx, cancel := context.WithTimeout(ctx, clusterReadyTimeout)
+	defer cancel()
+
+	ticker := time.NewTicker(clusterReadyPollInterval)
+	defer ticker.Stop()
+
+	for {
+		clusterResp, err := r.client.GetCluster(ctx, clusterID)
+		if err != nil {
+			return nil, fmt.Errorf("could not get cluster %s: %w", clusterID, err)
+		}
+
+		state, _ := clusterResp["clusterState"].(string)
+		if state == "RUNNING" {
+			return clusterResp, nil
+		}
+		if _, terminal := clusterTerminalFailureStates[state]; terminal {
+			return nil, fmt.Errorf("cluster %s entered terminal state %s and cannot reach RUNNING", clusterID, state)
+		}
+
+		select {
+		case <-ctx.Done():
+			return nil, fmt.Errorf("cluster %s did not reach RUNNING state before timeout (last state: %s)", clusterID, state)
+		case <-ticker.C:
+		}
+	}
 }
 
 func (r *clusterResource) Read(ctx context.Context, req resource.ReadRequest, resp *resource.ReadResponse) {

@@ -21,6 +21,7 @@ description: |-
 
 ### Read-Only
 
+- `business_context` (String) Business context for the Data Product, used to guide AI agents (read only)
 - `catalog` (Attributes) Catalog details (read only) (see [below for nested schema](#nestedatt--catalog))
 - `contacts` (Attributes List) Data Product contacts (read only) (see [below for nested schema](#nestedatt--contacts))
 - `created_by` (Attributes) Created by user. If empty then the user is inactive/deleted. (read only) (see [below for nested schema](#nestedatt--created_by))
@@ -50,8 +51,8 @@ Read-Only:
 
 Read-Only:
 
-- `email` (String) User email (read only)
-- `user_id` (String) User ID (read only)
+- `email` (String) User email
+- `user_id` (String) User ID
 
 
 <a id="nestedatt--created_by"></a>
@@ -59,8 +60,8 @@ Read-Only:
 
 Read-Only:
 
-- `email` (String) User email (read only)
-- `user_id` (String) User ID (read only)
+- `email` (String) User email
+- `user_id` (String) User ID
 
 
 <a id="nestedatt--links"></a>
@@ -68,8 +69,8 @@ Read-Only:
 
 Read-Only:
 
-- `name` (String) The name of the link (read only)
-- `uri` (String) The link URI (read only)
+- `name` (String) The name of the link
+- `uri` (String) The link URI
 
 
 <a id="nestedatt--modified_by"></a>
@@ -77,5 +78,5 @@ Read-Only:
 
 Read-Only:
 
-- `email` (String) User email (read only)
-- `user_id` (String) User ID (read only)
+- `email` (String) User email
+- `user_id` (String) User ID

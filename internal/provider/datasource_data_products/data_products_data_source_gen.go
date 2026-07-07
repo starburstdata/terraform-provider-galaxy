@@ -21,6 +21,11 @@ func DataProductsDataSourceSchema(ctx context.Context) schema.Schema {
 			"result": schema.ListNestedAttribute{
 				NestedObject: schema.NestedAttributeObject{
 					Attributes: map[string]schema.Attribute{
+						"business_context": schema.StringAttribute{
+							Computed:            true,
+							Description:         "Business context for the Data Product, used to guide AI agents (read only)",
+							MarkdownDescription: "Business context for the Data Product, used to guide AI agents (read only)",
+						},
 						"catalog": schema.SingleNestedAttribute{
 							Attributes: map[string]schema.Attribute{
 								"catalog_id": schema.StringAttribute{
@@ -59,13 +64,13 @@ func DataProductsDataSourceSchema(ctx context.Context) schema.Schema {
 								Attributes: map[string]schema.Attribute{
 									"email": schema.StringAttribute{
 										Computed:            true,
-										Description:         "User email (read only)",
-										MarkdownDescription: "User email (read only)",
+										Description:         "User email",
+										MarkdownDescription: "User email",
 									},
 									"user_id": schema.StringAttribute{
 										Computed:            true,
-										Description:         "User ID (read only)",
-										MarkdownDescription: "User ID (read only)",
+										Description:         "User ID",
+										MarkdownDescription: "User ID",
 									},
 								},
 								CustomType: ContactsType{
@@ -82,13 +87,13 @@ func DataProductsDataSourceSchema(ctx context.Context) schema.Schema {
 							Attributes: map[string]schema.Attribute{
 								"email": schema.StringAttribute{
 									Computed:            true,
-									Description:         "User email (read only)",
-									MarkdownDescription: "User email (read only)",
+									Description:         "User email",
+									MarkdownDescription: "User email",
 								},
 								"user_id": schema.StringAttribute{
 									Computed:            true,
-									Description:         "User ID (read only)",
-									MarkdownDescription: "User ID (read only)",
+									Description:         "User ID",
+									MarkdownDescription: "User ID",
 								},
 							},
 							CustomType: CreatedByType{
@@ -125,13 +130,13 @@ func DataProductsDataSourceSchema(ctx context.Context) schema.Schema {
 								Attributes: map[string]schema.Attribute{
 									"name": schema.StringAttribute{
 										Computed:            true,
-										Description:         "The name of the link (read only)",
-										MarkdownDescription: "The name of the link (read only)",
+										Description:         "The name of the link",
+										MarkdownDescription: "The name of the link",
 									},
 									"uri": schema.StringAttribute{
 										Computed:            true,
-										Description:         "The link URI (read only)",
-										MarkdownDescription: "The link URI (read only)",
+										Description:         "The link URI",
+										MarkdownDescription: "The link URI",
 									},
 								},
 								CustomType: LinksType{
@@ -148,13 +153,13 @@ func DataProductsDataSourceSchema(ctx context.Context) schema.Schema {
 							Attributes: map[string]schema.Attribute{
 								"email": schema.StringAttribute{
 									Computed:            true,
-									Description:         "User email (read only)",
-									MarkdownDescription: "User email (read only)",
+									Description:         "User email",
+									MarkdownDescription: "User email",
 								},
 								"user_id": schema.StringAttribute{
 									Computed:            true,
-									Description:         "User ID (read only)",
-									MarkdownDescription: "User ID (read only)",
+									Description:         "User ID",
+									MarkdownDescription: "User ID",
 								},
 							},
 							CustomType: ModifiedByType{
@@ -229,6 +234,24 @@ func (t ResultType) ValueFromObject(ctx context.Context, in basetypes.ObjectValu
 	var diags diag.Diagnostics
 
 	attributes := in.Attributes()
+
+	businessContextAttribute, ok := attributes["business_context"]
+
+	if !ok {
+		diags.AddError(
+			"Attribute Missing",
+			`business_context is missing from object`)
+
+		return nil, diags
+	}
+
+	businessContextVal, ok := businessContextAttribute.(basetypes.StringValue)
+
+	if !ok {
+		diags.AddError(
+			"Attribute Wrong Type",
+			fmt.Sprintf(`business_context expected to be basetypes.StringValue, was: %T`, businessContextAttribute))
+	}
 
 	catalogAttribute, ok := attributes["catalog"]
 
@@ -469,6 +492,7 @@ func (t ResultType) ValueFromObject(ctx context.Context, in basetypes.ObjectValu
 	}
 
 	return ResultValue{
+		BusinessContext:  businessContextVal,
 		Catalog:          catalogVal,
 		Contacts:         contactsVal,
 		CreatedBy:        createdByVal,
@@ -549,6 +573,24 @@ func NewResultValue(attributeTypes map[string]attr.Type, attributes map[string]a
 		return NewResultValueUnknown(), diags
 	}
 
+	businessContextAttribute, ok := attributes["business_context"]
+
+	if !ok {
+		diags.AddError(
+			"Attribute Missing",
+			`business_context is missing from object`)
+
+		return NewResultValueUnknown(), diags
+	}
+
+	businessContextVal, ok := businessContextAttribute.(basetypes.StringValue)
+
+	if !ok {
+		diags.AddError(
+			"Attribute Wrong Type",
+			fmt.Sprintf(`business_context expected to be basetypes.StringValue, was: %T`, businessContextAttribute))
+	}
+
 	catalogAttribute, ok := attributes["catalog"]
 
 	if !ok {
@@ -788,6 +830,7 @@ func NewResultValue(attributeTypes map[string]attr.Type, attributes map[string]a
 	}
 
 	return ResultValue{
+		BusinessContext:  businessContextVal,
 		Catalog:          catalogVal,
 		Contacts:         contactsVal,
 		CreatedBy:        createdByVal,
@@ -873,6 +916,7 @@ func (t ResultType) ValueType(ctx context.Context) attr.Value {
 var _ basetypes.ObjectValuable = ResultValue{}
 
 type ResultValue struct {
+	BusinessContext  basetypes.StringValue `tfsdk:"business_context"`
 	Catalog          basetypes.ObjectValue `tfsdk:"catalog"`
 	Contacts         basetypes.ListValue   `tfsdk:"contacts"`
 	CreatedBy        basetypes.ObjectValue `tfsdk:"created_by"`
@@ -890,11 +934,12 @@ type ResultValue struct {
 }
 
 func (v ResultValue) ToTerraformValue(ctx context.Context) (tftypes.Value, error) {
-	attrTypes := make(map[string]tftypes.Type, 13)
+	attrTypes := make(map[string]tftypes.Type, 14)
 
 	var val tftypes.Value
 	var err error
 
+	attrTypes["business_context"] = basetypes.StringType{}.TerraformType(ctx)
 	attrTypes["catalog"] = basetypes.ObjectType{
 		AttrTypes: CatalogValue{}.AttributeTypes(ctx),
 	}.TerraformType(ctx)
@@ -923,7 +968,15 @@ func (v ResultValue) ToTerraformValue(ctx context.Context) (tftypes.Value, error
 
 	switch v.state {
 	case attr.ValueStateKnown:
-		vals := make(map[string]tftypes.Value, 13)
+		vals := make(map[string]tftypes.Value, 14)
+
+		val, err = v.BusinessContext.ToTerraformValue(ctx)
+
+		if err != nil {
+			return tftypes.NewValue(objectType, tftypes.UnknownValue), err
+		}
+
+		vals["business_context"] = val
 
 		val, err = v.Catalog.ToTerraformValue(ctx)
 
@@ -1180,6 +1233,7 @@ func (v ResultValue) ToObjectValue(ctx context.Context) (basetypes.ObjectValue, 
 	}
 
 	attributeTypes := map[string]attr.Type{
+		"business_context": basetypes.StringType{},
 		"catalog": basetypes.ObjectType{
 			AttrTypes: CatalogValue{}.AttributeTypes(ctx),
 		},
@@ -1216,6 +1270,7 @@ func (v ResultValue) ToObjectValue(ctx context.Context) (basetypes.ObjectValue, 
 	objVal, diags := types.ObjectValue(
 		attributeTypes,
 		map[string]attr.Value{
+			"business_context":   v.BusinessContext,
 			"catalog":            catalog,
 			"contacts":           contacts,
 			"created_by":         createdBy,
@@ -1247,6 +1302,10 @@ func (v ResultValue) Equal(o attr.Value) bool {
 
 	if v.state != attr.ValueStateKnown {
 		return true
+	}
+
+	if !v.BusinessContext.Equal(other.BusinessContext) {
+		return false
 	}
 
 	if !v.Catalog.Equal(other.Catalog) {
@@ -1314,6 +1373,7 @@ func (v ResultValue) Type(ctx context.Context) attr.Type {
 
 func (v ResultValue) AttributeTypes(ctx context.Context) map[string]attr.Type {
 	return map[string]attr.Type{
+		"business_context": basetypes.StringType{},
 		"catalog": basetypes.ObjectType{
 			AttrTypes: CatalogValue{}.AttributeTypes(ctx),
 		},

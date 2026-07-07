@@ -18,16 +18,17 @@ description: |-
 ### Required
 
 - `catalog_id` (String) Catalog ID
-- `contacts` (Attributes List) Data Product contacts (read only) (see [below for nested schema](#nestedatt--contacts))
+- `contacts` (Attributes List) Data Product contacts (see [below for nested schema](#nestedatt--contacts))
 - `name` (String) Data Product name
 - `schema_name` (String) Name of the data product schema
 - `summary` (String) Short summary of Data Product
 
 ### Optional
 
+- `business_context` (String) Business context for the Data Product, used to guide AI agents
 - `default_cluster_id` (String) Default cluster ID for Data Product
 - `description` (String) Long form description of Data Product
-- `links` (Attributes List) Any links for this Data Product (read only) (see [below for nested schema](#nestedatt--links))
+- `links` (Attributes List) Any links for this Data Product (see [below for nested schema](#nestedatt--links))
 
 ### Read-Only
 
@@ -43,8 +44,8 @@ description: |-
 
 Required:
 
-- `email` (String) User email (read only)
-- `user_id` (String) User ID (read only)
+- `email` (String) User email
+- `user_id` (String) User ID
 
 
 <a id="nestedatt--links"></a>
@@ -52,8 +53,8 @@ Required:
 
 Required:
 
-- `name` (String) The name of the link (read only)
-- `uri` (String) The link URI (read only)
+- `name` (String) The name of the link
+- `uri` (String) The link URI
 
 
 <a id="nestedatt--catalog"></a>
@@ -72,8 +73,8 @@ Read-Only:
 
 Read-Only:
 
-- `email` (String) User email (read only)
-- `user_id` (String) User ID (read only)
+- `email` (String) User email
+- `user_id` (String) User ID
 
 
 <a id="nestedatt--modified_by"></a>
@@ -81,8 +82,8 @@ Read-Only:
 
 Read-Only:
 
-- `email` (String) User email (read only)
-- `user_id` (String) User ID (read only)
+- `email` (String) User email
+- `user_id` (String) User ID
 
 ## Import
 
