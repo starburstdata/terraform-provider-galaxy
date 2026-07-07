@@ -47,15 +47,21 @@ const (
 	clusterPathPrefix = "/public/api/v1/cluster/"
 )
 
+// Rate limiters are package-global so all GalaxyClient instances in a process
+// share a single budget. Cloudflare enforces per-IP buckets, so per-instance
+// limiters under-count when multiple providers (parallel acceptance tests,
+// multi-workspace runs) hit the same edge from one host.
+var (
+	sharedLimiter        = rate.NewLimiter(rate.Limit(requestRateLimitPerSec), requestBurstLimit)
+	sharedClusterLimiter = rate.NewLimiter(rate.Limit(clusterRateLimitPerSec), clusterBurstLimit)
+)
+
 type GalaxyClient struct {
 	BaseURL         string
 	ClientID        string
 	ClientSecret    string
 	HTTPClient      *http.Client
 	ProviderVersion string
-
-	limiter        *rate.Limiter
-	clusterLimiter *rate.Limiter
 
 	tokenMu     sync.RWMutex
 	accessToken string
@@ -81,8 +87,6 @@ func NewGalaxyClient(baseURL, clientID, clientSecret, providerVersion string) *G
 		HTTPClient: &http.Client{
 			Timeout: 30 * time.Second,
 		},
-		limiter:        rate.NewLimiter(rate.Limit(requestRateLimitPerSec), requestBurstLimit),
-		clusterLimiter: rate.NewLimiter(rate.Limit(clusterRateLimitPerSec), clusterBurstLimit),
 	}
 }
 
@@ -184,11 +188,11 @@ func (c *GalaxyClient) doRequestWithRetry(ctx context.Context, method, path stri
 		return c.doRequestWithRetry(ctx, method, path, body, result, retries-1)
 	}
 
-	if err := c.limiter.Wait(ctx); err != nil {
+	if err := sharedLimiter.Wait(ctx); err != nil {
 		return fmt.Errorf("rate limiter wait: %w", err)
 	}
 	if strings.HasPrefix(path, clusterPathPrefix) {
-		if err := c.clusterLimiter.Wait(ctx); err != nil {
+		if err := sharedClusterLimiter.Wait(ctx); err != nil {
 			return fmt.Errorf("cluster rate limiter wait: %w", err)
 		}
 	}
