@@ -118,6 +118,15 @@ func (r *clusterResource) Create(ctx context.Context, req resource.CreateRequest
 		return
 	}
 
+	// Save the cluster ID to state immediately so that if polling fails, we don't orphan the resource
+	if clusterId, ok := clusterResp["clusterId"].(string); ok {
+		plan.ClusterId = types.StringValue(clusterId)
+	}
+	resp.Diagnostics.Append(resp.State.Set(ctx, &plan)...)
+	if resp.Diagnostics.HasError() {
+		return
+	}
+
 	// Update plan with response data
 	r.updateModelFromResponse(ctx, &plan, clusterResp, &resp.Diagnostics)
 	if resp.Diagnostics.HasError() {
@@ -375,9 +384,9 @@ func (r *clusterResource) updateModelFromResponse(ctx context.Context, model *re
 		model.Enabled = types.BoolNull()
 	}
 
-	// Edge case: trino_uri field remains unknown after apply when cluster is in DISABLED state. Only set when ENABLED.
+	// Edge case: trino_uri field remains unknown after apply when cluster is in DISABLED state. Only set when ENABLED or RUNNING.
 	if trinoUri, ok := response["trinoUri"].(string); ok {
-		if model.ClusterState.ValueString() == "ENABLED" {
+		if model.ClusterState.ValueString() == "ENABLED" || model.ClusterState.ValueString() == "RUNNING" {
 			model.TrinoUri = types.StringValue(trinoUri)
 		} else {
 			// Set to null when cluster is not enabled
