@@ -18,6 +18,12 @@ import (
 func DataProductResourceSchema(ctx context.Context) schema.Schema {
 	return schema.Schema{
 		Attributes: map[string]schema.Attribute{
+			"business_context": schema.StringAttribute{
+				Optional:            true,
+				Computed:            true,
+				Description:         "Business context for the Data Product, used to guide AI agents",
+				MarkdownDescription: "Business context for the Data Product, used to guide AI agents",
+			},
 			"catalog": schema.SingleNestedAttribute{
 				Attributes: map[string]schema.Attribute{
 					"catalog_id": schema.StringAttribute{
@@ -61,13 +67,13 @@ func DataProductResourceSchema(ctx context.Context) schema.Schema {
 					Attributes: map[string]schema.Attribute{
 						"email": schema.StringAttribute{
 							Required:            true,
-							Description:         "User email (read only)",
-							MarkdownDescription: "User email (read only)",
+							Description:         "User email",
+							MarkdownDescription: "User email",
 						},
 						"user_id": schema.StringAttribute{
 							Required:            true,
-							Description:         "User ID (read only)",
-							MarkdownDescription: "User ID (read only)",
+							Description:         "User ID",
+							MarkdownDescription: "User ID",
 						},
 					},
 					CustomType: ContactsType{
@@ -77,20 +83,20 @@ func DataProductResourceSchema(ctx context.Context) schema.Schema {
 					},
 				},
 				Required:            true,
-				Description:         "Data Product contacts (read only)",
-				MarkdownDescription: "Data Product contacts (read only)",
+				Description:         "Data Product contacts",
+				MarkdownDescription: "Data Product contacts",
 			},
 			"created_by": schema.SingleNestedAttribute{
 				Attributes: map[string]schema.Attribute{
 					"email": schema.StringAttribute{
 						Computed:            true,
-						Description:         "User email (read only)",
-						MarkdownDescription: "User email (read only)",
+						Description:         "User email",
+						MarkdownDescription: "User email",
 					},
 					"user_id": schema.StringAttribute{
 						Computed:            true,
-						Description:         "User ID (read only)",
-						MarkdownDescription: "User ID (read only)",
+						Description:         "User ID",
+						MarkdownDescription: "User ID",
 					},
 				},
 				CustomType: CreatedByType{
@@ -129,13 +135,13 @@ func DataProductResourceSchema(ctx context.Context) schema.Schema {
 					Attributes: map[string]schema.Attribute{
 						"name": schema.StringAttribute{
 							Required:            true,
-							Description:         "The name of the link (read only)",
-							MarkdownDescription: "The name of the link (read only)",
+							Description:         "The name of the link",
+							MarkdownDescription: "The name of the link",
 						},
 						"uri": schema.StringAttribute{
 							Required:            true,
-							Description:         "The link URI (read only)",
-							MarkdownDescription: "The link URI (read only)",
+							Description:         "The link URI",
+							MarkdownDescription: "The link URI",
 						},
 					},
 					CustomType: LinksType{
@@ -146,20 +152,20 @@ func DataProductResourceSchema(ctx context.Context) schema.Schema {
 				},
 				Optional:            true,
 				Computed:            true,
-				Description:         "Any links for this Data Product (read only)",
-				MarkdownDescription: "Any links for this Data Product (read only)",
+				Description:         "Any links for this Data Product",
+				MarkdownDescription: "Any links for this Data Product",
 			},
 			"modified_by": schema.SingleNestedAttribute{
 				Attributes: map[string]schema.Attribute{
 					"email": schema.StringAttribute{
 						Computed:            true,
-						Description:         "User email (read only)",
-						MarkdownDescription: "User email (read only)",
+						Description:         "User email",
+						MarkdownDescription: "User email",
 					},
 					"user_id": schema.StringAttribute{
 						Computed:            true,
-						Description:         "User ID (read only)",
-						MarkdownDescription: "User ID (read only)",
+						Description:         "User ID",
+						MarkdownDescription: "User ID",
 					},
 				},
 				CustomType: ModifiedByType{
@@ -196,6 +202,7 @@ func DataProductResourceSchema(ctx context.Context) schema.Schema {
 }
 
 type DataProductModel struct {
+	BusinessContext  types.String    `tfsdk:"business_context"`
 	Catalog          CatalogValue    `tfsdk:"catalog"`
 	CatalogId        types.String    `tfsdk:"catalog_id"`
 	Contacts         types.List      `tfsdk:"contacts"`
