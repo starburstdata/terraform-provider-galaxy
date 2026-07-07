@@ -65,6 +65,14 @@ func (d *dataQualityCheckDataSource) Read(ctx context.Context, req datasource.Re
 		return
 	}
 
+	if d.client == nil {
+		resp.Diagnostics.AddError(
+			"Unconfigured Client",
+			"Cannot perform data source operation: client is not configured. Please ensure the provider configuration is complete.",
+		)
+		return
+	}
+
 	id := config.DataQualityCheckId.ValueString()
 	tflog.Debug(ctx, "Reading data quality check", map[string]interface{}{"id": id})
 

@@ -66,6 +66,14 @@ func (d *usageExampleDataSource) Read(ctx context.Context, req datasource.ReadRe
 		return
 	}
 
+	if d.client == nil {
+		resp.Diagnostics.AddError(
+			"Unconfigured Client",
+			"Cannot perform data source operation: client is not configured. Please ensure the provider configuration is complete.",
+		)
+		return
+	}
+
 	dataProductId := config.DataProductId.ValueString()
 	tflog.Debug(ctx, "Reading usage examples", map[string]interface{}{"data_product_id": dataProductId})
 
@@ -83,6 +91,8 @@ func (d *usageExampleDataSource) Read(ctx context.Context, req datasource.ReadRe
 	for _, resultInterface := range allResults {
 		if resultMap, ok := resultInterface.(map[string]interface{}); ok {
 			resultMaps = append(resultMaps, resultMap)
+		} else {
+			tflog.Warn(ctx, fmt.Sprintf("unexpected entry type in usage examples list, skipping: %T", resultInterface))
 		}
 	}
 

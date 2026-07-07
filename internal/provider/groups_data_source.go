@@ -66,6 +66,14 @@ func (d *groupsDataSource) Read(ctx context.Context, req datasource.ReadRequest,
 		return
 	}
 
+	if d.client == nil {
+		resp.Diagnostics.AddError(
+			"Unconfigured Client",
+			"Cannot perform data source operation: client is not configured. Please ensure the provider configuration is complete.",
+		)
+		return
+	}
+
 	tflog.Debug(ctx, "Reading groups with automatic pagination")
 
 	allGroups, err := d.client.GetAllPaginatedResults(ctx, "/public/api/v1/group")
@@ -195,6 +203,8 @@ func (d *groupsDataSource) mapRolesList(ctx context.Context, groupMap map[string
 					roleValue.RoleName = types.StringValue(roleName)
 				}
 				rolesList = append(rolesList, roleValue)
+			} else {
+				tflog.Warn(ctx, fmt.Sprintf("unexpected entry type in roles list, skipping: %T", roleInterface))
 			}
 		}
 		listValue, d := types.ListValueFrom(ctx, elementType, rolesList)
@@ -229,6 +239,8 @@ func (d *groupsDataSource) mapUsersList(ctx context.Context, groupMap map[string
 					userValue.UserId = types.StringValue(userId)
 				}
 				usersList = append(usersList, userValue)
+			} else {
+				tflog.Warn(ctx, fmt.Sprintf("unexpected entry type in users list, skipping: %T", userInterface))
 			}
 		}
 		listValue, d := types.ListValueFrom(ctx, elementType, usersList)

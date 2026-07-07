@@ -67,6 +67,14 @@ func (d *dataQualityChecksDataSource) Read(ctx context.Context, req datasource.R
 		return
 	}
 
+	if d.client == nil {
+		resp.Diagnostics.AddError(
+			"Unconfigured Client",
+			"Cannot perform data source operation: client is not configured. Please ensure the provider configuration is complete.",
+		)
+		return
+	}
+
 	tflog.Debug(ctx, "Reading data quality checks")
 
 	// Build query path with optional filters
@@ -98,6 +106,8 @@ func (d *dataQualityChecksDataSource) Read(ctx context.Context, req datasource.R
 	for _, resultInterface := range allResults {
 		if resultMap, ok := resultInterface.(map[string]interface{}); ok {
 			resultMaps = append(resultMaps, resultMap)
+		} else {
+			tflog.Warn(ctx, fmt.Sprintf("unexpected entry type in data quality checks list, skipping: %T", resultInterface))
 		}
 	}
 
