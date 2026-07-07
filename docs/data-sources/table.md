@@ -32,7 +32,7 @@ Read-Only:
 
 - `contacts` (Attributes List) Any contacts set for this table (read only) (see [below for nested schema](#nestedatt--result--contacts))
 - `description` (String) Any description set for this table (read only)
-- `owner` (Attributes) The role that owns this catalog (read only) (see [below for nested schema](#nestedatt--result--owner))
+- `owner` (Attributes) The role that owns this table (read only) (see [below for nested schema](#nestedatt--result--owner))
 - `table_id` (String) Table ID (read only)
 - `table_type` (String) Any table type returned from the data source (read only)
 - `tags` (Attributes List) Any tags set for this table (read only) (see [below for nested schema](#nestedatt--result--tags))

@@ -32,7 +32,7 @@ Read-Only:
 - `contacts` (Attributes List) Any contacts set for this schema (read only) (see [below for nested schema](#nestedatt--result--contacts))
 - `description` (String) Any description set for this schema (read only)
 - `links` (Attributes List) Any links set for this schema (read only) (see [below for nested schema](#nestedatt--result--links))
-- `owner` (Attributes) The role that owns this catalog (read only) (see [below for nested schema](#nestedatt--result--owner))
+- `owner` (Attributes) The role that owns this schema (read only) (see [below for nested schema](#nestedatt--result--owner))
 - `schema_id` (String) Schema ID (read only)
 - `tags` (Attributes List) Any tags set for this schema (read only) (see [below for nested schema](#nestedatt--result--tags))
 

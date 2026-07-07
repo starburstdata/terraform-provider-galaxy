@@ -98,8 +98,8 @@ func SchemaDataSourceSchema(ctx context.Context) schema.Schema {
 								},
 							},
 							Computed:            true,
-							Description:         "The role that owns this catalog (read only)",
-							MarkdownDescription: "The role that owns this catalog (read only)",
+							Description:         "The role that owns this schema (read only)",
+							MarkdownDescription: "The role that owns this schema (read only)",
 						},
 						"schema_id": schema.StringAttribute{
 							Computed:            true,
