@@ -277,6 +277,31 @@ func validScopeLen(n int) bool {
 	return n == 0 || n == 1 || n == 3
 }
 
+// scopeShapeValidForEntityKind validates that the scope part count matches
+// expectations for the given entity_kind.
+func scopeShapeValidForEntityKind(entityKind string, scopeLen int) bool {
+	switch entityKind {
+	case "Schema":
+		return scopeLen == 0 || scopeLen == 1
+	case "Table", "Column":
+		return scopeLen == 0 || scopeLen == 3
+	default:
+		return true
+	}
+}
+
+// scopeShapeDescription returns a human-readable description of valid scope shapes for an entity_kind.
+func scopeShapeDescription(entityKind string) string {
+	switch entityKind {
+	case "Schema":
+		return "0 or 1 scope part"
+	case "Table", "Column":
+		return "0 or 3 scope parts"
+	default:
+		return "any scope"
+	}
+}
+
 // parsedImportID holds the structured pieces of a role_privilege_grant import ID.
 // SchemaName/TableName/ColumnName are empty strings when not present.
 type parsedImportID struct {
@@ -336,10 +361,16 @@ func parseRolePrivilegeGrantImportID(id string) (parsedImportID, error) {
 		}
 	}
 
+	entityKind := parts[entityKindIdx]
+	if !scopeShapeValidForEntityKind(entityKind, len(scopeParts)) {
+		return parsedImportID{}, fmt.Errorf("invalid scope shape for %s entity: expected %s, but got %d scope parts in import ID: %s",
+			entityKind, scopeShapeDescription(entityKind), len(scopeParts), id)
+	}
+
 	out := parsedImportID{
 		RoleID:     parts[0],
 		EntityID:   entityID,
-		EntityKind: parts[entityKindIdx],
+		EntityKind: entityKind,
 		Privilege:  parts[entityKindIdx+1],
 		GrantKind:  parts[anchor],
 	}
