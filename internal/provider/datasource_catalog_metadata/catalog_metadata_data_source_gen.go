@@ -33,13 +33,13 @@ func CatalogMetadataDataSourceSchema(ctx context.Context) schema.Schema {
 					Attributes: map[string]schema.Attribute{
 						"email": schema.StringAttribute{
 							Computed:            true,
-							Description:         "User email (read only)",
-							MarkdownDescription: "User email (read only)",
+							Description:         "User email",
+							MarkdownDescription: "User email",
 						},
 						"user_id": schema.StringAttribute{
 							Computed:            true,
-							Description:         "User ID (read only)",
-							MarkdownDescription: "User ID (read only)",
+							Description:         "User ID",
+							MarkdownDescription: "User ID",
 						},
 					},
 					CustomType: ContactsType{

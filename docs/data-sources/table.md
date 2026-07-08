@@ -20,34 +20,27 @@ description: |-
 - `catalog_id` (String) - A catalog
 - This parameter can be looked up using `name` instead of its Id. Use `name=value` instead of an Id to lookup/search using the `value`. `value` must be encoded ([see RFC](https://www.rfc-editor.org/rfc/rfc3986#section-2.2) including `=`)
 - `schema_id` (String) A schema from a catalog
+- `table_id` (String) A table from a catalog
 
 ### Read-Only
 
-- `result` (Attributes List) A page of results. (see [below for nested schema](#nestedatt--result))
-
-<a id="nestedatt--result"></a>
-### Nested Schema for `result`
-
-Read-Only:
-
-- `contacts` (Attributes List) Any contacts set for this table (read only) (see [below for nested schema](#nestedatt--result--contacts))
+- `contacts` (Attributes List) Any contacts set for this table (read only) (see [below for nested schema](#nestedatt--contacts))
 - `description` (String) Any description set for this table (read only)
-- `owner` (Attributes) The role that owns this catalog (read only) (see [below for nested schema](#nestedatt--result--owner))
-- `table_id` (String) Table ID (read only)
+- `owner` (Attributes) The role that owns this catalog (read only) (see [below for nested schema](#nestedatt--owner))
 - `table_type` (String) Any table type returned from the data source (read only)
-- `tags` (Attributes List) Any tags set for this table (read only) (see [below for nested schema](#nestedatt--result--tags))
+- `tags` (Attributes List) Any tags set for this table (read only) (see [below for nested schema](#nestedatt--tags))
 
-<a id="nestedatt--result--contacts"></a>
-### Nested Schema for `result.contacts`
+<a id="nestedatt--contacts"></a>
+### Nested Schema for `contacts`
 
 Read-Only:
 
-- `email` (String) User email (read only)
-- `user_id` (String) User ID (read only)
+- `email` (String) User email
+- `user_id` (String) User ID
 
 
-<a id="nestedatt--result--owner"></a>
-### Nested Schema for `result.owner`
+<a id="nestedatt--owner"></a>
+### Nested Schema for `owner`
 
 Read-Only:
 
@@ -55,8 +48,8 @@ Read-Only:
 - `role_name` (String) Role name (read only)
 
 
-<a id="nestedatt--result--tags"></a>
-### Nested Schema for `result.tags`
+<a id="nestedatt--tags"></a>
+### Nested Schema for `tags`
 
 Read-Only:
 

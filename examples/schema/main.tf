@@ -22,16 +22,14 @@ locals {
   has_catalogs = local.first_catalog != null
 }
 
-# Test the schema data source (only if we have catalogs available)
+# Example: Reading a schema data source
+# Note: Replace "information_schema" with an actual schema that exists in your catalog
+# To find available schemas, users can use the Galaxy API directly
+# Set count = 1 to enable this data source with an actual schema ID
 data "galaxy_schema" "test" {
-  count      = local.has_catalogs ? 1 : 0
-  catalog_id = local.first_catalog.catalog_id
-}
-
-# Local processing of schema results
-locals {
-  schema_result = local.has_catalogs ? try(data.galaxy_schema.test[0].result, []) : []
-  has_schemas   = length(local.schema_result) > 0
+  count      = 0
+  catalog_id = local.has_catalogs ? local.first_catalog.catalog_id : ""
+  schema_id  = "information_schema"
 }
 
 # Diagnostic outputs
@@ -43,10 +41,6 @@ output "catalogs_count" {
   value = length(local.catalogs_result)
 }
 
-output "schemas_count" {
-  value = length(local.schema_result)
-}
-
 output "first_catalog_debug" {
   value = {
     found      = local.first_catalog != null
@@ -55,64 +49,6 @@ output "first_catalog_debug" {
   }
 }
 
-# Schema data source test outputs (conditional)
-output "schema_test" {
-  value = local.has_catalogs ? {
-    catalog_id    = data.galaxy_schema.test[0].catalog_id
-    schemas_count = length(local.schema_result)
-    has_schemas   = local.has_schemas
-    test_status   = "success"
-  } : {
-    catalog_id    = "not_available"
-    schemas_count = 0
-    has_schemas   = false
-    test_status   = "failed"
-  }
-}
-
-# Show details of schemas (if available)
-output "schemas_details" {
-  value = local.has_schemas ? [
-    for schema in local.schema_result : {
-      schema_name = try(schema.schema_name, "unknown")
-      owner       = try(schema.owner, "unknown")
-      type        = try(schema.type, "unknown")
-      contacts    = length(try(schema.contacts, []))
-    }
-  ] : []
-  description = "Details of schemas in the catalog"
-}
-
-# Show first schema details for reference
-output "first_schema_info" {
-  value = local.has_schemas ? {
-    schema_name = try(local.schema_result[0].schema_name, "unknown")
-    owner       = try(local.schema_result[0].owner, "unknown")
-    type        = try(local.schema_result[0].type, "unknown")
-    contacts    = length(try(local.schema_result[0].contacts, []))
-  } : {
-    schema_name = "No schemas available"
-    owner       = "none"
-    type        = "none"
-    contacts    = 0
-  }
-  description = "Information about the first schema (if any exists)"
-}
-
-# Summary statistics
-output "schemas_summary" {
-  value = local.has_schemas ? {
-    total_schemas    = length(local.schema_result)
-    unique_owners    = length(distinct([for schema in local.schema_result : try(schema.owner, "unknown")]))
-    unique_types     = length(distinct([for schema in local.schema_result : try(schema.type, "unknown")]))
-    schemas_with_contacts = length([for schema in local.schema_result : schema if length(try(schema.contacts, [])) > 0])
-    status           = "success"
-  } : {
-    total_schemas    = 0
-    unique_owners    = 0
-    unique_types     = 0
-    schemas_with_contacts = 0
-    status           = "no_catalogs_available"
-  }
-  description = "Summary statistics of schemas"
+output "schema_example_note" {
+  value = "To test the schema data source, update the schema_id to an actual schema in your catalog and set count=1"
 }

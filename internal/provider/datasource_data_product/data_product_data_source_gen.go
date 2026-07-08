@@ -18,6 +18,11 @@ import (
 func DataProductDataSourceSchema(ctx context.Context) schema.Schema {
 	return schema.Schema{
 		Attributes: map[string]schema.Attribute{
+			"business_context": schema.StringAttribute{
+				Computed:            true,
+				Description:         "Business context for the Data Product, used to guide AI agents (read only)",
+				MarkdownDescription: "Business context for the Data Product, used to guide AI agents (read only)",
+			},
 			"catalog": schema.SingleNestedAttribute{
 				Attributes: map[string]schema.Attribute{
 					"catalog_id": schema.StringAttribute{
@@ -56,13 +61,13 @@ func DataProductDataSourceSchema(ctx context.Context) schema.Schema {
 					Attributes: map[string]schema.Attribute{
 						"email": schema.StringAttribute{
 							Computed:            true,
-							Description:         "User email (read only)",
-							MarkdownDescription: "User email (read only)",
+							Description:         "User email",
+							MarkdownDescription: "User email",
 						},
 						"user_id": schema.StringAttribute{
 							Computed:            true,
-							Description:         "User ID (read only)",
-							MarkdownDescription: "User ID (read only)",
+							Description:         "User ID",
+							MarkdownDescription: "User ID",
 						},
 					},
 					CustomType: ContactsType{
@@ -79,13 +84,13 @@ func DataProductDataSourceSchema(ctx context.Context) schema.Schema {
 				Attributes: map[string]schema.Attribute{
 					"email": schema.StringAttribute{
 						Computed:            true,
-						Description:         "User email (read only)",
-						MarkdownDescription: "User email (read only)",
+						Description:         "User email",
+						MarkdownDescription: "User email",
 					},
 					"user_id": schema.StringAttribute{
 						Computed:            true,
-						Description:         "User ID (read only)",
-						MarkdownDescription: "User ID (read only)",
+						Description:         "User ID",
+						MarkdownDescription: "User ID",
 					},
 				},
 				CustomType: CreatedByType{
@@ -122,13 +127,13 @@ func DataProductDataSourceSchema(ctx context.Context) schema.Schema {
 					Attributes: map[string]schema.Attribute{
 						"name": schema.StringAttribute{
 							Computed:            true,
-							Description:         "The name of the link (read only)",
-							MarkdownDescription: "The name of the link (read only)",
+							Description:         "The name of the link",
+							MarkdownDescription: "The name of the link",
 						},
 						"uri": schema.StringAttribute{
 							Computed:            true,
-							Description:         "The link URI (read only)",
-							MarkdownDescription: "The link URI (read only)",
+							Description:         "The link URI",
+							MarkdownDescription: "The link URI",
 						},
 					},
 					CustomType: LinksType{
@@ -145,13 +150,13 @@ func DataProductDataSourceSchema(ctx context.Context) schema.Schema {
 				Attributes: map[string]schema.Attribute{
 					"email": schema.StringAttribute{
 						Computed:            true,
-						Description:         "User email (read only)",
-						MarkdownDescription: "User email (read only)",
+						Description:         "User email",
+						MarkdownDescription: "User email",
 					},
 					"user_id": schema.StringAttribute{
 						Computed:            true,
-						Description:         "User ID (read only)",
-						MarkdownDescription: "User ID (read only)",
+						Description:         "User ID",
+						MarkdownDescription: "User ID",
 					},
 				},
 				CustomType: ModifiedByType{
@@ -188,6 +193,7 @@ func DataProductDataSourceSchema(ctx context.Context) schema.Schema {
 }
 
 type DataProductModel struct {
+	BusinessContext  types.String    `tfsdk:"business_context"`
 	Catalog          CatalogValue    `tfsdk:"catalog"`
 	Contacts         types.List      `tfsdk:"contacts"`
 	CreatedBy        CreatedByValue  `tfsdk:"created_by"`
