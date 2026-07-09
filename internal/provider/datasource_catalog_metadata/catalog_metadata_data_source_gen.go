@@ -76,8 +76,8 @@ func CatalogMetadataDataSourceSchema(ctx context.Context) schema.Schema {
 					},
 				},
 				Computed:            true,
-				Description:         "The role that owns this catalog (read only)",
-				MarkdownDescription: "The role that owns this catalog (read only)",
+				Description:         "The role that owns this resource (read only)",
+				MarkdownDescription: "The role that owns this resource (read only)",
 			},
 			"tags": schema.ListNestedAttribute{
 				NestedObject: schema.NestedAttributeObject{

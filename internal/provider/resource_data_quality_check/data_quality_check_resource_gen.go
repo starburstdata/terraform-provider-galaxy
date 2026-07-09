@@ -16,13 +16,13 @@ func DataQualityCheckResourceSchema(ctx context.Context) schema.Schema {
 		Attributes: map[string]schema.Attribute{
 			"catalog_id": schema.StringAttribute{
 				Required:            true,
-				Description:         "Catalog ID (read only)",
-				MarkdownDescription: "Catalog ID (read only)",
+				Description:         "Catalog ID",
+				MarkdownDescription: "Catalog ID",
 			},
 			"category": schema.StringAttribute{
 				Required:            true,
-				Description:         "Category of data quality check (read only)",
-				MarkdownDescription: "Category of data quality check (read only)",
+				Description:         "Category of data quality check",
+				MarkdownDescription: "Category of data quality check",
 				Validators: []validator.String{
 					stringvalidator.OneOf(
 						"Validity",
@@ -36,8 +36,8 @@ func DataQualityCheckResourceSchema(ctx context.Context) schema.Schema {
 			"cluster_id": schema.StringAttribute{
 				Optional:            true,
 				Computed:            true,
-				Description:         "ClusterId to validate expression on. Required for 'SqlQuery' kind quality checks. If missing, attempt will be made to use cluster that was already configured for the schedule. (read only)",
-				MarkdownDescription: "ClusterId to validate expression on. Required for 'SqlQuery' kind quality checks. If missing, attempt will be made to use cluster that was already configured for the schedule. (read only)",
+				Description:         "ClusterId to validate expression on. Required for 'SqlQuery' kind quality checks. If missing, attempt will be made to use cluster that was already configured for the schedule.",
+				MarkdownDescription: "ClusterId to validate expression on. Required for 'SqlQuery' kind quality checks. If missing, attempt will be made to use cluster that was already configured for the schedule.",
 			},
 			"data_quality_check_id": schema.StringAttribute{
 				Computed:            true,
@@ -47,13 +47,13 @@ func DataQualityCheckResourceSchema(ctx context.Context) schema.Schema {
 			"description": schema.StringAttribute{
 				Optional:            true,
 				Computed:            true,
-				Description:         "Description of what this check validates (read only)",
-				MarkdownDescription: "Description of what this check validates (read only)",
+				Description:         "Description of what this check validates",
+				MarkdownDescription: "Description of what this check validates",
 			},
 			"kind": schema.StringAttribute{
 				Required:            true,
-				Description:         "Kind of data quality check (read only)",
-				MarkdownDescription: "Kind of data quality check (read only)",
+				Description:         "Kind of data quality check",
+				MarkdownDescription: "Kind of data quality check",
 				Validators: []validator.String{
 					stringvalidator.OneOf(
 						"QualityExpression",
@@ -63,23 +63,23 @@ func DataQualityCheckResourceSchema(ctx context.Context) schema.Schema {
 			},
 			"name": schema.StringAttribute{
 				Required:            true,
-				Description:         "Name of the data quality check (read only)",
-				MarkdownDescription: "Name of the data quality check (read only)",
+				Description:         "Name of the data quality check",
+				MarkdownDescription: "Name of the data quality check",
 			},
 			"query": schema.StringAttribute{
 				Required:            true,
-				Description:         "Either expression or SQL query that implements the data quality check logic. (read only)",
-				MarkdownDescription: "Either expression or SQL query that implements the data quality check logic. (read only)",
+				Description:         "Either expression or SQL query that implements the data quality check logic.",
+				MarkdownDescription: "Either expression or SQL query that implements the data quality check logic.",
 			},
 			"schema_id": schema.StringAttribute{
 				Required:            true,
-				Description:         "Schema ID (read only)",
-				MarkdownDescription: "Schema ID (read only)",
+				Description:         "Schema ID",
+				MarkdownDescription: "Schema ID",
 			},
 			"severity": schema.StringAttribute{
 				Required:            true,
-				Description:         "Severity level of check failures (read only)",
-				MarkdownDescription: "Severity level of check failures (read only)",
+				Description:         "Severity level of check failures",
+				MarkdownDescription: "Severity level of check failures",
 				Validators: []validator.String{
 					stringvalidator.OneOf(
 						"Low",
@@ -91,8 +91,8 @@ func DataQualityCheckResourceSchema(ctx context.Context) schema.Schema {
 			},
 			"table_id": schema.StringAttribute{
 				Required:            true,
-				Description:         "Table ID (read only)",
-				MarkdownDescription: "Table ID (read only)",
+				Description:         "Table ID",
+				MarkdownDescription: "Table ID",
 			},
 		},
 	}

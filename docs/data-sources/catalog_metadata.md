@@ -25,7 +25,7 @@ description: |-
 - `catalog_name` (String) Catalog name (read only)
 - `contacts` (Attributes List) Any contacts set for this catalog (read only) (see [below for nested schema](#nestedatt--contacts))
 - `description` (String) Any description set for this catalog (read only)
-- `owner` (Attributes) The role that owns this catalog (read only) (see [below for nested schema](#nestedatt--owner))
+- `owner` (Attributes) The role that owns this resource (read only) (see [below for nested schema](#nestedatt--owner))
 - `tags` (Attributes List) Any tags set for this catalog (read only) (see [below for nested schema](#nestedatt--tags))
 
 <a id="nestedatt--contacts"></a>
