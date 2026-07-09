@@ -17,19 +17,19 @@ description: |-
 
 ### Required
 
-- `catalog_id` (String) Catalog ID (read only)
-- `category` (String) Category of data quality check (read only)
-- `kind` (String) Kind of data quality check (read only)
-- `name` (String) Name of the data quality check (read only)
-- `query` (String) Either expression or SQL query that implements the data quality check logic. (read only)
-- `schema_id` (String) Schema ID (read only)
-- `severity` (String) Severity level of check failures (read only)
-- `table_id` (String) Table ID (read only)
+- `catalog_id` (String) Catalog ID
+- `category` (String) Category of data quality check
+- `kind` (String) Kind of data quality check
+- `name` (String) Name of the data quality check
+- `query` (String) Either expression or SQL query that implements the data quality check logic.
+- `schema_id` (String) Schema ID
+- `severity` (String) Severity level of check failures
+- `table_id` (String) Table ID
 
 ### Optional
 
-- `cluster_id` (String) ClusterId to validate expression on. Required for 'SqlQuery' kind quality checks. If missing, attempt will be made to use cluster that was already configured for the schedule. (read only)
-- `description` (String) Description of what this check validates (read only)
+- `cluster_id` (String) ClusterId to validate expression on. Required for 'SqlQuery' kind quality checks. If missing, attempt will be made to use cluster that was already configured for the schedule.
+- `description` (String) Description of what this check validates
 
 ### Read-Only
 
