@@ -16,6 +16,9 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
 
@@ -40,7 +43,27 @@ func (r *column_maskResource) Metadata(ctx context.Context, req resource.Metadat
 }
 
 func (r *column_maskResource) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
-	resp.Schema = resource_column_mask.ColumnMaskResourceSchema(ctx)
+	s := resource_column_mask.ColumnMaskResourceSchema(ctx)
+
+	// column_mask_id is assigned at creation and never changes. Without UseStateForUnknown, any
+	// update to the column mask causes Terraform to mark column_mask_id as "known after apply".
+	if attr, ok := s.Attributes["column_mask_id"].(schema.StringAttribute); ok {
+		attr.PlanModifiers = []planmodifier.String{
+			stringplanmodifier.UseStateForUnknown(),
+		}
+		s.Attributes["column_mask_id"] = attr
+	}
+
+	// created is assigned at creation and never changes. Without UseStateForUnknown, any update
+	// to the column mask causes Terraform to mark created as "known after apply".
+	if attr, ok := s.Attributes["created"].(schema.StringAttribute); ok {
+		attr.PlanModifiers = []planmodifier.String{
+			stringplanmodifier.UseStateForUnknown(),
+		}
+		s.Attributes["created"] = attr
+	}
+
+	resp.Schema = s
 }
 
 func (r *column_maskResource) Configure(ctx context.Context, req resource.ConfigureRequest, resp *resource.ConfigureResponse) {

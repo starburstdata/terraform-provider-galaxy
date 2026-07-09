@@ -22,6 +22,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/booldefault"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/boolplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
 
@@ -46,6 +47,17 @@ func (r *clusterResource) Metadata(ctx context.Context, req resource.MetadataReq
 
 func (r *clusterResource) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
 	s := resource_cluster.ClusterResourceSchema(ctx)
+
+	// cluster_id is assigned at creation and never changes. Without UseStateForUnknown, any update
+	// to the cluster (e.g. catalog_refs change) causes Terraform to mark cluster_id as "known after
+	// apply", which propagates to downstream resources referencing it (e.g. galaxy_role_privilege_grant.entity_id)
+	// and forces unnecessary destroy/recreate cycles.
+	if attr, ok := s.Attributes["cluster_id"].(schema.StringAttribute); ok {
+		attr.PlanModifiers = []planmodifier.String{
+			stringplanmodifier.UseStateForUnknown(),
+		}
+		s.Attributes["cluster_id"] = attr
+	}
 
 	// warp_resiliency_enabled is a zombie field: the Galaxy API's CreateClusterConfiguration still
 	// requires it at the request boundary (primitive boolean, 400s on null), but ClusterDao hardcodes
