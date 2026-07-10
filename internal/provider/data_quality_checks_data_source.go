@@ -60,6 +60,14 @@ func (d *dataQualityChecksDataSource) Configure(ctx context.Context, req datasou
 }
 
 func (d *dataQualityChecksDataSource) Read(ctx context.Context, req datasource.ReadRequest, resp *datasource.ReadResponse) {
+	if d.client == nil {
+		resp.Diagnostics.AddError(
+			"Unconfigured Provider",
+			"The provider has not been properly configured. Please ensure the provider credentials are set.",
+		)
+		return
+	}
+
 	var config datasource_data_quality_checks.DataQualityChecksModel
 
 	resp.Diagnostics.Append(req.Config.Get(ctx, &config)...)
@@ -98,6 +106,8 @@ func (d *dataQualityChecksDataSource) Read(ctx context.Context, req datasource.R
 	for _, resultInterface := range allResults {
 		if resultMap, ok := resultInterface.(map[string]interface{}); ok {
 			resultMaps = append(resultMaps, resultMap)
+		} else {
+			tflog.Warn(ctx, fmt.Sprintf("unexpected entry type, skipping: %T", resultInterface))
 		}
 	}
 

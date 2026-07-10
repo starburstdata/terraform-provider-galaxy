@@ -11,6 +11,9 @@ package client
 
 import (
 	"context"
+	"io"
+	"net/http"
+	"strings"
 	"testing"
 	"time"
 )
@@ -84,5 +87,50 @@ func TestSleepCtx_RespectsContextCancellation(t *testing.T) {
 	}
 	if elapsed := time.Since(start); elapsed > 200*time.Millisecond {
 		t.Fatalf("sleepCtx did not return promptly on cancel: %v", elapsed)
+	}
+}
+
+type mockRoundTripper struct {
+	requestCount int
+	statusCode   int
+	method       string
+	attempts     []string
+}
+
+func (m *mockRoundTripper) RoundTrip(req *http.Request) (*http.Response, error) {
+	m.requestCount++
+	m.method = req.Method
+	m.attempts = append(m.attempts, req.Method)
+	return &http.Response{
+		StatusCode: m.statusCode,
+		Header:     http.Header{},
+		Body:       io.NopCloser(strings.NewReader("{}")),
+		Request:    req,
+	}, nil
+}
+
+func TestPost500NotRetried(t *testing.T) {
+	mock := &mockRoundTripper{statusCode: http.StatusInternalServerError}
+	client := &GalaxyClient{
+		BaseURL:         "http://localhost",
+		ClientID:        "test",
+		ClientSecret:    "test",
+		ProviderVersion: "1.0.0",
+		HTTPClient: &http.Client{
+			Transport: mock,
+		},
+		accessToken: "test-token",
+		tokenExpiry: time.Now().Add(1 * time.Hour),
+	}
+
+	ctx := context.Background()
+	var result map[string]interface{}
+	err := client.doRequestWithRetry(ctx, http.MethodPost, "/test", nil, &result, 3)
+
+	if err == nil {
+		t.Fatalf("expected error for 500 POST, got nil")
+	}
+	if mock.requestCount != 1 {
+		t.Fatalf("POST 500 should not be retried; expected 1 request, got %d", mock.requestCount)
 	}
 }

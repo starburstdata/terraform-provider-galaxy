@@ -90,6 +90,16 @@ func (r *service_account_passwordResource) Schema(ctx context.Context, req resou
 		baseSchema.Attributes["created"] = attr
 	}
 
+	// service_account_password_id is assigned at creation and never changes. Without
+	// UseStateForUnknown, any update to the service account password causes Terraform to mark
+	// service_account_password_id as "known after apply".
+	if attr, ok := baseSchema.Attributes["service_account_password_id"].(schema.StringAttribute); ok {
+		attr.PlanModifiers = []planmodifier.String{
+			stringplanmodifier.UseStateForUnknown(),
+		}
+		baseSchema.Attributes["service_account_password_id"] = attr
+	}
+
 	resp.Schema = baseSchema
 }
 

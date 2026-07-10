@@ -26,7 +26,7 @@ description: |-
 
 - `contacts` (Attributes List) Any contacts set for this table (read only) (see [below for nested schema](#nestedatt--contacts))
 - `description` (String) Any description set for this table (read only)
-- `owner` (Attributes) The role that owns this resource (read only) (see [below for nested schema](#nestedatt--owner))
+- `owner` (Attributes) The role that owns this table (read only) (see [below for nested schema](#nestedatt--owner))
 - `table_type` (String) Any table type returned from the data source (read only)
 - `tags` (Attributes List) Any tags set for this table (read only) (see [below for nested schema](#nestedatt--tags))
 
