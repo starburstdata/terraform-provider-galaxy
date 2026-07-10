@@ -15,6 +15,7 @@ import (
 
 	"github.com/hashicorp/terraform-plugin-framework/attr"
 	"github.com/hashicorp/terraform-plugin-framework/datasource"
+	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
 
@@ -59,6 +60,14 @@ func (d *dataQualityScheduleDataSource) Configure(ctx context.Context, req datas
 }
 
 func (d *dataQualityScheduleDataSource) Read(ctx context.Context, req datasource.ReadRequest, resp *datasource.ReadResponse) {
+	if d.client == nil {
+		resp.Diagnostics.AddError(
+			"Unconfigured Provider",
+			"The provider has not been properly configured. Please ensure the provider credentials are set.",
+		)
+		return
+	}
+
 	var config datasource_data_quality_schedule.DataQualityScheduleModel
 
 	resp.Diagnostics.Append(req.Config.Get(ctx, &config)...)
@@ -103,12 +112,18 @@ func (d *dataQualityScheduleDataSource) Read(ctx context.Context, req datasource
 		return
 	}
 
-	d.updateModelFromResponse(ctx, &config, response)
+	updateDiags := d.updateModelFromResponse(ctx, &config, response)
+	resp.Diagnostics.Append(updateDiags...)
+	if resp.Diagnostics.HasError() {
+		return
+	}
 
 	resp.Diagnostics.Append(resp.State.Set(ctx, &config)...)
 }
 
-func (d *dataQualityScheduleDataSource) updateModelFromResponse(ctx context.Context, model *datasource_data_quality_schedule.DataQualityScheduleModel, response map[string]interface{}) {
+func (d *dataQualityScheduleDataSource) updateModelFromResponse(ctx context.Context, model *datasource_data_quality_schedule.DataQualityScheduleModel, response map[string]interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+
 	if clusterId, ok := response["clusterId"].(string); ok {
 		model.ClusterId = types.StringValue(clusterId)
 	}
@@ -157,18 +172,23 @@ func (d *dataQualityScheduleDataSource) updateModelFromResponse(ctx context.Cont
 
 				checkValue, d := datasource_data_quality_schedule.NewDataQualityChecksValue(attributeTypes, attributes)
 				if d.HasError() {
-					tflog.Error(ctx, fmt.Sprintf("Error creating data quality check value: %v", d))
+					diags.Append(d...)
 					continue
 				}
 				checksList = append(checksList, checkValue)
 			}
 		}
 		listValue, d := types.ListValueFrom(ctx, checksType, checksList)
-		if !d.HasError() {
+		if d.HasError() {
+			diags.Append(d...)
+			model.DataQualityChecks = types.ListNull(checksType)
+		} else {
 			model.DataQualityChecks = listValue
 		}
 	} else {
 		emptyList, _ := types.ListValueFrom(ctx, checksType, []datasource_data_quality_schedule.DataQualityChecksValue{})
 		model.DataQualityChecks = emptyList
 	}
+
+	return diags
 }

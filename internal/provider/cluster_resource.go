@@ -22,6 +22,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/booldefault"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/boolplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
 
@@ -46,6 +47,17 @@ func (r *clusterResource) Metadata(ctx context.Context, req resource.MetadataReq
 
 func (r *clusterResource) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
 	s := resource_cluster.ClusterResourceSchema(ctx)
+
+	// cluster_id is assigned at creation and never changes. Without UseStateForUnknown, any update
+	// to the cluster (e.g. catalog_refs change) causes Terraform to mark cluster_id as "known after
+	// apply", which propagates to downstream resources referencing it (e.g. galaxy_role_privilege_grant.entity_id)
+	// and forces unnecessary destroy/recreate cycles.
+	if attr, ok := s.Attributes["cluster_id"].(schema.StringAttribute); ok {
+		attr.PlanModifiers = []planmodifier.String{
+			stringplanmodifier.UseStateForUnknown(),
+		}
+		s.Attributes["cluster_id"] = attr
+	}
 
 	// warp_resiliency_enabled is a zombie field: the Galaxy API's CreateClusterConfiguration still
 	// requires it at the request boundary (primitive boolean, 400s on null), but ClusterDao hardcodes
@@ -136,6 +148,16 @@ func (r *clusterResource) Create(ctx context.Context, req resource.CreateRequest
 			"Error enabling cluster",
 			"Could not enable cluster "+clusterID+": "+err.Error(),
 		)
+		return
+	}
+
+	// Save cluster ID to state immediately after creation, before polling begins.
+	// If polling fails later, the cluster ID is already persisted so the resource is recoverable.
+	// Only cluster_id is set here (not the full plan, which still has unknown computed fields) -
+	// writing unknown values to state now would fail Terraform's consistency check if polling errors out.
+	plan.ClusterId = types.StringValue(clusterID)
+	resp.Diagnostics.Append(resp.State.SetAttribute(ctx, path.Root("cluster_id"), clusterID)...)
+	if resp.Diagnostics.HasError() {
 		return
 	}
 
@@ -458,12 +480,13 @@ func (r *clusterResource) updateModelFromResponse(ctx context.Context, model *re
 		model.Enabled = types.BoolNull()
 	}
 
-	// Edge case: trino_uri field remains unknown after apply when cluster is in DISABLED state. Only set when ENABLED.
+	// Edge case: trino_uri field remains unknown after apply when cluster is in DISABLED state. Only set when ENABLED or RUNNING.
 	if trinoUri, ok := response["trinoUri"].(string); ok {
-		if model.ClusterState.ValueString() == "ENABLED" {
+		state := model.ClusterState.ValueString()
+		if state == "ENABLED" || state == "RUNNING" {
 			model.TrinoUri = types.StringValue(trinoUri)
 		} else {
-			// Set to null when cluster is not enabled
+			// Set to null when cluster is not enabled or running
 			model.TrinoUri = types.StringNull()
 		}
 	} else {

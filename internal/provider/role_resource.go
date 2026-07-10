@@ -17,6 +17,9 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
 
@@ -41,7 +44,26 @@ func (r *roleResource) Metadata(ctx context.Context, req resource.MetadataReques
 }
 
 func (r *roleResource) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
-	resp.Schema = resource_role.RoleResourceSchema(ctx)
+	s := resource_role.RoleResourceSchema(ctx)
+
+	// role_id and created_on are assigned at creation and never change. Without UseStateForUnknown,
+	// any update to the role causes Terraform to mark them as "known after apply", which propagates
+	// to downstream resources referencing role_id (e.g. galaxy_role_privilege_grant.entity_id) and
+	// forces unnecessary destroy/recreate cycles.
+	if attr, ok := s.Attributes["role_id"].(schema.StringAttribute); ok {
+		attr.PlanModifiers = []planmodifier.String{
+			stringplanmodifier.UseStateForUnknown(),
+		}
+		s.Attributes["role_id"] = attr
+	}
+	if attr, ok := s.Attributes["created_on"].(schema.StringAttribute); ok {
+		attr.PlanModifiers = []planmodifier.String{
+			stringplanmodifier.UseStateForUnknown(),
+		}
+		s.Attributes["created_on"] = attr
+	}
+
+	resp.Schema = s
 }
 
 func (r *roleResource) Configure(ctx context.Context, req resource.ConfigureRequest, resp *resource.ConfigureResponse) {

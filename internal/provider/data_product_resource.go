@@ -18,7 +18,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
-	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
@@ -49,12 +48,32 @@ func (r *data_productResource) Schema(ctx context.Context, req resource.SchemaRe
 	// catalog_id and schema_name are immutable at the API level; changing them
 	// requires destroying and recreating the data product.
 	catalogIDAttr := s.Attributes["catalog_id"].(schema.StringAttribute)
-	catalogIDAttr.PlanModifiers = []planmodifier.String{stringplanmodifier.RequiresReplace()}
+	catalogIDAttr.PlanModifiers = append(catalogIDAttr.PlanModifiers, stringplanmodifier.RequiresReplace())
 	s.Attributes["catalog_id"] = catalogIDAttr
 
 	schemaNameAttr := s.Attributes["schema_name"].(schema.StringAttribute)
-	schemaNameAttr.PlanModifiers = []planmodifier.String{stringplanmodifier.RequiresReplace()}
+	schemaNameAttr.PlanModifiers = append(schemaNameAttr.PlanModifiers, stringplanmodifier.RequiresReplace())
 	s.Attributes["schema_name"] = schemaNameAttr
+
+	// data_product_id is assigned at creation and never changes. Without UseStateForUnknown, any
+	// update to the data product causes Terraform to mark data_product_id as "known after apply",
+	// which propagates to downstream resources referencing it (e.g. galaxy_role_privilege_grant.entity_id)
+	// and forces unnecessary destroy/recreate cycles.
+	if attr, ok := s.Attributes["data_product_id"].(schema.StringAttribute); ok {
+		attr.PlanModifiers = []planmodifier.String{
+			stringplanmodifier.UseStateForUnknown(),
+		}
+		s.Attributes["data_product_id"] = attr
+	}
+
+	// created_on is assigned at creation and never changes. Without UseStateForUnknown, any update
+	// to the data product causes Terraform to mark created_on as "known after apply".
+	if attr, ok := s.Attributes["created_on"].(schema.StringAttribute); ok {
+		attr.PlanModifiers = []planmodifier.String{
+			stringplanmodifier.UseStateForUnknown(),
+		}
+		s.Attributes["created_on"] = attr
+	}
 
 	resp.Schema = s
 }

@@ -16,6 +16,9 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
 
@@ -40,7 +43,20 @@ func (r *tagResource) Metadata(ctx context.Context, req resource.MetadataRequest
 }
 
 func (r *tagResource) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
-	resp.Schema = resource_tag.TagResourceSchema(ctx)
+	s := resource_tag.TagResourceSchema(ctx)
+
+	// tag_id is assigned at creation and never changes. Without UseStateForUnknown, any update
+	// to the tag causes Terraform to mark tag_id as "known after apply", which propagates to
+	// downstream resources referencing it (e.g. galaxy_role_privilege_grant.entity_id) and forces
+	// unnecessary destroy/recreate cycles.
+	if attr, ok := s.Attributes["tag_id"].(schema.StringAttribute); ok {
+		attr.PlanModifiers = []planmodifier.String{
+			stringplanmodifier.UseStateForUnknown(),
+		}
+		s.Attributes["tag_id"] = attr
+	}
+
+	resp.Schema = s
 }
 
 func (r *tagResource) Configure(ctx context.Context, req resource.ConfigureRequest, resp *resource.ConfigureResponse) {

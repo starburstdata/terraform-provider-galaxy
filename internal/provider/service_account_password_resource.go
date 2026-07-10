@@ -81,6 +81,15 @@ func (r *service_account_passwordResource) Schema(ctx context.Context, req resou
 		},
 	}
 
+	// created is assigned at creation and never changes. Without UseStateForUnknown, any update
+	// to the service account password causes Terraform to mark created as "known after apply".
+	if attr, ok := baseSchema.Attributes["created"].(schema.StringAttribute); ok {
+		attr.PlanModifiers = []planmodifier.String{
+			stringplanmodifier.UseStateForUnknown(),
+		}
+		baseSchema.Attributes["created"] = attr
+	}
+
 	resp.Schema = baseSchema
 }
 

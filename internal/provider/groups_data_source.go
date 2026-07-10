@@ -59,6 +59,14 @@ func (d *groupsDataSource) Configure(ctx context.Context, req datasource.Configu
 }
 
 func (d *groupsDataSource) Read(ctx context.Context, req datasource.ReadRequest, resp *datasource.ReadResponse) {
+	if d.client == nil {
+		resp.Diagnostics.AddError(
+			"Unconfigured Provider",
+			"The provider has not been properly configured. Please ensure the provider credentials are set.",
+		)
+		return
+	}
+
 	var config datasource_groups.GroupsModel
 
 	resp.Diagnostics.Append(req.Config.Get(ctx, &config)...)
@@ -81,6 +89,8 @@ func (d *groupsDataSource) Read(ctx context.Context, req datasource.ReadRequest,
 	for _, groupInterface := range allGroups {
 		if groupMap, ok := groupInterface.(map[string]interface{}); ok {
 			groupMaps = append(groupMaps, groupMap)
+		} else {
+			tflog.Warn(ctx, fmt.Sprintf("unexpected entry type, skipping: %T", groupInterface))
 		}
 	}
 
@@ -195,6 +205,8 @@ func (d *groupsDataSource) mapRolesList(ctx context.Context, groupMap map[string
 					roleValue.RoleName = types.StringValue(roleName)
 				}
 				rolesList = append(rolesList, roleValue)
+			} else {
+				tflog.Warn(ctx, fmt.Sprintf("unexpected entry type, skipping: %T", roleInterface))
 			}
 		}
 		listValue, d := types.ListValueFrom(ctx, elementType, rolesList)
@@ -229,6 +241,8 @@ func (d *groupsDataSource) mapUsersList(ctx context.Context, groupMap map[string
 					userValue.UserId = types.StringValue(userId)
 				}
 				usersList = append(usersList, userValue)
+			} else {
+				tflog.Warn(ctx, fmt.Sprintf("unexpected entry type, skipping: %T", userInterface))
 			}
 		}
 		listValue, d := types.ListValueFrom(ctx, elementType, usersList)

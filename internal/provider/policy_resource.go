@@ -17,6 +17,9 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-framework/types/basetypes"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
@@ -42,7 +45,29 @@ func (r *policyResource) Metadata(ctx context.Context, req resource.MetadataRequ
 }
 
 func (r *policyResource) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
-	resp.Schema = resource_policy.PolicyResourceSchema(ctx)
+	s := resource_policy.PolicyResourceSchema(ctx)
+
+	// policy_id is assigned at creation and never changes. Without UseStateForUnknown, any
+	// update to the policy causes Terraform to mark policy_id as "known after apply", which
+	// propagates to downstream resources referencing it (e.g. galaxy_role_privilege_grant.entity_id)
+	// and forces unnecessary destroy/recreate cycles.
+	if attr, ok := s.Attributes["policy_id"].(schema.StringAttribute); ok {
+		attr.PlanModifiers = []planmodifier.String{
+			stringplanmodifier.UseStateForUnknown(),
+		}
+		s.Attributes["policy_id"] = attr
+	}
+
+	// created is assigned at creation and never changes. Without UseStateForUnknown, any update
+	// to the policy causes Terraform to mark created as "known after apply".
+	if attr, ok := s.Attributes["created"].(schema.StringAttribute); ok {
+		attr.PlanModifiers = []planmodifier.String{
+			stringplanmodifier.UseStateForUnknown(),
+		}
+		s.Attributes["created"] = attr
+	}
+
+	resp.Schema = s
 }
 
 func (r *policyResource) Configure(ctx context.Context, req resource.ConfigureRequest, resp *resource.ConfigureResponse) {

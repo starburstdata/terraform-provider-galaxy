@@ -71,8 +71,8 @@ func TableDataSourceSchema(ctx context.Context) schema.Schema {
 					},
 				},
 				Computed:            true,
-				Description:         "The role that owns this resource (read only)",
-				MarkdownDescription: "The role that owns this resource (read only)",
+				Description:         "The role that owns this table (read only)",
+				MarkdownDescription: "The role that owns this table (read only)",
 			},
 			"schema_id": schema.StringAttribute{
 				Required:            true,

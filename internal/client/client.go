@@ -238,7 +238,7 @@ func (c *GalaxyClient) doRequestWithRetry(ctx context.Context, method, path stri
 
 	resp, err := c.HTTPClient.Do(req)
 	if err != nil {
-		if ctx.Err() != nil || retries <= 0 {
+		if ctx.Err() != nil || retries <= 0 || method == http.MethodPost {
 			return fmt.Errorf("request failed: %w", err)
 		}
 		attempt := maxRequestRetries - retries
@@ -300,8 +300,9 @@ func (c *GalaxyClient) doRequestWithRetry(ctx context.Context, method, path stri
 		return c.doRequestWithRetry(ctx, method, path, body, result, retries-1)
 	}
 
-	// 500: always retry - all observed 500s on this API are transient CockroachDB TransactionRetryExhaustedException errors.
-	if retries > 0 && resp.StatusCode == http.StatusInternalServerError {
+	// 500: only retry on idempotent methods (GET, PUT, PATCH, DELETE) to avoid duplicating non-idempotent operations (POST).
+	// All observed 500s on this API are transient CockroachDB TransactionRetryExhaustedException errors.
+	if retries > 0 && resp.StatusCode == http.StatusInternalServerError && method != http.MethodPost {
 		attempt := maxRequestRetries - retries
 		waitTime := computeRetryBackoff(attempt, backoffBase)
 		tflog.Warn(ctx, "Encountered retriable error, retrying after backoff", map[string]interface{}{

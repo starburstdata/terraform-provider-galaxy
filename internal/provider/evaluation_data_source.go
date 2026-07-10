@@ -15,6 +15,7 @@ import (
 
 	"github.com/hashicorp/terraform-plugin-framework/attr"
 	"github.com/hashicorp/terraform-plugin-framework/datasource"
+	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
 
@@ -59,6 +60,14 @@ func (d *evaluationDataSource) Configure(ctx context.Context, req datasource.Con
 }
 
 func (d *evaluationDataSource) Read(ctx context.Context, req datasource.ReadRequest, resp *datasource.ReadResponse) {
+	if d.client == nil {
+		resp.Diagnostics.AddError(
+			"Unconfigured Provider",
+			"The provider has not been properly configured. Please ensure the provider credentials are set.",
+		)
+		return
+	}
+
 	var config datasource_evaluation.EvaluationModel
 
 	resp.Diagnostics.Append(req.Config.Get(ctx, &config)...)
@@ -78,12 +87,18 @@ func (d *evaluationDataSource) Read(ctx context.Context, req datasource.ReadRequ
 		return
 	}
 
-	d.updateModelFromResponse(ctx, &config, response)
+	updateDiags := d.updateModelFromResponse(ctx, &config, response)
+	resp.Diagnostics.Append(updateDiags...)
+	if resp.Diagnostics.HasError() {
+		return
+	}
 
 	resp.Diagnostics.Append(resp.State.Set(ctx, &config)...)
 }
 
-func (d *evaluationDataSource) updateModelFromResponse(ctx context.Context, model *datasource_evaluation.EvaluationModel, response map[string]interface{}) {
+func (d *evaluationDataSource) updateModelFromResponse(ctx context.Context, model *datasource_evaluation.EvaluationModel, response map[string]interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+
 	if catalogId, ok := response["catalogId"].(string); ok {
 		model.CatalogId = types.StringValue(catalogId)
 	}
@@ -151,18 +166,23 @@ func (d *evaluationDataSource) updateModelFromResponse(ctx context.Context, mode
 
 				evalValue, d := datasource_evaluation.NewEvaluationsValue(attributeTypes, attributes)
 				if d.HasError() {
-					tflog.Error(ctx, fmt.Sprintf("Error creating evaluation value: %v", d))
+					diags.Append(d...)
 					continue
 				}
 				evalsList = append(evalsList, evalValue)
 			}
 		}
 		listValue, d := types.ListValueFrom(ctx, evaluationsType, evalsList)
-		if !d.HasError() {
+		if d.HasError() {
+			diags.Append(d...)
+			model.Evaluations = types.ListNull(evaluationsType)
+		} else {
 			model.Evaluations = listValue
 		}
 	} else {
 		emptyList, _ := types.ListValueFrom(ctx, evaluationsType, []datasource_evaluation.EvaluationsValue{})
 		model.Evaluations = emptyList
 	}
+
+	return diags
 }
