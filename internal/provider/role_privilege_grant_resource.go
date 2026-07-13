@@ -336,10 +336,28 @@ func parseRolePrivilegeGrantImportID(id string) (parsedImportID, error) {
 		}
 	}
 
+	// Validate scope shape matches entity_kind
+	entityKind := parts[entityKindIdx]
+	scopeLen := len(scopeParts)
+	switch entityKind {
+	case "Schema":
+		if scopeLen != 0 && scopeLen != 1 {
+			return parsedImportID{}, fmt.Errorf("Schema entity_kind requires 0 or 1 scope parts, got %d in import ID: %s", scopeLen, id)
+		}
+	case "Table", "Column":
+		if scopeLen != 0 && scopeLen != 3 {
+			return parsedImportID{}, fmt.Errorf("%s entity_kind requires 0 or 3 scope parts, got %d in import ID: %s", entityKind, scopeLen, id)
+		}
+	default:
+		if scopeLen != 0 {
+			return parsedImportID{}, fmt.Errorf("%s entity_kind requires 0 scope parts, got %d in import ID: %s", entityKind, scopeLen, id)
+		}
+	}
+
 	out := parsedImportID{
 		RoleID:     parts[0],
 		EntityID:   entityID,
-		EntityKind: parts[entityKindIdx],
+		EntityKind: entityKind,
 		Privilege:  parts[entityKindIdx+1],
 		GrantKind:  parts[anchor],
 	}

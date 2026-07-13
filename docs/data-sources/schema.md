@@ -26,7 +26,7 @@ description: |-
 - `contacts` (Attributes List) Any contacts set for this schema (read only) (see [below for nested schema](#nestedatt--contacts))
 - `description` (String) Any description set for this schema (read only)
 - `links` (Attributes List) Any links set for this schema (read only) (see [below for nested schema](#nestedatt--links))
-- `owner` (Attributes) The role that owns this resource (read only) (see [below for nested schema](#nestedatt--owner))
+- `owner` (Attributes) The role that owns this schema (read only) (see [below for nested schema](#nestedatt--owner))
 - `tags` (Attributes List) Any tags set for this schema (read only) (see [below for nested schema](#nestedatt--tags))
 
 <a id="nestedatt--contacts"></a>

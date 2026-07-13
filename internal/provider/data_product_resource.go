@@ -49,11 +49,11 @@ func (r *data_productResource) Schema(ctx context.Context, req resource.SchemaRe
 	// catalog_id and schema_name are immutable at the API level; changing them
 	// requires destroying and recreating the data product.
 	catalogIDAttr := s.Attributes["catalog_id"].(schema.StringAttribute)
-	catalogIDAttr.PlanModifiers = []planmodifier.String{stringplanmodifier.RequiresReplace()}
+	catalogIDAttr.PlanModifiers = append(catalogIDAttr.PlanModifiers, stringplanmodifier.RequiresReplace())
 	s.Attributes["catalog_id"] = catalogIDAttr
 
 	schemaNameAttr := s.Attributes["schema_name"].(schema.StringAttribute)
-	schemaNameAttr.PlanModifiers = []planmodifier.String{stringplanmodifier.RequiresReplace()}
+	schemaNameAttr.PlanModifiers = append(schemaNameAttr.PlanModifiers, stringplanmodifier.RequiresReplace())
 	s.Attributes["schema_name"] = schemaNameAttr
 
 	// data_product_id is assigned at creation and never changes. Without UseStateForUnknown, any
@@ -377,6 +377,19 @@ func (r *data_productResource) updateModelFromResponse(ctx context.Context, mode
 	model.CreatedBy = resource_data_product.NewCreatedByValueNull()
 	model.ModifiedBy = resource_data_product.NewModifiedByValueNull()
 
+	// Capture planned contacts/links before overwritten below, so the API response can be
+	// reordered to match the plan. Required, order-sensitive attributes (contacts, links) must
+	// exactly match the plan after apply, but the Galaxy API does not preserve submission order,
+	// which otherwise causes "Provider produced inconsistent result after apply" on every apply.
+	plannedContacts := make([]resource_data_product.ContactsValue, 0)
+	if !model.Contacts.IsNull() && !model.Contacts.IsUnknown() {
+		diags.Append(model.Contacts.ElementsAs(ctx, &plannedContacts, false)...)
+	}
+	plannedLinks := make([]resource_data_product.LinksValue, 0)
+	if !model.Links.IsNull() && !model.Links.IsUnknown() {
+		diags.Append(model.Links.ElementsAs(ctx, &plannedLinks, false)...)
+	}
+
 	// Handle contacts from response
 	if contacts, ok := response["contacts"].([]interface{}); ok && len(contacts) > 0 {
 		contactsList := make([]resource_data_product.ContactsValue, 0, len(contacts))
@@ -402,6 +415,9 @@ func (r *data_productResource) updateModelFromResponse(ctx context.Context, mode
 				contactsList = append(contactsList, contactValue)
 			}
 		}
+		contactsList = reorderToMatchPlanBy(plannedContacts, contactsList, func(c resource_data_product.ContactsValue) string {
+			return c.Email.ValueString() + "\x00" + c.UserId.ValueString()
+		})
 		contactsListValue, d := types.ListValueFrom(ctx, resource_data_product.ContactsValue{}.Type(ctx), contactsList)
 		diags.Append(d...)
 		if !d.HasError() {
@@ -440,6 +456,9 @@ func (r *data_productResource) updateModelFromResponse(ctx context.Context, mode
 				linksList = append(linksList, linkValue)
 			}
 		}
+		linksList = reorderToMatchPlanBy(plannedLinks, linksList, func(l resource_data_product.LinksValue) string {
+			return l.Name.ValueString() + "\x00" + l.Uri.ValueString()
+		})
 		linksListValue, d := types.ListValueFrom(ctx, resource_data_product.LinksValue{}.Type(ctx), linksList)
 		diags.Append(d...)
 		if !d.HasError() {

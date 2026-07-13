@@ -58,6 +58,14 @@ func (d *dataQualityCheckDataSource) Configure(ctx context.Context, req datasour
 }
 
 func (d *dataQualityCheckDataSource) Read(ctx context.Context, req datasource.ReadRequest, resp *datasource.ReadResponse) {
+	if d.client == nil {
+		resp.Diagnostics.AddError(
+			"Unconfigured Provider",
+			"The provider has not been properly configured. Please ensure the provider credentials are set.",
+		)
+		return
+	}
+
 	var config datasource_data_quality_check.DataQualityCheckModel
 
 	resp.Diagnostics.Append(req.Config.Get(ctx, &config)...)

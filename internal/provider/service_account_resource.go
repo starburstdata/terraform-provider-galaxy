@@ -266,13 +266,23 @@ func (r *service_accountResource) updateModelFromResponse(ctx context.Context, m
 		model.RoleId = types.StringValue(roleId)
 	}
 
-	// Handle additional role IDs
+	// Handle additional role IDs. additional_role_ids is Required, so Terraform requires the
+	// applied state to exactly match the plan order, but the Galaxy API does not preserve
+	// submission order - reorder the response to match the plan to avoid "Provider produced
+	// inconsistent result after apply".
 	if additionalRoleIds, ok := response["additionalRoleIds"].([]interface{}); ok {
-		var roleIds []attr.Value
+		plannedRoleIds, planDiags := stringListElements(ctx, model.AdditionalRoleIds)
+		diags.Append(planDiags...)
+		roleIdStrings := make([]string, 0, len(additionalRoleIds))
 		for _, id := range additionalRoleIds {
 			if roleId, ok := id.(string); ok {
-				roleIds = append(roleIds, types.StringValue(roleId))
+				roleIdStrings = append(roleIdStrings, roleId)
 			}
+		}
+		roleIdStrings = reorderToMatchPlan(plannedRoleIds, roleIdStrings)
+		roleIds := make([]attr.Value, 0, len(roleIdStrings))
+		for _, roleId := range roleIdStrings {
+			roleIds = append(roleIds, types.StringValue(roleId))
 		}
 		if len(roleIds) > 0 {
 			model.AdditionalRoleIds = types.ListValueMust(types.StringType, roleIds)

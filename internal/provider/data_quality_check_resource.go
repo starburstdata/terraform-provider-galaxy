@@ -53,6 +53,15 @@ func (r *dataQualityCheckResource) Schema(ctx context.Context, req resource.Sche
 		}
 	}
 
+	// cluster_id and description are Optional+Computed; add UseStateForUnknown to prevent
+	// recurring "(known after apply)" diffs
+	for _, name := range []string{"cluster_id", "description"} {
+		if attr, ok := s.Attributes[name].(schema.StringAttribute); ok {
+			attr.PlanModifiers = append(attr.PlanModifiers, stringplanmodifier.UseStateForUnknown())
+			s.Attributes[name] = attr
+		}
+	}
+
 	resp.Schema = s
 }
 
