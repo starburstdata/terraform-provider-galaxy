@@ -49,11 +49,11 @@ func (r *data_productResource) Schema(ctx context.Context, req resource.SchemaRe
 	// catalog_id and schema_name are immutable at the API level; changing them
 	// requires destroying and recreating the data product.
 	catalogIDAttr := s.Attributes["catalog_id"].(schema.StringAttribute)
-	catalogIDAttr.PlanModifiers = []planmodifier.String{stringplanmodifier.RequiresReplace()}
+	catalogIDAttr.PlanModifiers = append(catalogIDAttr.PlanModifiers, stringplanmodifier.RequiresReplace())
 	s.Attributes["catalog_id"] = catalogIDAttr
 
 	schemaNameAttr := s.Attributes["schema_name"].(schema.StringAttribute)
-	schemaNameAttr.PlanModifiers = []planmodifier.String{stringplanmodifier.RequiresReplace()}
+	schemaNameAttr.PlanModifiers = append(schemaNameAttr.PlanModifiers, stringplanmodifier.RequiresReplace())
 	s.Attributes["schema_name"] = schemaNameAttr
 
 	// data_product_id is assigned at creation and never changes. Without UseStateForUnknown, any
