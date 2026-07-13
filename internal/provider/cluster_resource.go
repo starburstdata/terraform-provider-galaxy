@@ -550,65 +550,32 @@ func (r *clusterResource) updateModelFromResponse(ctx context.Context, model *re
 		model.Replicas = types.Int64Value(int64(replicas))
 	}
 
-	// Handle catalog references - preserve original plan order to avoid consistency errors
+	// Handle catalog references. catalog_refs is Required, so Terraform requires the applied
+	// state to exactly match the plan order, but the Galaxy API does not preserve submission
+	// order - reorder the response to match the plan to avoid "Provider produced inconsistent
+	// result after apply". Catalogs present in the response but not in the plan are appended
+	// after the plan-ordered set rather than silently dropped, so drift is visible on the next
+	// Read/plan instead of being masked.
 	if catalogRefs, ok := response["catalogRefs"].([]interface{}); ok {
-		// Convert API response to a map for lookup
-		responseCatalogs := make(map[string]bool)
+		plannedCatalogRefs, planDiags := stringListElements(ctx, model.CatalogRefs)
+		diags.Append(planDiags...)
+
+		catalogRefStrings := make([]string, 0, len(catalogRefs))
 		for _, ref := range catalogRefs {
 			if refStr, ok := ref.(string); ok {
-				responseCatalogs[refStr] = true
+				catalogRefStrings = append(catalogRefStrings, refStr)
 			}
 		}
+		catalogRefStrings = reorderToMatchPlan(plannedCatalogRefs, catalogRefStrings)
 
-		// Preserve the original order from the plan/model
-		// Only update if we have the same catalogs (validation that all planned catalogs exist)
-		if !model.CatalogRefs.IsNull() && !model.CatalogRefs.IsUnknown() {
-			planElements := make([]types.String, 0, len(model.CatalogRefs.Elements()))
-			model.CatalogRefs.ElementsAs(ctx, &planElements, false)
-
-			// Verify all plan elements exist in response
-			allFound := true
-			for _, elem := range planElements {
-				if !elem.IsNull() && !elem.IsUnknown() {
-					if !responseCatalogs[elem.ValueString()] {
-						allFound = false
-						break
-					}
-				}
-			}
-
-			// If all plan catalogs are found in response, keep the original plan order
-			if allFound {
-				tflog.Info(ctx, "CATALOG_REFS: Preserving plan order to maintain consistency")
-				// Keep the existing model.CatalogRefs unchanged to preserve order
-			} else {
-				tflog.Warn(ctx, "CATALOG_REFS: Plan and response mismatch, using response order")
-				// Fall back to response order if there's a mismatch
-				catalogRefElements := make([]types.String, len(catalogRefs))
-				for i, ref := range catalogRefs {
-					if refStr, ok := ref.(string); ok {
-						catalogRefElements[i] = types.StringValue(refStr)
-					}
-				}
-				listValue, listDiag := types.ListValueFrom(ctx, types.StringType, catalogRefElements)
-				diags.Append(listDiag...)
-				if !listDiag.HasError() {
-					model.CatalogRefs = listValue
-				}
-			}
-		} else {
-			// No plan data, use response order
-			catalogRefElements := make([]types.String, len(catalogRefs))
-			for i, ref := range catalogRefs {
-				if refStr, ok := ref.(string); ok {
-					catalogRefElements[i] = types.StringValue(refStr)
-				}
-			}
-			listValue, listDiag := types.ListValueFrom(ctx, types.StringType, catalogRefElements)
-			diags.Append(listDiag...)
-			if !listDiag.HasError() {
-				model.CatalogRefs = listValue
-			}
+		catalogRefElements := make([]types.String, len(catalogRefStrings))
+		for i, refStr := range catalogRefStrings {
+			catalogRefElements[i] = types.StringValue(refStr)
+		}
+		listValue, listDiag := types.ListValueFrom(ctx, types.StringType, catalogRefElements)
+		diags.Append(listDiag...)
+		if !listDiag.HasError() {
+			model.CatalogRefs = listValue
 		}
 	}
 }
