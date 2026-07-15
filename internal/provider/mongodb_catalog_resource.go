@@ -461,13 +461,23 @@ func (r *mongodb_catalogResource) updateModelFromResponse(ctx context.Context, m
 		model.ConnectionType = types.StringValue(connectionType)
 	}
 
-	// Handle regions field
+	// Handle regions field. regions is Required, so Terraform requires the applied state to
+	// exactly match the plan order, but the Galaxy API does not preserve submission order -
+	// reorder the response to match the plan to avoid "Provider produced inconsistent result
+	// after apply".
 	if regions, ok := response["regions"].([]interface{}); ok {
-		regionsList := make([]types.String, len(regions))
-		for i, r := range regions {
+		plannedRegions, planDiags := stringListElements(ctx, model.Regions)
+		diags.Append(planDiags...)
+		regionStrings := make([]string, 0, len(regions))
+		for _, r := range regions {
 			if regionStr, ok := r.(string); ok {
-				regionsList[i] = types.StringValue(regionStr)
+				regionStrings = append(regionStrings, regionStr)
 			}
+		}
+		regionStrings = reorderToMatchPlan(plannedRegions, regionStrings)
+		regionsList := make([]types.String, len(regionStrings))
+		for i, regionStr := range regionStrings {
+			regionsList[i] = types.StringValue(regionStr)
 		}
 		model.Regions, _ = types.ListValueFrom(ctx, types.StringType, regionsList)
 	}

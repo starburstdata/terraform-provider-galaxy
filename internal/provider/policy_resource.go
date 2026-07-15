@@ -441,12 +441,39 @@ func (r *policyResource) updateModelFromResponse(ctx context.Context, model *res
 }
 
 func (r *policyResource) updateScopesFromResponse(ctx context.Context, model *resource_policy.PolicyModel, scopesData []interface{}, diags *diag.Diagnostics) {
+	// Capture the planned scopes before they are overwritten, so column_mask_ids and
+	// row_filter_ids (Required, order-sensitive attributes) can be reordered to match
+	// the plan. The Galaxy API does not preserve submission order for these ID lists,
+	// which otherwise causes "Provider produced inconsistent result after apply" on
+	// every apply since Terraform requires non-computed attributes to match exactly.
+	// Planned scopes are keyed by scope identity (entity + schema/table/column names) so a
+	// response scope is matched to its plan counterpart regardless of scopes[] order.
+	plannedScopesByIdentity := map[string]resource_policy.ScopesValue{}
+	if !model.Scopes.IsNull() && !model.Scopes.IsUnknown() {
+		planElements := make([]resource_policy.ScopesValue, 0, len(model.Scopes.Elements()))
+		if elemDiags := model.Scopes.ElementsAs(ctx, &planElements, false); !elemDiags.HasError() {
+			for _, s := range planElements {
+				plannedScopesByIdentity[plannedScopeIdentity(s)] = s
+			}
+		}
+	}
+
 	// Convert API response scopes to model format
 	scopesList := make([]resource_policy.ScopesValue, 0, len(scopesData))
 
 	for _, scopeData := range scopesData {
 		if scope, ok := scopeData.(map[string]interface{}); ok {
-			scopeValue := r.mapAPIResponseScopeToModelValue(ctx, scope, diags)
+			var plannedColumnMaskIds, plannedRowFilterIds, plannedPrivilegeIds []string
+			if plannedScope, found := plannedScopesByIdentity[responseScopeIdentity(scope)]; found {
+				maskIds, maskDiags := stringListElements(ctx, plannedScope.ColumnMaskIds)
+				diags.Append(maskDiags...)
+				filterIds, filterDiags := stringListElements(ctx, plannedScope.RowFilterIds)
+				diags.Append(filterDiags...)
+				privIds, privDiags := plannedPrivilegeElements(ctx, plannedScope.Privileges)
+				diags.Append(privDiags...)
+				plannedColumnMaskIds, plannedRowFilterIds, plannedPrivilegeIds = maskIds, filterIds, privIds
+			}
+			scopeValue := r.mapAPIResponseScopeToModelValue(ctx, scope, plannedColumnMaskIds, plannedRowFilterIds, plannedPrivilegeIds, diags)
 			if !diags.HasError() {
 				scopesList = append(scopesList, scopeValue)
 			}
@@ -467,7 +494,7 @@ func (r *policyResource) updateScopesFromResponse(ctx context.Context, model *re
 	}
 }
 
-func (r *policyResource) mapAPIResponseScopeToModelValue(ctx context.Context, scope map[string]interface{}, diags *diag.Diagnostics) resource_policy.ScopesValue {
+func (r *policyResource) mapAPIResponseScopeToModelValue(ctx context.Context, scope map[string]interface{}, plannedColumnMaskIds []string, plannedRowFilterIds []string, plannedPrivilegeIds []string, diags *diag.Diagnostics) resource_policy.ScopesValue {
 	attributeTypes := resource_policy.ScopesValue{}.AttributeTypes(ctx)
 	attributes := make(map[string]attr.Value)
 
@@ -498,26 +525,38 @@ func (r *policyResource) mapAPIResponseScopeToModelValue(ctx context.Context, sc
 		attributes["table_name"] = types.StringValue(val)
 	}
 
-	// Handle column_mask_ids list
-	columnMaskIds := make([]attr.Value, 0)
+	// Handle column_mask_ids list. The API does not preserve submission order, so reorder
+	// its response to match the plan (matching on set membership) to avoid "Provider
+	// produced inconsistent result after apply" for this Required, order-sensitive attribute.
+	columnMaskIdStrings := make([]string, 0)
 	if maskIdsData, ok := scope["columnMaskIds"].([]interface{}); ok {
 		for _, maskId := range maskIdsData {
 			if maskIdStr, ok := maskId.(string); ok {
-				columnMaskIds = append(columnMaskIds, types.StringValue(maskIdStr))
+				columnMaskIdStrings = append(columnMaskIdStrings, maskIdStr)
 			}
 		}
+	}
+	columnMaskIdStrings = reorderToMatchPlan(plannedColumnMaskIds, columnMaskIdStrings)
+	columnMaskIds := make([]attr.Value, 0, len(columnMaskIdStrings))
+	for _, maskIdStr := range columnMaskIdStrings {
+		columnMaskIds = append(columnMaskIds, types.StringValue(maskIdStr))
 	}
 	columnMaskIdsList, _ := types.ListValue(types.StringType, columnMaskIds)
 	attributes["column_mask_ids"] = columnMaskIdsList
 
-	// Handle row_filter_ids list
-	rowFilterIds := make([]attr.Value, 0)
+	// Handle row_filter_ids list. Same order-preservation treatment as column_mask_ids above.
+	rowFilterIdStrings := make([]string, 0)
 	if filterIdsData, ok := scope["rowFilterIds"].([]interface{}); ok {
 		for _, filterId := range filterIdsData {
 			if filterIdStr, ok := filterId.(string); ok {
-				rowFilterIds = append(rowFilterIds, types.StringValue(filterIdStr))
+				rowFilterIdStrings = append(rowFilterIdStrings, filterIdStr)
 			}
 		}
+	}
+	rowFilterIdStrings = reorderToMatchPlan(plannedRowFilterIds, rowFilterIdStrings)
+	rowFilterIds := make([]attr.Value, 0, len(rowFilterIdStrings))
+	for _, filterIdStr := range rowFilterIdStrings {
+		rowFilterIds = append(rowFilterIds, types.StringValue(filterIdStr))
 	}
 	rowFilterIdsList, _ := types.ListValue(types.StringType, rowFilterIds)
 	attributes["row_filter_ids"] = rowFilterIdsList
@@ -533,13 +572,18 @@ func (r *policyResource) mapAPIResponseScopeToModelValue(ctx context.Context, sc
 		}
 
 		if privilegeList, ok := privData["privilege"].([]interface{}); ok {
-			privs := make([]attr.Value, 0, len(privilegeList))
+			privStrings := make([]string, 0, len(privilegeList))
 			for _, priv := range privilegeList {
 				if privStr, ok := priv.(string); ok {
-					privs = append(privs, types.StringValue(privStr))
+					privStrings = append(privStrings, privStr)
 				}
 			}
-			if len(privs) > 0 {
+			privStrings = reorderToMatchPlan(plannedPrivilegeIds, privStrings)
+			if len(privStrings) > 0 {
+				privs := make([]attr.Value, 0, len(privStrings))
+				for _, privStr := range privStrings {
+					privs = append(privs, types.StringValue(privStr))
+				}
 				privListVal, _ := types.ListValue(types.StringType, privs)
 				privAttrs["privilege"] = privListVal
 			}
@@ -556,4 +600,49 @@ func (r *policyResource) mapAPIResponseScopeToModelValue(ctx context.Context, sc
 	scopeValue, scopeDiags := resource_policy.NewScopesValue(attributeTypes, attributes)
 	diags.Append(scopeDiags...)
 	return scopeValue
+}
+
+// plannedScopeIdentity builds the identity key for a planned scope. The five fields below form
+// a scope's natural key (an entity in a specific schema/table/column context) so a response
+// scope can be matched to its plan counterpart regardless of the API's returned order.
+func plannedScopeIdentity(s resource_policy.ScopesValue) string {
+	return s.EntityId.ValueString() + "\x00" +
+		s.EntityKind.ValueString() + "\x00" +
+		s.SchemaName.ValueString() + "\x00" +
+		s.TableName.ValueString() + "\x00" +
+		s.ColumnName.ValueString()
+}
+
+// responseScopeIdentity builds the identity key for a scope in the raw API response, matching
+// the shape of plannedScopeIdentity.
+func responseScopeIdentity(scope map[string]interface{}) string {
+	get := func(k string) string {
+		if v, ok := scope[k].(string); ok {
+			return v
+		}
+		return ""
+	}
+	return get("entityId") + "\x00" +
+		get("entityKind") + "\x00" +
+		get("schemaName") + "\x00" +
+		get("tableName") + "\x00" +
+		get("columnName")
+}
+
+// plannedPrivilegeElements extracts the planned privilege order from a scope's privileges
+// object, returning nil if the object or its privilege list is null/unknown. Any diagnostics
+// from list extraction are returned to the caller.
+func plannedPrivilegeElements(ctx context.Context, privileges types.Object) ([]string, diag.Diagnostics) {
+	if privileges.IsNull() || privileges.IsUnknown() {
+		return nil, nil
+	}
+	privilegeAttr, ok := privileges.Attributes()["privilege"]
+	if !ok {
+		return nil, nil
+	}
+	privilegeList, ok := privilegeAttr.(basetypes.ListValue)
+	if !ok {
+		return nil, nil
+	}
+	return stringListElements(ctx, privilegeList)
 }
