@@ -5,7 +5,7 @@ The Terraform Provider for Starburst Galaxy enables Infrastructure-as-Code manag
 ## Getting Started
 
 ### Prerequisites
-- Terraform 1.0+
+- Terraform 1.11+ (or OpenTofu)
 - Go 1.20+ (for local development)
 - Starburst Galaxy account with API access
 - OAuth2 client credentials (client ID and secret)
