@@ -29,6 +29,7 @@ description: |-
 - `all_roles` (Attributes List) All directly granted and inherited roles (read only) (see [below for nested schema](#nestedatt--all_roles))
 - `created_on` (String) Creation date (read only)
 - `directly_granted_roles` (Attributes List) Directly granted roles (read only) (see [below for nested schema](#nestedatt--directly_granted_roles))
+- `id` (String) Terraform import identifier.
 - `modified_on` (String) Modified date (read only)
 - `owning_role_id` (String) Owning role (read only)
 - `role_id` (String) Role ID (read only)

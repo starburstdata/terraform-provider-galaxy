@@ -45,6 +45,11 @@ func ClusterResourceSchema(ctx context.Context) schema.Schema {
 				Description:         "Cluster enabled state (extended field) (read only)",
 				MarkdownDescription: "Cluster enabled state (extended field) (read only)",
 			},
+			"id": schema.StringAttribute{
+				Computed:            true,
+				Description:         "Terraform import identifier.",
+				MarkdownDescription: "Terraform import identifier.",
+			},
 			"idle_stop_minutes": schema.Int64Attribute{
 				Optional:            true,
 				Computed:            true,
@@ -126,6 +131,7 @@ type ClusterModel struct {
 	ClusterId                           types.String `tfsdk:"cluster_id"`
 	ClusterState                        types.String `tfsdk:"cluster_state"`
 	Enabled                             types.Bool   `tfsdk:"enabled"`
+	Id                                  types.String `tfsdk:"id"`
 	IdleStopMinutes                     types.Int64  `tfsdk:"idle_stop_minutes"`
 	MaxWorkers                          types.Int64  `tfsdk:"max_workers"`
 	MinWorkers                          types.Int64  `tfsdk:"min_workers"`

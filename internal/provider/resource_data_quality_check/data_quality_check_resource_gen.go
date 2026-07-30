@@ -50,6 +50,11 @@ func DataQualityCheckResourceSchema(ctx context.Context) schema.Schema {
 				Description:         "Description of what this check validates",
 				MarkdownDescription: "Description of what this check validates",
 			},
+			"id": schema.StringAttribute{
+				Computed:            true,
+				Description:         "Terraform import identifier.",
+				MarkdownDescription: "Terraform import identifier.",
+			},
 			"kind": schema.StringAttribute{
 				Required:            true,
 				Description:         "Kind of data quality check",
@@ -104,6 +109,7 @@ type DataQualityCheckModel struct {
 	ClusterId          types.String `tfsdk:"cluster_id"`
 	DataQualityCheckId types.String `tfsdk:"data_quality_check_id"`
 	Description        types.String `tfsdk:"description"`
+	Id                 types.String `tfsdk:"id"`
 	Kind               types.String `tfsdk:"kind"`
 	Name               types.String `tfsdk:"name"`
 	Query              types.String `tfsdk:"query"`

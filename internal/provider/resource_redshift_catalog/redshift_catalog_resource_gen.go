@@ -37,6 +37,11 @@ func RedshiftCatalogResourceSchema(ctx context.Context) schema.Schema {
 				Description:         "Redshift cluster endpoint",
 				MarkdownDescription: "Redshift cluster endpoint",
 			},
+			"id": schema.StringAttribute{
+				Computed:            true,
+				Description:         "Terraform import identifier.",
+				MarkdownDescription: "Terraform import identifier.",
+			},
 			"name": schema.StringAttribute{
 				Required:            true,
 				Description:         "Catalog name",
@@ -100,6 +105,7 @@ type RedshiftCatalogModel struct {
 	CatalogId   types.String `tfsdk:"catalog_id"`
 	Description types.String `tfsdk:"description"`
 	Endpoint    types.String `tfsdk:"endpoint"`
+	Id          types.String `tfsdk:"id"`
 	Name        types.String `tfsdk:"name"`
 	Password    types.String `tfsdk:"password"`
 	ReadOnly    types.Bool   `tfsdk:"read_only"`

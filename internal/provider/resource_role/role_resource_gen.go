@@ -130,6 +130,11 @@ func RoleResourceSchema(ctx context.Context) schema.Schema {
 				Description:         "Grant to creating role (read only)",
 				MarkdownDescription: "Grant to creating role (read only)",
 			},
+			"id": schema.StringAttribute{
+				Computed:            true,
+				Description:         "Terraform import identifier.",
+				MarkdownDescription: "Terraform import identifier.",
+			},
 			"modified_on": schema.StringAttribute{
 				Computed:            true,
 				Description:         "Modified date (read only)",
@@ -165,6 +170,7 @@ type RoleModel struct {
 	CreatedOn            types.String `tfsdk:"created_on"`
 	DirectlyGrantedRoles types.List   `tfsdk:"directly_granted_roles"`
 	GrantToCreatingRole  types.Bool   `tfsdk:"grant_to_creating_role"`
+	Id                   types.String `tfsdk:"id"`
 	ModifiedOn           types.String `tfsdk:"modified_on"`
 	OwningRoleId         types.String `tfsdk:"owning_role_id"`
 	RoleDescription      types.String `tfsdk:"role_description"`

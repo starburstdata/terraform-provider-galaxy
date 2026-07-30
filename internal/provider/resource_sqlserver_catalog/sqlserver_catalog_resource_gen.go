@@ -49,6 +49,11 @@ func SqlserverCatalogResourceSchema(ctx context.Context) schema.Schema {
 				Description:         "SQL Server database endpoint",
 				MarkdownDescription: "SQL Server database endpoint",
 			},
+			"id": schema.StringAttribute{
+				Computed:            true,
+				Description:         "Terraform import identifier.",
+				MarkdownDescription: "Terraform import identifier.",
+			},
 			"name": schema.StringAttribute{
 				Required:            true,
 				Description:         "Catalog name",
@@ -105,6 +110,7 @@ type SqlserverCatalogModel struct {
 	DatabaseName  types.String `tfsdk:"database_name"`
 	Description   types.String `tfsdk:"description"`
 	Endpoint      types.String `tfsdk:"endpoint"`
+	Id            types.String `tfsdk:"id"`
 	Name          types.String `tfsdk:"name"`
 	Password      types.String `tfsdk:"password"`
 	Port          types.Int64  `tfsdk:"port"`

@@ -26,6 +26,7 @@ description: |-
 
 ### Read-Only
 
+- `id` (String) Terraform import identifier.
 - `tag_id` (String) Tag ID (read only)
 
 ## Import
