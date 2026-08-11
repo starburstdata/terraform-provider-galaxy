@@ -245,10 +245,12 @@ func (r *row_filterResource) updateModelFromResponse(ctx context.Context, model 
 	// Map response fields to model
 	if id, ok := response["rowFilterId"].(string); ok {
 		model.RowFilterId = types.StringValue(id)
+		model.Id = types.StringValue(id)
 	}
 
 	if rowFilterId, ok := response["rowFilterId"].(string); ok {
 		model.RowFilterId = types.StringValue(rowFilterId)
+		model.Id = types.StringValue(rowFilterId)
 	}
 
 	if name, ok := response["name"].(string); ok {

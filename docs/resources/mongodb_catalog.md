@@ -43,6 +43,7 @@ description: |-
 ### Read-Only
 
 - `catalog_id` (String) MongoDB catalog identifier (read only)
+- `id` (String) Terraform import identifier.
 
 ## Import
 

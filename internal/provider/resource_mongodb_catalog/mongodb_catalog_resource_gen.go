@@ -59,6 +59,11 @@ func MongodbCatalogResourceSchema(ctx context.Context) schema.Schema {
 				Description:         "MongoDB hosts",
 				MarkdownDescription: "MongoDB hosts",
 			},
+			"id": schema.StringAttribute{
+				Computed:            true,
+				Description:         "Terraform import identifier.",
+				MarkdownDescription: "Terraform import identifier.",
+			},
 			"name": schema.StringAttribute{
 				Required:            true,
 				Description:         "Catalog name",
@@ -123,6 +128,7 @@ type MongodbCatalogModel struct {
 	DnsSeedListEnabled       types.Bool   `tfsdk:"dns_seed_list_enabled"`
 	FederatedDatabaseEnabled types.Bool   `tfsdk:"federated_database_enabled"`
 	Hosts                    types.String `tfsdk:"hosts"`
+	Id                       types.String `tfsdk:"id"`
 	Name                     types.String `tfsdk:"name"`
 	Password                 types.String `tfsdk:"password"`
 	PrivateLinkId            types.String `tfsdk:"private_link_id"`

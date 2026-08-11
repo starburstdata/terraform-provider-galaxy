@@ -240,10 +240,12 @@ func (r *tagResource) updateModelFromResponse(ctx context.Context, model *resour
 	// Map response fields to model
 	if id, ok := response["tagId"].(string); ok {
 		model.TagId = types.StringValue(id)
+		model.Id = types.StringValue(id)
 	}
 
 	if tagId, ok := response["tagId"].(string); ok {
 		model.TagId = types.StringValue(tagId)
+		model.Id = types.StringValue(tagId)
 	}
 
 	if name, ok := response["name"].(string); ok {

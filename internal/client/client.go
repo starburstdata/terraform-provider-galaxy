@@ -1286,3 +1286,66 @@ func (c *GalaxyClient) GetDataQualitySchedule(ctx context.Context, catalogID, sc
 	err := c.doRequest(ctx, "GET", apiPath("/public/api/v1/catalog/%s/schema/%s/table/%s/dataQualitySchedule", catalogID, schemaID, tableID), nil, &result)
 	return result, err
 }
+
+// Usage Example resource CRUD
+func (c *GalaxyClient) CreateUsageExample(ctx context.Context, dataProductID string, req interface{}) (map[string]interface{}, error) {
+	var result map[string]interface{}
+	err := c.doRequest(ctx, "POST", apiPath("/public/api/v1/dataProduct/%s/usageExample", dataProductID), req, &result)
+	return result, err
+}
+
+func (c *GalaxyClient) GetUsageExample(ctx context.Context, dataProductID, usageExampleID string) (map[string]interface{}, error) {
+	// There is no per-item GET endpoint for usage examples. List all and filter by ID.
+	list, err := c.ListUsageExamples(ctx, dataProductID)
+	if err != nil {
+		return nil, err
+	}
+	var resultArr []interface{}
+	if items, ok := list["items"].([]interface{}); ok {
+		resultArr = items
+	} else if arr, ok := list["result"].([]interface{}); ok {
+		resultArr = arr
+	}
+	for _, item := range resultArr {
+		if m, ok := item.(map[string]interface{}); ok {
+			if id, ok := m["usageExampleId"].(string); ok && id == usageExampleID {
+				return m, nil
+			}
+		}
+	}
+	return nil, &NotFoundError{Message: fmt.Sprintf("usage example %s not found in data product %s", usageExampleID, dataProductID)}
+}
+
+func (c *GalaxyClient) UpdateUsageExample(ctx context.Context, dataProductID, usageExampleID string, req interface{}) (map[string]interface{}, error) {
+	var result map[string]interface{}
+	err := c.doRequest(ctx, "PATCH", apiPath("/public/api/v1/dataProduct/%s/usageExample/%s", dataProductID, usageExampleID), req, &result)
+	return result, err
+}
+
+func (c *GalaxyClient) DeleteUsageExample(ctx context.Context, dataProductID, usageExampleID string) error {
+	return c.doRequest(ctx, "DELETE", apiPath("/public/api/v1/dataProduct/%s/usageExample/%s", dataProductID, usageExampleID), nil, nil)
+}
+
+// Evaluation resource (create triggers evaluation, read-mostly resource)
+func (c *GalaxyClient) CreateEvaluation(ctx context.Context, checkID string) (map[string]interface{}, error) {
+	var result map[string]interface{}
+	err := c.doRequest(ctx, "POST", apiPath("/public/api/v1/dataQualityCheck/%s/evaluation", checkID), nil, &result)
+	return result, err
+}
+
+// Data Quality Schedule resource CRUD
+func (c *GalaxyClient) CreateDataQualitySchedule(ctx context.Context, catalogID, schemaID, tableID string, req interface{}) (map[string]interface{}, error) {
+	var result map[string]interface{}
+	err := c.doRequest(ctx, "POST", apiPath("/public/api/v1/catalog/%s/schema/%s/table/%s/dataQualitySchedule", catalogID, schemaID, tableID), req, &result)
+	return result, err
+}
+
+func (c *GalaxyClient) UpdateDataQualitySchedule(ctx context.Context, catalogID, schemaID, tableID, scheduleID string, req interface{}) (map[string]interface{}, error) {
+	var result map[string]interface{}
+	err := c.doRequest(ctx, "PATCH", apiPath("/public/api/v1/catalog/%s/schema/%s/table/%s/dataQualitySchedule/%s", catalogID, schemaID, tableID, scheduleID), req, &result)
+	return result, err
+}
+
+func (c *GalaxyClient) DeleteDataQualitySchedule(ctx context.Context, catalogID, schemaID, tableID, scheduleID string) error {
+	return c.doRequest(ctx, "DELETE", apiPath("/public/api/v1/catalog/%s/schema/%s/table/%s/dataQualitySchedule/%s", catalogID, schemaID, tableID, scheduleID), nil, nil)
+}

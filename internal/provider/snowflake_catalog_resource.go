@@ -337,9 +337,10 @@ func (r *snowflake_catalogResource) updateModelFromResponse(ctx context.Context,
 	// The API returns catalogId as the primary identifier
 	if catalogId, ok := response["catalogId"].(string); ok {
 		model.CatalogId = types.StringValue(catalogId) // Use catalogId as the main ID
-		model.CatalogId = types.StringValue(catalogId) // Also set the catalogId field
+		model.Id = types.StringValue(catalogId)
 	} else if id, ok := response["snowflakeCatalogId"].(string); ok {
 		model.CatalogId = types.StringValue(id)
+		model.Id = types.StringValue(id)
 	}
 
 	if name, ok := response["name"].(string); ok {

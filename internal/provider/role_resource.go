@@ -269,6 +269,7 @@ func (r *roleResource) updateModelFromResponse(ctx context.Context, model *resou
 	// Map response fields to model
 	if id, ok := response["roleId"].(string); ok {
 		model.RoleId = types.StringValue(id)
+		model.Id = types.StringValue(id)
 	}
 
 	if roleName, ok := response["roleName"].(string); ok {

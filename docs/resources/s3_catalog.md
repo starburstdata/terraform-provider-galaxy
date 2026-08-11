@@ -44,6 +44,7 @@ description: |-
 ### Read-Only
 
 - `catalog_id` (String) S3 catalog identifier (read only)
+- `id` (String) Terraform import identifier.
 
 ## Import
 

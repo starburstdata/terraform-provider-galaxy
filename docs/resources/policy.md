@@ -30,6 +30,7 @@ description: |-
 ### Read-Only
 
 - `created` (String) Created on (read only)
+- `id` (String) Terraform import identifier.
 - `modified` (String) Modified on (read only)
 - `policy_id` (String) Policy ID (read only)
 

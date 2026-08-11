@@ -39,6 +39,7 @@ description: |-
 - `cluster_id` (String) Cluster ID (read only)
 - `cluster_state` (String) Cluster state (read only)
 - `enabled` (Boolean) Cluster enabled state (extended field) (read only)
+- `id` (String) Terraform import identifier.
 - `trino_uri` (String) Connection URL (read only)
 - `warp_speed_cluster` (Boolean) Supports warp speed mode (read only)
 

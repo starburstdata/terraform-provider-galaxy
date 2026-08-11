@@ -320,6 +320,7 @@ func (r *opensearch_catalogResource) updateModelFromResponse(ctx context.Context
 	// Map response fields to model
 	if id, ok := response["catalogId"].(string); ok {
 		model.CatalogId = types.StringValue(id)
+		model.Id = types.StringValue(id)
 	}
 
 	if name, ok := response["name"].(string); ok {

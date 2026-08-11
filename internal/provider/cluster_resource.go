@@ -453,6 +453,7 @@ func (r *clusterResource) updateModelFromResponse(ctx context.Context, model *re
 	// Set computed fields from response
 	if clusterId, ok := response["clusterId"].(string); ok {
 		model.ClusterId = types.StringValue(clusterId)
+		model.Id = types.StringValue(clusterId)
 	}
 
 	if clusterState, ok := response["clusterState"].(string); ok {

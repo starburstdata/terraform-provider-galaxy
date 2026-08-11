@@ -26,6 +26,7 @@ description: |-
 
 - `column_mask_id` (String) Column Mask ID (read only)
 - `created` (String) Created on (read only)
+- `id` (String) Terraform import identifier.
 - `modified` (String) Modified on (read only)
 
 ## Import

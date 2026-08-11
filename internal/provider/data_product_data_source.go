@@ -119,21 +119,26 @@ func (d *data_productDataSource) updateModelFromResponse(ctx context.Context, mo
 
 	// Map nested objects - simplified mapping for now
 	if catalog, ok := response["catalog"].(map[string]interface{}); ok {
-		catalogValue := datasource_data_product.CatalogValue{}
+		catalogAttrTypes := datasource_data_product.CatalogValue{}.AttributeTypes(ctx)
+		catalogAttrs := map[string]attr.Value{}
 		if catalogId, ok := catalog["id"].(string); ok {
-			catalogValue.CatalogId = types.StringValue(catalogId)
+			catalogAttrs["catalog_id"] = types.StringValue(catalogId)
 		} else if catalogId, ok := catalog["catalogId"].(string); ok {
-			catalogValue.CatalogId = types.StringValue(catalogId)
+			catalogAttrs["catalog_id"] = types.StringValue(catalogId)
+		} else {
+			catalogAttrs["catalog_id"] = types.StringNull()
 		}
 		if catalogName, ok := catalog["name"].(string); ok {
-			catalogValue.CatalogName = types.StringValue(catalogName)
+			catalogAttrs["catalog_name"] = types.StringValue(catalogName)
 		} else if catalogName, ok := catalog["catalogName"].(string); ok {
-			catalogValue.CatalogName = types.StringValue(catalogName)
+			catalogAttrs["catalog_name"] = types.StringValue(catalogName)
+		} else {
+			catalogAttrs["catalog_name"] = types.StringNull()
 		}
 		if catalogKind, ok := catalog["catalogKind"].(string); ok {
-			catalogValue.CatalogKind = types.StringValue(catalogKind)
+			catalogAttrs["catalog_kind"] = types.StringValue(catalogKind)
 		} else {
-			catalogValue.CatalogKind = types.StringNull()
+			catalogAttrs["catalog_kind"] = types.StringNull()
 		}
 		// Handle local_regions
 		if localRegions, ok := catalog["localRegions"].([]interface{}); ok {
@@ -143,11 +148,15 @@ func (d *data_productDataSource) updateModelFromResponse(ctx context.Context, mo
 					regionList = append(regionList, types.StringValue(regionStr))
 				}
 			}
-			catalogValue.LocalRegions, _ = types.ListValueFrom(ctx, types.StringType, regionList)
+			catalogAttrs["local_regions"], _ = types.ListValueFrom(ctx, types.StringType, regionList)
 		} else {
-			catalogValue.LocalRegions = types.ListNull(types.StringType)
+			catalogAttrs["local_regions"] = types.ListNull(types.StringType)
 		}
-		model.Catalog = catalogValue
+		catalogValue, d := datasource_data_product.NewCatalogValue(catalogAttrTypes, catalogAttrs)
+		diags.Append(d...)
+		if !d.HasError() {
+			model.Catalog = catalogValue
+		}
 	}
 
 	// Map contacts from response
@@ -226,36 +235,46 @@ func (d *data_productDataSource) updateModelFromResponse(ctx context.Context, mo
 
 	// Map created by and modified by
 	if createdBy, ok := response["createdBy"].(map[string]interface{}); ok {
-		createdByValue := datasource_data_product.CreatedByValue{}
+		createdByAttrTypes := datasource_data_product.CreatedByValue{}.AttributeTypes(ctx)
+		createdByAttrs := map[string]attr.Value{}
 		if email, ok := createdBy["email"].(string); ok {
-			createdByValue.Email = types.StringValue(email)
+			createdByAttrs["email"] = types.StringValue(email)
 		} else {
-			createdByValue.Email = types.StringNull()
+			createdByAttrs["email"] = types.StringNull()
 		}
 		if userId, ok := createdBy["userId"].(string); ok {
-			createdByValue.UserId = types.StringValue(userId)
+			createdByAttrs["user_id"] = types.StringValue(userId)
 		} else if id, ok := createdBy["id"].(string); ok {
-			createdByValue.UserId = types.StringValue(id)
+			createdByAttrs["user_id"] = types.StringValue(id)
 		} else {
-			createdByValue.UserId = types.StringNull()
+			createdByAttrs["user_id"] = types.StringNull()
 		}
-		model.CreatedBy = createdByValue
+		createdByValue, d := datasource_data_product.NewCreatedByValue(createdByAttrTypes, createdByAttrs)
+		diags.Append(d...)
+		if !d.HasError() {
+			model.CreatedBy = createdByValue
+		}
 	}
 
 	if modifiedBy, ok := response["modifiedBy"].(map[string]interface{}); ok {
-		modifiedByValue := datasource_data_product.ModifiedByValue{}
+		modifiedByAttrTypes := datasource_data_product.ModifiedByValue{}.AttributeTypes(ctx)
+		modifiedByAttrs := map[string]attr.Value{}
 		if email, ok := modifiedBy["email"].(string); ok {
-			modifiedByValue.Email = types.StringValue(email)
+			modifiedByAttrs["email"] = types.StringValue(email)
 		} else {
-			modifiedByValue.Email = types.StringNull()
+			modifiedByAttrs["email"] = types.StringNull()
 		}
 		if userId, ok := modifiedBy["userId"].(string); ok {
-			modifiedByValue.UserId = types.StringValue(userId)
+			modifiedByAttrs["user_id"] = types.StringValue(userId)
 		} else if id, ok := modifiedBy["id"].(string); ok {
-			modifiedByValue.UserId = types.StringValue(id)
+			modifiedByAttrs["user_id"] = types.StringValue(id)
 		} else {
-			modifiedByValue.UserId = types.StringNull()
+			modifiedByAttrs["user_id"] = types.StringNull()
 		}
-		model.ModifiedBy = modifiedByValue
+		modifiedByValue, d := datasource_data_product.NewModifiedByValue(modifiedByAttrTypes, modifiedByAttrs)
+		diags.Append(d...)
+		if !d.HasError() {
+			model.ModifiedBy = modifiedByValue
+		}
 	}
 }

@@ -24,6 +24,11 @@ func ServiceAccountResourceSchema(ctx context.Context) schema.Schema {
 				Description:         "Additional role IDs (read only)",
 				MarkdownDescription: "Additional role IDs (read only)",
 			},
+			"id": schema.StringAttribute{
+				Computed:            true,
+				Description:         "Terraform import identifier.",
+				MarkdownDescription: "Terraform import identifier.",
+			},
 			"passwords": schema.ListNestedAttribute{
 				NestedObject: schema.NestedAttributeObject{
 					Attributes: map[string]schema.Attribute{
@@ -100,6 +105,7 @@ func ServiceAccountResourceSchema(ctx context.Context) schema.Schema {
 
 type ServiceAccountModel struct {
 	AdditionalRoleIds   types.List   `tfsdk:"additional_role_ids"`
+	Id                  types.String `tfsdk:"id"`
 	Passwords           types.List   `tfsdk:"passwords"`
 	RoleId              types.String `tfsdk:"role_id"`
 	ServiceAccountId    types.String `tfsdk:"service_account_id"`

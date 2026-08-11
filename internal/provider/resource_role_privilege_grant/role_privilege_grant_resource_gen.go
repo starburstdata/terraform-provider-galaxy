@@ -63,6 +63,11 @@ func RolePrivilegeGrantResourceSchema(ctx context.Context) schema.Schema {
 				Description:         "Grant option",
 				MarkdownDescription: "Grant option",
 			},
+			"id": schema.StringAttribute{
+				Computed:            true,
+				Description:         "Terraform import identifier.",
+				MarkdownDescription: "Terraform import identifier.",
+			},
 			"list_all_privileges": schema.BoolAttribute{
 				Optional:            true,
 				Computed:            true,
@@ -115,9 +120,11 @@ func RolePrivilegeGrantResourceSchema(ctx context.Context) schema.Schema {
 						"CreateFunction",
 						"CancelQuery",
 						"ViewDataProduct",
+						"ViewDataDomain",
 						"DownloadQueryResults",
 						"ManageQueryRoutingRules",
 						"ManageIcehouseOps",
+						"CreateDataDomain",
 					),
 				},
 			},
@@ -149,6 +156,7 @@ type RolePrivilegeGrantModel struct {
 	EntityKind        types.String `tfsdk:"entity_kind"`
 	GrantKind         types.String `tfsdk:"grant_kind"`
 	GrantOption       types.Bool   `tfsdk:"grant_option"`
+	Id                types.String `tfsdk:"id"`
 	ListAllPrivileges types.Bool   `tfsdk:"list_all_privileges"`
 	Privilege         types.String `tfsdk:"privilege"`
 	RoleId            types.String `tfsdk:"role_id"`

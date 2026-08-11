@@ -40,6 +40,7 @@ description: |-
 ### Read-Only
 
 - `catalog_id` (String) GCS catalog identifier (read only)
+- `id` (String) Terraform import identifier.
 
 ## Import
 

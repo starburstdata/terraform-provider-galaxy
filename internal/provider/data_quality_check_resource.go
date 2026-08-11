@@ -261,6 +261,7 @@ func (r *dataQualityCheckResource) modelToCreateRequest(model *resource_data_qua
 func (r *dataQualityCheckResource) updateModelFromResponse(model *resource_data_quality_check.DataQualityCheckModel, response map[string]interface{}) {
 	if id, ok := response["dataQualityCheckId"].(string); ok {
 		model.DataQualityCheckId = types.StringValue(id)
+		model.Id = types.StringValue(id)
 	}
 
 	if catalogId, ok := response["catalogId"].(string); ok {
