@@ -377,6 +377,7 @@ func (r *s3_catalogResource) updateModelFromResponse(ctx context.Context, model 
 	// Use catalogId as the ID for s3_catalog
 	if catalogId, ok := response["catalogId"].(string); ok {
 		model.CatalogId = types.StringValue(catalogId)
+		model.Id = types.StringValue(catalogId)
 	}
 	if name, ok := response["name"].(string); ok {
 		model.Name = types.StringValue(name)

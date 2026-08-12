@@ -38,6 +38,7 @@ description: |-
 ### Read-Only
 
 - `catalog_id` (String) SQL Server catalog identifier (read only)
+- `id` (String) Terraform import identifier.
 
 ## Import
 

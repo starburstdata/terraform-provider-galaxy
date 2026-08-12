@@ -322,6 +322,7 @@ func (r *data_productResource) updateModelFromResponse(ctx context.Context, mode
 	// Map response fields to model
 	if id, ok := response["dataProductId"].(string); ok {
 		model.DataProductId = types.StringValue(id)
+		model.Id = types.StringValue(id)
 	}
 
 	if name, ok := response["name"].(string); ok {

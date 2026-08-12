@@ -27,6 +27,7 @@ description: |-
 
 ### Read-Only
 
+- `id` (String) Terraform import identifier.
 - `passwords` (Attributes List) (see [below for nested schema](#nestedatt--passwords))
 - `service_account_id` (String) Service account ID (read only)
 - `user_name` (String) Service account user name (read only)

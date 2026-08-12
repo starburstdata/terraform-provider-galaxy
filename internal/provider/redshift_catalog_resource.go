@@ -316,6 +316,7 @@ func (r *redshift_catalogResource) updateModelFromResponse(ctx context.Context, 
 	// Map response fields to model
 	if catalogId, ok := response["catalogId"].(string); ok {
 		model.CatalogId = types.StringValue(catalogId)
+		model.Id = types.StringValue(catalogId)
 	}
 
 	if name, ok := response["name"].(string); ok {

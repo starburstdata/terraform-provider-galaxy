@@ -56,6 +56,11 @@ func ColumnMaskResourceSchema(ctx context.Context) schema.Schema {
 				Description:         "Column mask expression (read only)",
 				MarkdownDescription: "Column mask expression (read only)",
 			},
+			"id": schema.StringAttribute{
+				Computed:            true,
+				Description:         "Terraform import identifier.",
+				MarkdownDescription: "Terraform import identifier.",
+			},
 			"modified": schema.StringAttribute{
 				Computed:            true,
 				Description:         "Modified on (read only)",
@@ -76,6 +81,7 @@ type ColumnMaskModel struct {
 	Created        types.String `tfsdk:"created"`
 	Description    types.String `tfsdk:"description"`
 	Expression     types.String `tfsdk:"expression"`
+	Id             types.String `tfsdk:"id"`
 	Modified       types.String `tfsdk:"modified"`
 	Name           types.String `tfsdk:"name"`
 }

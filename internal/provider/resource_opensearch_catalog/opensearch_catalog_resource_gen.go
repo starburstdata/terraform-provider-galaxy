@@ -37,6 +37,11 @@ func OpensearchCatalogResourceSchema(ctx context.Context) schema.Schema {
 				Description:         "OpenSearch cluster endpoint",
 				MarkdownDescription: "OpenSearch cluster endpoint",
 			},
+			"id": schema.StringAttribute{
+				Computed:            true,
+				Description:         "Terraform import identifier.",
+				MarkdownDescription: "Terraform import identifier.",
+			},
 			"name": schema.StringAttribute{
 				Required:            true,
 				Description:         "Catalog name",
@@ -106,6 +111,7 @@ type OpensearchCatalogModel struct {
 	CatalogId   types.String `tfsdk:"catalog_id"`
 	Description types.String `tfsdk:"description"`
 	Endpoint    types.String `tfsdk:"endpoint"`
+	Id          types.String `tfsdk:"id"`
 	Name        types.String `tfsdk:"name"`
 	Password    types.String `tfsdk:"password"`
 	Port        types.Int64  `tfsdk:"port"`

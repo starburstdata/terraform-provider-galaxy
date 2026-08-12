@@ -53,6 +53,11 @@ func CassandraCatalogResourceSchema(ctx context.Context) schema.Schema {
 				Description:         "Catalog description",
 				MarkdownDescription: "Catalog description",
 			},
+			"id": schema.StringAttribute{
+				Computed:            true,
+				Description:         "Terraform import identifier.",
+				MarkdownDescription: "Terraform import identifier.",
+			},
 			"local_datacenter": schema.StringAttribute{
 				Optional:            true,
 				Computed:            true,
@@ -124,6 +129,7 @@ type CassandraCatalogModel struct {
 	DatabaseId      types.String `tfsdk:"database_id"`
 	DeploymentType  types.String `tfsdk:"deployment_type"`
 	Description     types.String `tfsdk:"description"`
+	Id              types.String `tfsdk:"id"`
 	LocalDatacenter types.String `tfsdk:"local_datacenter"`
 	Name            types.String `tfsdk:"name"`
 	Password        types.String `tfsdk:"password"`

@@ -130,6 +130,11 @@ func DataProductResourceSchema(ctx context.Context) schema.Schema {
 				Description:         "Long form description of Data Product",
 				MarkdownDescription: "Long form description of Data Product",
 			},
+			"id": schema.StringAttribute{
+				Computed:            true,
+				Description:         "Terraform import identifier.",
+				MarkdownDescription: "Terraform import identifier.",
+			},
 			"links": schema.ListNestedAttribute{
 				NestedObject: schema.NestedAttributeObject{
 					Attributes: map[string]schema.Attribute{
@@ -211,6 +216,7 @@ type DataProductModel struct {
 	DataProductId    types.String    `tfsdk:"data_product_id"`
 	DefaultClusterId types.String    `tfsdk:"default_cluster_id"`
 	Description      types.String    `tfsdk:"description"`
+	Id               types.String    `tfsdk:"id"`
 	Links            types.List      `tfsdk:"links"`
 	ModifiedBy       ModifiedByValue `tfsdk:"modified_by"`
 	ModifiedOn       types.String    `tfsdk:"modified_on"`
