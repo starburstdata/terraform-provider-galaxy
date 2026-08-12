@@ -34,3 +34,4 @@ description: |-
 ### Read-Only
 
 - `data_quality_check_id` (String) Data Quality check ID (read only)
+- `id` (String) Terraform import identifier.

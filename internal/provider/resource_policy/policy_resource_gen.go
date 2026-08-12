@@ -36,6 +36,11 @@ func PolicyResourceSchema(ctx context.Context) schema.Schema {
 				Description:         "Policy expiration (read only)",
 				MarkdownDescription: "Policy expiration (read only)",
 			},
+			"id": schema.StringAttribute{
+				Computed:            true,
+				Description:         "Terraform import identifier.",
+				MarkdownDescription: "Terraform import identifier.",
+			},
 			"modified": schema.StringAttribute{
 				Computed:            true,
 				Description:         "Modified on (read only)",
@@ -170,6 +175,7 @@ type PolicyModel struct {
 	Created     types.String `tfsdk:"created"`
 	Description types.String `tfsdk:"description"`
 	Expiration  types.String `tfsdk:"expiration"`
+	Id          types.String `tfsdk:"id"`
 	Modified    types.String `tfsdk:"modified"`
 	Name        types.String `tfsdk:"name"`
 	PolicyId    types.String `tfsdk:"policy_id"`

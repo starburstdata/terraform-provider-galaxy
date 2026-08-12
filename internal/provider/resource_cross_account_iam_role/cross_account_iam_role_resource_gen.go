@@ -28,6 +28,11 @@ func CrossAccountIamRoleResourceSchema(ctx context.Context) schema.Schema {
 				Description:         "List of catalogs or ingest sources attached to the role (read only)",
 				MarkdownDescription: "List of catalogs or ingest sources attached to the role (read only)",
 			},
+			"id": schema.StringAttribute{
+				Computed:            true,
+				Description:         "Terraform import identifier.",
+				MarkdownDescription: "Terraform import identifier.",
+			},
 		},
 	}
 }
@@ -36,4 +41,5 @@ type CrossAccountIamRoleModel struct {
 	AliasName  types.String `tfsdk:"alias_name"`
 	AwsIamArn  types.String `tfsdk:"aws_iam_arn"`
 	Dependants types.List   `tfsdk:"dependants"`
+	Id         types.String `tfsdk:"id"`
 }

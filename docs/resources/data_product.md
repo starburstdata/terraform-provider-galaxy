@@ -36,6 +36,7 @@ description: |-
 - `created_by` (Attributes) Created by user. If empty then the user is inactive/deleted. (read only) (see [below for nested schema](#nestedatt--created_by))
 - `created_on` (String) Creation date (read only)
 - `data_product_id` (String) Data Product ID (read only)
+- `id` (String) Terraform import identifier.
 - `modified_by` (Attributes) Created by user. If empty then the user is inactive/deleted. (read only) (see [below for nested schema](#nestedatt--modified_by))
 - `modified_on` (String) Modified date (read only)
 

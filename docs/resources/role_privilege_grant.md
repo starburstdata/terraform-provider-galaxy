@@ -33,6 +33,7 @@ description: |-
 
 ### Read-Only
 
+- `id` (String) Terraform import identifier.
 - `list_all_privileges` (Boolean) Lists all inherited and directly granted privileges if true, or only directly granted privileges if false.
 
 ## Import

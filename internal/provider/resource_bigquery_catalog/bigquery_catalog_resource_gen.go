@@ -30,6 +30,11 @@ func BigqueryCatalogResourceSchema(ctx context.Context) schema.Schema {
 				Description:         "Catalog description",
 				MarkdownDescription: "Catalog description",
 			},
+			"id": schema.StringAttribute{
+				Computed:            true,
+				Description:         "Terraform import identifier.",
+				MarkdownDescription: "Terraform import identifier.",
+			},
 			"name": schema.StringAttribute{
 				Required:            true,
 				Description:         "Catalog name",
@@ -66,6 +71,7 @@ type BigqueryCatalogModel struct {
 	CatalogId       types.String `tfsdk:"catalog_id"`
 	CredentialsKey  types.String `tfsdk:"credentials_key"`
 	Description     types.String `tfsdk:"description"`
+	Id              types.String `tfsdk:"id"`
 	Name            types.String `tfsdk:"name"`
 	ParentProjectId types.String `tfsdk:"parent_project_id"`
 	ProjectId       types.String `tfsdk:"project_id"`

@@ -85,8 +85,10 @@ func (r *cross_account_iam_roleResource) Create(ctx context.Context, req resourc
 
 	// For cross-account IAM role, the Create response may return a list-like structure
 	// We only need to update the basic fields for the resource, ignoring pagination metadata
+	// TODO: Improve implementation to use basic updateModelFromResponse
 	if aliasName, ok := response["aliasName"].(string); ok {
 		plan.AliasName = types.StringValue(aliasName)
+		plan.Id = types.StringValue(aliasName)
 	}
 
 	if awsIamArn, ok := response["awsIamArn"].(string); ok {
@@ -181,6 +183,7 @@ func (r *cross_account_iam_roleResource) Update(ctx context.Context, req resourc
 	// Update only the fields that exist in our resource model
 	if aliasNameResp, ok := response["aliasName"].(string); ok {
 		plan.AliasName = types.StringValue(aliasNameResp)
+		plan.Id = types.StringValue(aliasNameResp)
 	}
 
 	if awsIamArn, ok := response["awsIamArn"].(string); ok {
@@ -270,6 +273,7 @@ func (r *cross_account_iam_roleResource) updateModelFromResponse(ctx context.Con
 
 	if aliasName, ok := response["aliasName"].(string); ok {
 		model.AliasName = types.StringValue(aliasName)
+		model.Id = types.StringValue(aliasName)
 	}
 
 	if awsIamArn, ok := response["awsIamArn"].(string); ok {

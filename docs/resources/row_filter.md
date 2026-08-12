@@ -24,6 +24,7 @@ description: |-
 ### Read-Only
 
 - `created` (String) Created on (read only)
+- `id` (String) Terraform import identifier.
 - `modified` (String) Modified on (read only)
 - `row_filter_id` (String) Row Filter ID (read only)
 

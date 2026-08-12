@@ -511,4 +511,11 @@ func (r *role_privilege_grantResource) updateModelFromResponse(ctx context.Conte
 
 	// list_all_privileges is not a resource property; always null
 	model.ListAllPrivileges = types.BoolNull()
+
+	// Set Id to a composite of the primary key fields for Terraform identity tracking
+	if !model.RoleId.IsNull() && !model.RoleId.IsUnknown() &&
+		!model.EntityId.IsNull() && !model.EntityId.IsUnknown() &&
+		!model.Privilege.IsNull() && !model.Privilege.IsUnknown() {
+		model.Id = types.StringValue(model.RoleId.ValueString() + "/" + model.EntityId.ValueString() + "/" + model.Privilege.ValueString())
+	}
 }

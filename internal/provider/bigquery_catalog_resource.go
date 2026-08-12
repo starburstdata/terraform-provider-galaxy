@@ -288,6 +288,7 @@ func (r *bigquery_catalogResource) updateModelFromResponse(ctx context.Context, 
 	// Use catalogId as the ID
 	if catalogId, ok := response["catalogId"].(string); ok {
 		model.CatalogId = types.StringValue(catalogId)
+		model.Id = types.StringValue(catalogId)
 	}
 	if name, ok := response["name"].(string); ok {
 		model.Name = types.StringValue(name)

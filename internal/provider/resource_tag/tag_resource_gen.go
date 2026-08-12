@@ -23,6 +23,11 @@ func TagResourceSchema(ctx context.Context) schema.Schema {
 				Description:         "comment (read only)",
 				MarkdownDescription: "comment (read only)",
 			},
+			"id": schema.StringAttribute{
+				Computed:            true,
+				Description:         "Terraform import identifier.",
+				MarkdownDescription: "Terraform import identifier.",
+			},
 			"name": schema.StringAttribute{
 				Required:            true,
 				Description:         "Tag name (read only)",
@@ -40,6 +45,7 @@ func TagResourceSchema(ctx context.Context) schema.Schema {
 type TagModel struct {
 	Color       types.String `tfsdk:"color"`
 	Description types.String `tfsdk:"description"`
+	Id          types.String `tfsdk:"id"`
 	Name        types.String `tfsdk:"name"`
 	TagId       types.String `tfsdk:"tag_id"`
 }

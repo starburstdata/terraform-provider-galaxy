@@ -23,6 +23,7 @@ description: |-
 ### Read-Only
 
 - `dependants` (List of String) List of catalogs or ingest sources attached to the role (read only)
+- `id` (String) Terraform import identifier.
 
 ## Import
 

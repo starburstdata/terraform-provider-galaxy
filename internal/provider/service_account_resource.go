@@ -251,6 +251,7 @@ func (r *service_accountResource) updateModelFromResponse(ctx context.Context, m
 	// Map response fields to model
 	if id, ok := response["serviceAccountId"].(string); ok {
 		model.ServiceAccountId = types.StringValue(id)
+		model.Id = types.StringValue(id)
 	}
 
 	if username, ok := response["username"].(string); ok {
