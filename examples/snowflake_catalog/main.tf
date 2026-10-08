@@ -19,7 +19,7 @@ resource "galaxy_snowflake_catalog" "test" {
   name               = "sfcat${local.timestamp}"
   account_identifier = var.TESTING_SNOWFLAKE_ACCOUNT_ID
   username           = var.TESTING_SNOWFLAKE_USER
-  password           = var.TESTING_SNOWFLAKE_PASSWORD
+  private_key        = var.TESTING_SNOWFLAKE_PRIVATE_KEY
   database_name      = var.TESTING_SNOWFLAKE_DATABASE
   read_only          = false
   description        = "E2E testing Snowflake data warehouse catalog"

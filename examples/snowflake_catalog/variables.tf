@@ -12,10 +12,10 @@ variable "TESTING_SNOWFLAKE_USER" {
   default     = ""
 }
 
-variable "TESTING_SNOWFLAKE_PASSWORD" {
+variable "TESTING_SNOWFLAKE_PRIVATE_KEY" {
   type        = string
   sensitive   = true
-  description = "Testing Snowflake password from integration secrets"
+  description = "Testing Snowflake private key from integration secrets"
   default     = ""
 }
 
