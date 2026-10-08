@@ -513,6 +513,14 @@ func (r *clusterResource) updateModelFromResponse(ctx context.Context, model *re
 
 	if idleStopMinutes, ok := response["idleStopMinutes"].(float64); ok {
 		model.IdleStopMinutes = types.Int64Value(int64(idleStopMinutes))
+	} else if model.IdleStopMinutes.IsUnknown() {
+		// idle_stop_minutes is Optional+Computed, so the Plugin Framework marks it unknown in the
+		// plan when another attribute (e.g. catalog_refs) changes and the user hasn't configured a
+		// value. The API omits the field when no idle-stop is set, which would leave the planned
+		// unknown untouched - Terraform then rejects the apply with "Provider returned invalid
+		// result object after apply". The guard preserves already-known values and only resolves
+		// unknowns to null, mirroring the ResultCacheDefaultVisibilitySeconds fallback below.
+		model.IdleStopMinutes = types.Int64Null()
 	}
 
 	if privateLinkCluster, ok := response["privateLinkCluster"].(bool); ok {
