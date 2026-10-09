@@ -110,9 +110,13 @@ func (d *rolegrantsDataSource) Read(ctx context.Context, req datasource.ReadRequ
 				resultElements = append(resultElements, resultValue)
 			}
 		}
-		config.Result, _ = types.ListValue(elementType, resultElements)
+		var ld diag.Diagnostics
+		config.Result, ld = types.ListValue(elementType, resultElements)
+		resp.Diagnostics.Append(ld...)
 	} else {
-		config.Result, _ = types.ListValue(elementType, []attr.Value{})
+		var ld diag.Diagnostics
+		config.Result, ld = types.ListValue(elementType, []attr.Value{})
+		resp.Diagnostics.Append(ld...)
 	}
 
 	resp.Diagnostics.Append(resp.State.Set(ctx, &config)...)

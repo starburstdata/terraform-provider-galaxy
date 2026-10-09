@@ -15,6 +15,7 @@ import (
 
 	"github.com/hashicorp/terraform-plugin-framework/attr"
 	"github.com/hashicorp/terraform-plugin-framework/datasource"
+	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
 
@@ -177,9 +178,13 @@ func (d *evaluationsDataSource) Read(ctx context.Context, req datasource.ReadReq
 				}
 			}
 		}
-		config.Evaluations, _ = types.ListValue(evaluationsElementType, evalElements)
+		var ld diag.Diagnostics
+		config.Evaluations, ld = types.ListValue(evaluationsElementType, evalElements)
+		resp.Diagnostics.Append(ld...)
 	} else {
-		config.Evaluations, _ = types.ListValue(evaluationsElementType, []attr.Value{})
+		var ld diag.Diagnostics
+		config.Evaluations, ld = types.ListValue(evaluationsElementType, []attr.Value{})
+		resp.Diagnostics.Append(ld...)
 	}
 
 	resp.Diagnostics.Append(resp.State.Set(ctx, &config)...)

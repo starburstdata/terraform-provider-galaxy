@@ -249,11 +249,6 @@ func (r *column_maskResource) updateModelFromResponse(ctx context.Context, model
 		model.Id = types.StringValue(id)
 	}
 
-	if columnMaskId, ok := response["columnMaskId"].(string); ok {
-		model.ColumnMaskId = types.StringValue(columnMaskId)
-		model.Id = types.StringValue(columnMaskId)
-	}
-
 	if name, ok := response["name"].(string); ok {
 		model.Name = types.StringValue(name)
 	}
