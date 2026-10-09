@@ -392,16 +392,10 @@ func (r *policyResource) modelToUpdateRequest(ctx context.Context, model *resour
 }
 
 func (r *policyResource) updateModelFromResponse(ctx context.Context, model *resource_policy.PolicyModel, response map[string]interface{}, diags *diag.Diagnostics) {
-	// Set ID - try both possible field names
+	// Set computed fields from API response
 	if id, ok := response["policyId"].(string); ok {
 		model.PolicyId = types.StringValue(id)
 		model.Id = types.StringValue(id)
-	}
-
-	// Set computed fields from API response
-	if policyId, ok := response["policyId"].(string); ok {
-		model.PolicyId = types.StringValue(policyId)
-		model.Id = types.StringValue(policyId)
 	}
 
 	if name, ok := response["name"].(string); ok {

@@ -56,6 +56,13 @@ func (r *tagResource) Schema(ctx context.Context, req resource.SchemaRequest, re
 		s.Attributes["tag_id"] = attr
 	}
 
+	if attr, ok := s.Attributes["id"].(schema.StringAttribute); ok {
+		attr.PlanModifiers = []planmodifier.String{
+			stringplanmodifier.UseStateForUnknown(),
+		}
+		s.Attributes["id"] = attr
+	}
+
 	resp.Schema = s
 }
 
