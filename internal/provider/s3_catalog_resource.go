@@ -64,6 +64,13 @@ func (r *s3_catalogResource) Schema(ctx context.Context, req resource.SchemaRequ
 		s.Attributes["catalog_id"] = attr
 	}
 
+	if attr, ok := s.Attributes["id"].(schema.StringAttribute); ok {
+		attr.PlanModifiers = []planmodifier.String{
+			stringplanmodifier.UseStateForUnknown(),
+		}
+		s.Attributes["id"] = attr
+	}
+
 	resp.Schema = s
 }
 

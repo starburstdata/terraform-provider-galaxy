@@ -16,6 +16,8 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/attr"
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
 
@@ -40,7 +42,33 @@ func (r *evaluationResource) Metadata(ctx context.Context, req resource.Metadata
 }
 
 func (r *evaluationResource) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
-	resp.Schema = resource_evaluation.EvaluationResourceSchema(ctx)
+	s := resource_evaluation.EvaluationResourceSchema(ctx)
+
+	// data_quality_check_id identifies the target check; the API has no way to move an evaluation
+	// between checks, so any change must destroy and recreate the resource.
+	if attr, ok := s.Attributes["data_quality_check_id"].(schema.StringAttribute); ok {
+		attr.PlanModifiers = append(attr.PlanModifiers, stringplanmodifier.RequiresReplace())
+		s.Attributes["data_quality_check_id"] = attr
+	}
+
+	// cluster_id is a request-only Create parameter (see Update; the API never returns it). Any
+	// change to the configured value - including configuring one after import, when state is null -
+	// must re-run the evaluation. UseStateForUnknown preserves the recorded value across updates
+	// where the user does not change the config, so RequiresReplace only fires on real transitions.
+	if attr, ok := s.Attributes["cluster_id"].(schema.StringAttribute); ok {
+		attr.PlanModifiers = append(attr.PlanModifiers,
+			stringplanmodifier.UseStateForUnknown(),
+			stringplanmodifier.RequiresReplace(),
+		)
+		s.Attributes["cluster_id"] = attr
+	}
+
+	if attr, ok := s.Attributes["id"].(schema.StringAttribute); ok {
+		attr.PlanModifiers = append(attr.PlanModifiers, stringplanmodifier.UseStateForUnknown())
+		s.Attributes["id"] = attr
+	}
+
+	resp.Schema = s
 }
 
 func (r *evaluationResource) Configure(ctx context.Context, req resource.ConfigureRequest, resp *resource.ConfigureResponse) {

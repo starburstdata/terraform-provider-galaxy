@@ -78,6 +78,13 @@ func (r *sqlserver_catalogResource) Schema(ctx context.Context, req resource.Sch
 		s.Attributes["catalog_id"] = attr
 	}
 
+	if attr, ok := s.Attributes["id"].(schema.StringAttribute); ok {
+		attr.PlanModifiers = []planmodifier.String{
+			stringplanmodifier.UseStateForUnknown(),
+		}
+		s.Attributes["id"] = attr
+	}
+
 	resp.Schema = s
 }
 

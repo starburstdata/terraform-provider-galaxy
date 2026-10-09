@@ -15,6 +15,7 @@ import (
 
 	"github.com/hashicorp/terraform-plugin-framework/attr"
 	"github.com/hashicorp/terraform-plugin-framework/datasource"
+	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
 
@@ -162,9 +163,13 @@ func (d *dataQualitySchedulesDataSource) Read(ctx context.Context, req datasourc
 				checkElements = append(checkElements, checkValue)
 			}
 		}
-		config.DataQualityChecks, _ = types.ListValue(checksElementType, checkElements)
+		var ld diag.Diagnostics
+		config.DataQualityChecks, ld = types.ListValue(checksElementType, checkElements)
+		resp.Diagnostics.Append(ld...)
 	} else {
-		config.DataQualityChecks, _ = types.ListValue(checksElementType, []attr.Value{})
+		var ld diag.Diagnostics
+		config.DataQualityChecks, ld = types.ListValue(checksElementType, []attr.Value{})
+		resp.Diagnostics.Append(ld...)
 	}
 
 	resp.Diagnostics.Append(resp.State.Set(ctx, &config)...)
