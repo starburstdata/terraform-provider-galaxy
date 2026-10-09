@@ -512,10 +512,46 @@ func (r *role_privilege_grantResource) updateModelFromResponse(ctx context.Conte
 	// list_all_privileges is not a resource property; always null
 	model.ListAllPrivileges = types.BoolNull()
 
-	// Set Id to a composite of the primary key fields for Terraform identity tracking
+	// Set Id to a composite of the primary key fields for Terraform identity tracking.
+	// The format matches the documented import identifier so ImportState can round-trip:
+	// role_id/entity_id/entity_kind/privilege/grant_kind[/schema_name[/table_name/column_name]]
+	// role_id + entity_id + privilege alone is not unique — grants across different
+	// entity_kind, grant_kind, or scope would collide on Id and confuse Terraform state.
 	if !model.RoleId.IsNull() && !model.RoleId.IsUnknown() &&
 		!model.EntityId.IsNull() && !model.EntityId.IsUnknown() &&
-		!model.Privilege.IsNull() && !model.Privilege.IsUnknown() {
-		model.Id = types.StringValue(model.RoleId.ValueString() + "/" + model.EntityId.ValueString() + "/" + model.Privilege.ValueString())
+		!model.EntityKind.IsNull() && !model.EntityKind.IsUnknown() &&
+		!model.Privilege.IsNull() && !model.Privilege.IsUnknown() &&
+		!model.GrantKind.IsNull() && !model.GrantKind.IsUnknown() {
+		parts := []string{
+			model.RoleId.ValueString(),
+			model.EntityId.ValueString(),
+			model.EntityKind.ValueString(),
+			model.Privilege.ValueString(),
+			model.GrantKind.ValueString(),
+		}
+		entityKind := model.EntityKind.ValueString()
+		schemaName := ""
+		tableName := ""
+		columnName := ""
+		if !model.SchemaName.IsNull() && !model.SchemaName.IsUnknown() {
+			schemaName = model.SchemaName.ValueString()
+		}
+		if !model.TableName.IsNull() && !model.TableName.IsUnknown() {
+			tableName = model.TableName.ValueString()
+		}
+		if !model.ColumnName.IsNull() && !model.ColumnName.IsUnknown() {
+			columnName = model.ColumnName.ValueString()
+		}
+		// The API promotes Table grants to Column with column_name="*"; match that so the Id is stable across Read
+		if entityKind == "Table" && schemaName != "" && tableName != "" && columnName == "" {
+			columnName = "*"
+		}
+		// No diagnostics here: on Create the grant already exists server-side and an error would orphan it
+		for _, scope := range []string{schemaName, tableName, columnName} {
+			if scope != "" {
+				parts = append(parts, scope)
+			}
+		}
+		model.Id = types.StringValue(strings.Join(parts, "/"))
 	}
 }

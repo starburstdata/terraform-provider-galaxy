@@ -56,6 +56,13 @@ func (r *row_filterResource) Schema(ctx context.Context, req resource.SchemaRequ
 		s.Attributes["row_filter_id"] = attr
 	}
 
+	if attr, ok := s.Attributes["id"].(schema.StringAttribute); ok {
+		attr.PlanModifiers = []planmodifier.String{
+			stringplanmodifier.UseStateForUnknown(),
+		}
+		s.Attributes["id"] = attr
+	}
+
 	// created is assigned at creation and never changes. Without UseStateForUnknown, any update
 	// to the row filter causes Terraform to mark created as "known after apply".
 	if attr, ok := s.Attributes["created"].(schema.StringAttribute); ok {
