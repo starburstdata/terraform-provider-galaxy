@@ -57,6 +57,13 @@ func (r *service_accountResource) Schema(ctx context.Context, req resource.Schem
 		s.Attributes["service_account_id"] = attr
 	}
 
+	if attr, ok := s.Attributes["id"].(schema.StringAttribute); ok {
+		attr.PlanModifiers = []planmodifier.String{
+			stringplanmodifier.UseStateForUnknown(),
+		}
+		s.Attributes["id"] = attr
+	}
+
 	resp.Schema = s
 }
 

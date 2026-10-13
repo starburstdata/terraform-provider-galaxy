@@ -157,9 +157,13 @@ func (d *catalogMetadatasDataSource) updateModelFromResponse(ctx context.Context
 				}
 			}
 		}
-		model.Contacts, _ = types.ListValue(contactsElementType, contactElements)
+		var ld diag.Diagnostics
+		model.Contacts, ld = types.ListValue(contactsElementType, contactElements)
+		diags.Append(ld...)
 	} else {
-		model.Contacts, _ = types.ListValue(contactsElementType, []attr.Value{})
+		var ld diag.Diagnostics
+		model.Contacts, ld = types.ListValue(contactsElementType, []attr.Value{})
+		diags.Append(ld...)
 	}
 
 	// Map tags
@@ -191,9 +195,13 @@ func (d *catalogMetadatasDataSource) updateModelFromResponse(ctx context.Context
 				}
 			}
 		}
-		model.Tags, _ = types.ListValue(tagsElementType, tagElements)
+		var ld diag.Diagnostics
+		model.Tags, ld = types.ListValue(tagsElementType, tagElements)
+		diags.Append(ld...)
 	} else {
-		model.Tags, _ = types.ListValue(tagsElementType, []attr.Value{})
+		var ld diag.Diagnostics
+		model.Tags, ld = types.ListValue(tagsElementType, []attr.Value{})
+		diags.Append(ld...)
 	}
 
 	return diags
