@@ -86,6 +86,11 @@ func S3CatalogsDataSourceSchema(ctx context.Context) schema.Schema {
 							Description:         "Hive metastore host port. Defaults to 9083.",
 							MarkdownDescription: "Hive metastore host port. Defaults to 9083.",
 						},
+						"metadata_max_staleness_seconds": schema.Int64Attribute{
+							Computed:            true,
+							Description:         "Maximum metadata staleness in seconds (30, 60, 90, or 120)",
+							MarkdownDescription: "Maximum metadata staleness in seconds (30, 60, 90, or 120)",
+						},
 						"metastore_type": schema.StringAttribute{
 							Computed: true,
 						},
@@ -402,6 +407,24 @@ func (t ResultType) ValueFromObject(ctx context.Context, in basetypes.ObjectValu
 			fmt.Sprintf(`hive_metastore_port expected to be basetypes.Int64Value, was: %T`, hiveMetastorePortAttribute))
 	}
 
+	metadataMaxStalenessSecondsAttribute, ok := attributes["metadata_max_staleness_seconds"]
+
+	if !ok {
+		diags.AddError(
+			"Attribute Missing",
+			`metadata_max_staleness_seconds is missing from object`)
+
+		return nil, diags
+	}
+
+	metadataMaxStalenessSecondsVal, ok := metadataMaxStalenessSecondsAttribute.(basetypes.Int64Value)
+
+	if !ok {
+		diags.AddError(
+			"Attribute Wrong Type",
+			fmt.Sprintf(`metadata_max_staleness_seconds expected to be basetypes.Int64Value, was: %T`, metadataMaxStalenessSecondsAttribute))
+	}
+
 	metastoreTypeAttribute, ok := attributes["metastore_type"]
 
 	if !ok {
@@ -564,6 +587,7 @@ func (t ResultType) ValueFromObject(ctx context.Context, in basetypes.ObjectValu
 		GlueSecretKey:                glueSecretKeyVal,
 		HiveMetastoreHost:            hiveMetastoreHostVal,
 		HiveMetastorePort:            hiveMetastorePortVal,
+		MetadataMaxStalenessSeconds:  metadataMaxStalenessSecondsVal,
 		MetastoreType:                metastoreTypeVal,
 		Name:                         nameVal,
 		ReadOnly:                     readOnlyVal,
@@ -873,6 +897,24 @@ func NewResultValue(attributeTypes map[string]attr.Type, attributes map[string]a
 			fmt.Sprintf(`hive_metastore_port expected to be basetypes.Int64Value, was: %T`, hiveMetastorePortAttribute))
 	}
 
+	metadataMaxStalenessSecondsAttribute, ok := attributes["metadata_max_staleness_seconds"]
+
+	if !ok {
+		diags.AddError(
+			"Attribute Missing",
+			`metadata_max_staleness_seconds is missing from object`)
+
+		return NewResultValueUnknown(), diags
+	}
+
+	metadataMaxStalenessSecondsVal, ok := metadataMaxStalenessSecondsAttribute.(basetypes.Int64Value)
+
+	if !ok {
+		diags.AddError(
+			"Attribute Wrong Type",
+			fmt.Sprintf(`metadata_max_staleness_seconds expected to be basetypes.Int64Value, was: %T`, metadataMaxStalenessSecondsAttribute))
+	}
+
 	metastoreTypeAttribute, ok := attributes["metastore_type"]
 
 	if !ok {
@@ -1035,6 +1077,7 @@ func NewResultValue(attributeTypes map[string]attr.Type, attributes map[string]a
 		GlueSecretKey:                glueSecretKeyVal,
 		HiveMetastoreHost:            hiveMetastoreHostVal,
 		HiveMetastorePort:            hiveMetastorePortVal,
+		MetadataMaxStalenessSeconds:  metadataMaxStalenessSecondsVal,
 		MetastoreType:                metastoreTypeVal,
 		Name:                         nameVal,
 		ReadOnly:                     readOnlyVal,
@@ -1128,6 +1171,7 @@ type ResultValue struct {
 	GlueSecretKey                basetypes.StringValue `tfsdk:"glue_secret_key"`
 	HiveMetastoreHost            basetypes.StringValue `tfsdk:"hive_metastore_host"`
 	HiveMetastorePort            basetypes.Int64Value  `tfsdk:"hive_metastore_port"`
+	MetadataMaxStalenessSeconds  basetypes.Int64Value  `tfsdk:"metadata_max_staleness_seconds"`
 	MetastoreType                basetypes.StringValue `tfsdk:"metastore_type"`
 	Name                         basetypes.StringValue `tfsdk:"name"`
 	ReadOnly                     basetypes.BoolValue   `tfsdk:"read_only"`
@@ -1140,7 +1184,7 @@ type ResultValue struct {
 }
 
 func (v ResultValue) ToTerraformValue(ctx context.Context) (tftypes.Value, error) {
-	attrTypes := make(map[string]tftypes.Type, 21)
+	attrTypes := make(map[string]tftypes.Type, 22)
 
 	var val tftypes.Value
 	var err error
@@ -1158,6 +1202,7 @@ func (v ResultValue) ToTerraformValue(ctx context.Context) (tftypes.Value, error
 	attrTypes["glue_secret_key"] = basetypes.StringType{}.TerraformType(ctx)
 	attrTypes["hive_metastore_host"] = basetypes.StringType{}.TerraformType(ctx)
 	attrTypes["hive_metastore_port"] = basetypes.Int64Type{}.TerraformType(ctx)
+	attrTypes["metadata_max_staleness_seconds"] = basetypes.Int64Type{}.TerraformType(ctx)
 	attrTypes["metastore_type"] = basetypes.StringType{}.TerraformType(ctx)
 	attrTypes["name"] = basetypes.StringType{}.TerraformType(ctx)
 	attrTypes["read_only"] = basetypes.BoolType{}.TerraformType(ctx)
@@ -1171,7 +1216,7 @@ func (v ResultValue) ToTerraformValue(ctx context.Context) (tftypes.Value, error
 
 	switch v.state {
 	case attr.ValueStateKnown:
-		vals := make(map[string]tftypes.Value, 21)
+		vals := make(map[string]tftypes.Value, 22)
 
 		val, err = v.AccessKey.ToTerraformValue(ctx)
 
@@ -1276,6 +1321,14 @@ func (v ResultValue) ToTerraformValue(ctx context.Context) (tftypes.Value, error
 		}
 
 		vals["hive_metastore_port"] = val
+
+		val, err = v.MetadataMaxStalenessSeconds.ToTerraformValue(ctx)
+
+		if err != nil {
+			return tftypes.NewValue(objectType, tftypes.UnknownValue), err
+		}
+
+		vals["metadata_max_staleness_seconds"] = val
 
 		val, err = v.MetastoreType.ToTerraformValue(ctx)
 
@@ -1384,6 +1437,7 @@ func (v ResultValue) ToObjectValue(ctx context.Context) (basetypes.ObjectValue, 
 		"glue_secret_key":                 basetypes.StringType{},
 		"hive_metastore_host":             basetypes.StringType{},
 		"hive_metastore_port":             basetypes.Int64Type{},
+		"metadata_max_staleness_seconds":  basetypes.Int64Type{},
 		"metastore_type":                  basetypes.StringType{},
 		"name":                            basetypes.StringType{},
 		"read_only":                       basetypes.BoolType{},
@@ -1418,6 +1472,7 @@ func (v ResultValue) ToObjectValue(ctx context.Context) (basetypes.ObjectValue, 
 			"glue_secret_key":                 v.GlueSecretKey,
 			"hive_metastore_host":             v.HiveMetastoreHost,
 			"hive_metastore_port":             v.HiveMetastorePort,
+			"metadata_max_staleness_seconds":  v.MetadataMaxStalenessSeconds,
 			"metastore_type":                  v.MetastoreType,
 			"name":                            v.Name,
 			"read_only":                       v.ReadOnly,
@@ -1498,6 +1553,10 @@ func (v ResultValue) Equal(o attr.Value) bool {
 		return false
 	}
 
+	if !v.MetadataMaxStalenessSeconds.Equal(other.MetadataMaxStalenessSeconds) {
+		return false
+	}
+
 	if !v.MetastoreType.Equal(other.MetastoreType) {
 		return false
 	}
@@ -1556,6 +1615,7 @@ func (v ResultValue) AttributeTypes(ctx context.Context) map[string]attr.Type {
 		"glue_secret_key":                 basetypes.StringType{},
 		"hive_metastore_host":             basetypes.StringType{},
 		"hive_metastore_port":             basetypes.Int64Type{},
+		"metadata_max_staleness_seconds":  basetypes.Int64Type{},
 		"metastore_type":                  basetypes.StringType{},
 		"name":                            basetypes.StringType{},
 		"read_only":                       basetypes.BoolType{},

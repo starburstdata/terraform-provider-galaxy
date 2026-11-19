@@ -23,21 +23,22 @@ description: |-
 
 ### Optional
 
-- `access_key` (String)
+- `access_key` (String, Sensitive) AWS access key
 - `default_bucket` (String) S3 bucket to use when storing data for new schemas
 - `default_data_location` (String) Default location to store data for new schemas
 - `default_table_format` (String) Default table format for new tables: ICEBERG, DELTA, or HIVE. Defaults to ICEBERG.
 - `description` (String) Catalog description
 - `external_table_creation_enabled` (Boolean) Allow creating external tables. Defaults to false.
 - `external_table_writes_enabled` (Boolean) Allow writing to external tables. Defaults to false.
-- `glue_access_key` (String)
+- `glue_access_key` (String, Sensitive) AWS access key for AWS Glue access
 - `glue_role_arn` (String) AWS cross account role for AWS Glue access
-- `glue_secret_key` (String)
+- `glue_secret_key` (String, Sensitive) AWS secret key for AWS Glue access
 - `hive_metastore_host` (String) Hive metastore host url
 - `hive_metastore_port` (Number) Hive metastore host port. Defaults to 9083.
+- `metadata_max_staleness_seconds` (Number) Maximum metadata staleness in seconds (30, 60, 90, or 120)
 - `region` (String) AWS region
 - `role_arn` (String) AWS cross account role ARN
-- `secret_key` (String)
+- `secret_key` (String, Sensitive) AWS secret key
 - `ssh_tunnel_id` (String) SSH tunnel identifier
 - `validate` (Boolean) Validate catalog configuration before creation
 
