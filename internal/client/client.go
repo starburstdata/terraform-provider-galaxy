@@ -1349,3 +1349,106 @@ func (c *GalaxyClient) UpdateDataQualitySchedule(ctx context.Context, catalogID,
 func (c *GalaxyClient) DeleteDataQualitySchedule(ctx context.Context, catalogID, schemaID, tableID, scheduleID string) error {
 	return c.doRequest(ctx, "DELETE", apiPath("/public/api/v1/catalog/%s/schema/%s/table/%s/dataQualitySchedule/%s", catalogID, schemaID, tableID, scheduleID), nil, nil)
 }
+
+// Data Domain resource CRUD
+func (c *GalaxyClient) CreateDataDomain(ctx context.Context, domain interface{}) (map[string]interface{}, error) {
+	var result map[string]interface{}
+	err := c.doRequest(ctx, "POST", "/public/api/v1/dataDomain", domain, &result)
+	return result, err
+}
+
+func (c *GalaxyClient) GetDataDomain(ctx context.Context, id string) (map[string]interface{}, error) {
+	var result map[string]interface{}
+	err := c.doRequest(ctx, "GET", apiPath("/public/api/v1/dataDomain/%s", id), nil, &result)
+	return result, err
+}
+
+func (c *GalaxyClient) UpdateDataDomain(ctx context.Context, id string, domain interface{}) (map[string]interface{}, error) {
+	var result map[string]interface{}
+	err := c.doRequest(ctx, "PATCH", apiPath("/public/api/v1/dataDomain/%s", id), domain, &result)
+	return result, err
+}
+
+func (c *GalaxyClient) DeleteDataDomain(ctx context.Context, id string) error {
+	return c.doRequest(ctx, "DELETE", apiPath("/public/api/v1/dataDomain/%s", id), nil, nil)
+}
+
+// Data Domain data source (plural variant is scoped to a data product)
+func (c *GalaxyClient) ListDataDomainsByDataProduct(ctx context.Context, dataProductID string) ([]interface{}, error) {
+	return c.GetAllPaginatedResults(ctx, apiPath("/public/api/v1/dataProduct/%s/dataDomain", dataProductID))
+}
+
+// Live Table resource CRUD (no update endpoint)
+func (c *GalaxyClient) CreateLiveTable(ctx context.Context, table interface{}) (map[string]interface{}, error) {
+	var result map[string]interface{}
+	err := c.doRequest(ctx, "POST", "/public/api/v1/liveTable", table, &result)
+	return result, err
+}
+
+func (c *GalaxyClient) GetLiveTable(ctx context.Context, id string) (map[string]interface{}, error) {
+	var result map[string]interface{}
+	err := c.doRequest(ctx, "GET", apiPath("/public/api/v1/liveTable/%s", id), nil, &result)
+	return result, err
+}
+
+func (c *GalaxyClient) DeleteLiveTable(ctx context.Context, id string) error {
+	return c.doRequest(ctx, "DELETE", apiPath("/public/api/v1/liveTable/%s", id), nil, nil)
+}
+
+func (c *GalaxyClient) ListLiveTables(ctx context.Context) ([]interface{}, error) {
+	return c.GetAllPaginatedResults(ctx, "/public/api/v1/liveTable")
+}
+
+// Kafka Ingest Source resource CRUD
+func (c *GalaxyClient) CreateKafkaIngestSource(ctx context.Context, source interface{}) (map[string]interface{}, error) {
+	var result map[string]interface{}
+	err := c.doRequest(ctx, "POST", "/public/api/v1/kafkaIngestSource", source, &result)
+	return result, err
+}
+
+func (c *GalaxyClient) GetKafkaIngestSource(ctx context.Context, id string) (map[string]interface{}, error) {
+	var result map[string]interface{}
+	err := c.doRequest(ctx, "GET", apiPath("/public/api/v1/kafkaIngestSource/%s", id), nil, &result)
+	return result, err
+}
+
+func (c *GalaxyClient) UpdateKafkaIngestSource(ctx context.Context, id string, source interface{}) (map[string]interface{}, error) {
+	var result map[string]interface{}
+	err := c.doRequest(ctx, "PATCH", apiPath("/public/api/v1/kafkaIngestSource/%s", id), source, &result)
+	return result, err
+}
+
+func (c *GalaxyClient) DeleteKafkaIngestSource(ctx context.Context, id string) error {
+	return c.doRequest(ctx, "DELETE", apiPath("/public/api/v1/kafkaIngestSource/%s", id), nil, nil)
+}
+
+func (c *GalaxyClient) ListKafkaIngestSources(ctx context.Context) ([]interface{}, error) {
+	return c.GetAllPaginatedResults(ctx, "/public/api/v1/kafkaIngestSource")
+}
+
+// File Ingest Source resource CRUD
+func (c *GalaxyClient) CreateFileIngestSource(ctx context.Context, source interface{}) (map[string]interface{}, error) {
+	var result map[string]interface{}
+	err := c.doRequest(ctx, "POST", "/public/api/v1/fileIngestSource", source, &result)
+	return result, err
+}
+
+func (c *GalaxyClient) GetFileIngestSource(ctx context.Context, id string) (map[string]interface{}, error) {
+	var result map[string]interface{}
+	err := c.doRequest(ctx, "GET", apiPath("/public/api/v1/fileIngestSource/%s", id), nil, &result)
+	return result, err
+}
+
+func (c *GalaxyClient) UpdateFileIngestSource(ctx context.Context, id string, source interface{}) (map[string]interface{}, error) {
+	var result map[string]interface{}
+	err := c.doRequest(ctx, "PATCH", apiPath("/public/api/v1/fileIngestSource/%s", id), source, &result)
+	return result, err
+}
+
+func (c *GalaxyClient) DeleteFileIngestSource(ctx context.Context, id string) error {
+	return c.doRequest(ctx, "DELETE", apiPath("/public/api/v1/fileIngestSource/%s", id), nil, nil)
+}
+
+func (c *GalaxyClient) ListFileIngestSources(ctx context.Context) ([]interface{}, error) {
+	return c.GetAllPaginatedResults(ctx, "/public/api/v1/fileIngestSource")
+}

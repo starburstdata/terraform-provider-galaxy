@@ -318,6 +318,14 @@ func (d *s3_catalogsDataSource) mapSingleS3Catalog(ctx context.Context, catalogM
 	} else {
 		attributes["validate"] = types.BoolNull()
 	}
+
+	// Map metadata_max_staleness_seconds
+	if metadataMaxStaleness, ok := catalogMap["metadataMaxStalenessSeconds"].(float64); ok {
+		attributes["metadata_max_staleness_seconds"] = types.Int64Value(int64(metadataMaxStaleness))
+	} else {
+		attributes["metadata_max_staleness_seconds"] = types.Int64Null()
+	}
+
 	// Create the ResultValue using the constructor
 	catalog, diags := datasource_s3_catalogs.NewResultValue(attributeTypes, attributes)
 	if diags.HasError() {

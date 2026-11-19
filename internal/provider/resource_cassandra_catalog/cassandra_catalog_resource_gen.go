@@ -73,8 +73,8 @@ func CassandraCatalogResourceSchema(ctx context.Context) schema.Schema {
 				Optional:            true,
 				Sensitive:           true,
 				WriteOnly:           true,
-				Description:         "",
-				MarkdownDescription: "",
+				Description:         "Cassandra password",
+				MarkdownDescription: "Cassandra password",
 			},
 			"port": schema.Int64Attribute{
 				Optional:            true,
@@ -103,8 +103,8 @@ func CassandraCatalogResourceSchema(ctx context.Context) schema.Schema {
 				Optional:            true,
 				Sensitive:           true,
 				WriteOnly:           true,
-				Description:         "",
-				MarkdownDescription: "",
+				Description:         "AstraDB token",
+				MarkdownDescription: "AstraDB token",
 			},
 			"username": schema.StringAttribute{
 				Optional:            true,

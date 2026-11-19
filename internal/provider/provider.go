@@ -193,6 +193,16 @@ func (p *galaxyProvider) DataSources(ctx context.Context) []func() datasource.Da
 		NewEvaluationsDataSource,
 		NewDataQualitySchedulesDataSource,
 
+		// Data domain, live table, and ingest source data sources
+		NewDataDomainDataSource,
+		NewDataDomainsDataSource,
+		NewLiveTableDataSource,
+		NewLiveTablesDataSource,
+		NewKafkaIngestSourceDataSource,
+		NewKafkaIngestSourcesDataSource,
+		NewFileIngestSourceDataSource,
+		NewFileIngestSourcesDataSource,
+
 		// Catalog-specific data sources
 		NewS3CatalogDataSource,
 		NewS3CatalogsDataSource,
@@ -255,6 +265,10 @@ func (p *galaxyProvider) Resources(ctx context.Context) []func() resource.Resour
 		NewUsageExampleResource,
 		NewEvaluationResource,
 		NewDataQualityScheduleResource,
+		NewDataDomainResource,
+		NewLiveTableResource,
+		NewKafkaIngestSourceResource,
+		NewFileIngestSourceResource,
 
 		// Catalog resources
 		NewS3CatalogResource,

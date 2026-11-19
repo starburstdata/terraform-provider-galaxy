@@ -26,12 +26,12 @@ description: |-
 
 > **NOTE**: [Write-only arguments](https://developer.hashicorp.com/terraform/language/resources/ephemeral#write-only-arguments) are supported in Terraform 1.11 and later.
 
-- `access_key` (String)
+- `access_key` (String, Sensitive) AWS access key
 - `description` (String) Catalog description
-- `password` (String, Sensitive, [Write-only](https://developer.hashicorp.com/terraform/language/resources/ephemeral#write-only-arguments))
+- `password` (String, Sensitive, [Write-only](https://developer.hashicorp.com/terraform/language/resources/ephemeral#write-only-arguments)) Password
 - `region` (String) AWS region
 - `role_arn` (String) AWS cross account role ARN
-- `secret_key` (String)
+- `secret_key` (String, Sensitive) AWS secret key
 - `ssh_tunnel_id` (String) SSH tunnel identifier
 - `username` (String) Username
 - `validate` (Boolean) Validate catalog configuration before creation

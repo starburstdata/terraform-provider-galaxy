@@ -62,6 +62,11 @@ func GcsCatalogDataSourceSchema(ctx context.Context) schema.Schema {
 				Description:         "Hive metastore host port. Defaults to 9083.",
 				MarkdownDescription: "Hive metastore host port. Defaults to 9083.",
 			},
+			"metadata_max_staleness_seconds": schema.Int64Attribute{
+				Computed:            true,
+				Description:         "Maximum metadata staleness in seconds (30, 60, 90, or 120)",
+				MarkdownDescription: "Maximum metadata staleness in seconds (30, 60, 90, or 120)",
+			},
 			"metastore_type": schema.StringAttribute{
 				Computed: true,
 			},
@@ -100,6 +105,7 @@ type GcsCatalogModel struct {
 	ExternalTableWritesEnabled   types.Bool   `tfsdk:"external_table_writes_enabled"`
 	HiveMetastoreHost            types.String `tfsdk:"hive_metastore_host"`
 	HiveMetastorePort            types.Int64  `tfsdk:"hive_metastore_port"`
+	MetadataMaxStalenessSeconds  types.Int64  `tfsdk:"metadata_max_staleness_seconds"`
 	MetastoreType                types.String `tfsdk:"metastore_type"`
 	Name                         types.String `tfsdk:"name"`
 	ReadOnly                     types.Bool   `tfsdk:"read_only"`

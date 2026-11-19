@@ -21,7 +21,7 @@ description: |-
 
 - `database_name` (String) PostgreSQL database name
 - `name` (String) Catalog name
-- `password` (String, Sensitive, [Write-only](https://developer.hashicorp.com/terraform/language/resources/ephemeral#write-only-arguments))
+- `password` (String, Sensitive, [Write-only](https://developer.hashicorp.com/terraform/language/resources/ephemeral#write-only-arguments)) PostgreSQL database password
 - `read_only` (Boolean) Is catalog read only
 - `username` (String) PostgreSQL database username
 

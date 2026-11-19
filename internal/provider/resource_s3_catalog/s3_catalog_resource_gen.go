@@ -15,8 +15,9 @@ func S3CatalogResourceSchema(ctx context.Context) schema.Schema {
 			"access_key": schema.StringAttribute{
 				Optional:            true,
 				Computed:            true,
-				Description:         "",
-				MarkdownDescription: "",
+				Sensitive:           true,
+				Description:         "AWS access key",
+				MarkdownDescription: "AWS access key",
 			},
 			"catalog_id": schema.StringAttribute{
 				Computed:            true,
@@ -62,8 +63,9 @@ func S3CatalogResourceSchema(ctx context.Context) schema.Schema {
 			"glue_access_key": schema.StringAttribute{
 				Optional:            true,
 				Computed:            true,
-				Description:         "",
-				MarkdownDescription: "",
+				Sensitive:           true,
+				Description:         "AWS access key for AWS Glue access",
+				MarkdownDescription: "AWS access key for AWS Glue access",
 			},
 			"glue_role_arn": schema.StringAttribute{
 				Optional:            true,
@@ -74,8 +76,9 @@ func S3CatalogResourceSchema(ctx context.Context) schema.Schema {
 			"glue_secret_key": schema.StringAttribute{
 				Optional:            true,
 				Computed:            true,
-				Description:         "",
-				MarkdownDescription: "",
+				Sensitive:           true,
+				Description:         "AWS secret key for AWS Glue access",
+				MarkdownDescription: "AWS secret key for AWS Glue access",
 			},
 			"hive_metastore_host": schema.StringAttribute{
 				Optional:            true,
@@ -93,6 +96,12 @@ func S3CatalogResourceSchema(ctx context.Context) schema.Schema {
 				Computed:            true,
 				Description:         "Terraform import identifier.",
 				MarkdownDescription: "Terraform import identifier.",
+			},
+			"metadata_max_staleness_seconds": schema.Int64Attribute{
+				Optional:            true,
+				Computed:            true,
+				Description:         "Maximum metadata staleness in seconds (30, 60, 90, or 120)",
+				MarkdownDescription: "Maximum metadata staleness in seconds (30, 60, 90, or 120)",
 			},
 			"metastore_type": schema.StringAttribute{
 				Required: true,
@@ -122,8 +131,9 @@ func S3CatalogResourceSchema(ctx context.Context) schema.Schema {
 			"secret_key": schema.StringAttribute{
 				Optional:            true,
 				Computed:            true,
-				Description:         "",
-				MarkdownDescription: "",
+				Sensitive:           true,
+				Description:         "AWS secret key",
+				MarkdownDescription: "AWS secret key",
 			},
 			"ssh_tunnel_id": schema.StringAttribute{
 				Optional:            true,
@@ -156,6 +166,7 @@ type S3CatalogModel struct {
 	HiveMetastoreHost            types.String `tfsdk:"hive_metastore_host"`
 	HiveMetastorePort            types.Int64  `tfsdk:"hive_metastore_port"`
 	Id                           types.String `tfsdk:"id"`
+	MetadataMaxStalenessSeconds  types.Int64  `tfsdk:"metadata_max_staleness_seconds"`
 	MetastoreType                types.String `tfsdk:"metastore_type"`
 	Name                         types.String `tfsdk:"name"`
 	ReadOnly                     types.Bool   `tfsdk:"read_only"`
