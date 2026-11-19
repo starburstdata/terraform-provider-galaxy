@@ -115,6 +115,9 @@ func (r *s3_catalogResource) Create(ctx context.Context, req resource.CreateRequ
 	if plan.GlueSecretKey.IsUnknown() {
 		plan.GlueSecretKey = types.StringNull()
 	}
+	if plan.MetadataMaxStalenessSeconds.IsUnknown() {
+		plan.MetadataMaxStalenessSeconds = types.Int64Null()
+	}
 
 	request := r.modelToCreateRequest(ctx, &plan, &resp.Diagnostics)
 	if resp.Diagnostics.HasError() {
@@ -362,6 +365,9 @@ func (r *s3_catalogResource) modelToCreateRequest(ctx context.Context, model *re
 	if !model.Validate.IsNull() && !model.Validate.IsUnknown() {
 		request["validate"] = model.Validate.ValueBool()
 	}
+	if !model.MetadataMaxStalenessSeconds.IsNull() && !model.MetadataMaxStalenessSeconds.IsUnknown() {
+		request["metadataMaxStalenessSeconds"] = model.MetadataMaxStalenessSeconds.ValueInt64()
+	}
 
 	return request
 }
@@ -511,4 +517,9 @@ func (r *s3_catalogResource) updateModelFromResponse(ctx context.Context, model 
 		model.Validate = types.BoolNull()
 	}
 
+	if v, ok := response["metadataMaxStalenessSeconds"].(float64); ok {
+		model.MetadataMaxStalenessSeconds = types.Int64Value(int64(v))
+	} else if model.MetadataMaxStalenessSeconds.IsUnknown() {
+		model.MetadataMaxStalenessSeconds = types.Int64Null()
+	}
 }
