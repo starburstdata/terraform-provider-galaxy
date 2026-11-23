@@ -19,6 +19,7 @@ import (
 	"math/rand"
 	"net/http"
 	"net/url"
+	"strconv"
 	"strings"
 	"sync"
 	"time"
@@ -45,7 +46,19 @@ const (
 	// POST /cluster (create, no trailing ID) falls under the global limiter.
 	// Update this constant if v2+ cluster APIs are added.
 	clusterPathPrefix = "/public/api/v1/cluster/"
+
+	defaultRequestTimeout = 30 * time.Second
+	// SQL check validation waits for a cluster query before returning.
+	dataQualityCreateTimeout = 60 * time.Second
+	dataQualityCreatePath    = "/public/api/v1/dataQualityCheck"
 )
+
+func requestTimeout(method, path string) time.Duration {
+	if method == http.MethodPost && path == dataQualityCreatePath {
+		return dataQualityCreateTimeout
+	}
+	return defaultRequestTimeout
+}
 
 // Rate limiters are package-global so all GalaxyClient instances in a process
 // share a single budget. Cloudflare enforces per-IP buckets, so per-instance
@@ -62,6 +75,8 @@ type GalaxyClient struct {
 	ClientSecret    string
 	HTTPClient      *http.Client
 	ProviderVersion string
+
+	retryWait func(context.Context, time.Duration) error
 
 	tokenMu     sync.RWMutex
 	accessToken string
@@ -84,9 +99,7 @@ func NewGalaxyClient(baseURL, clientID, clientSecret, providerVersion string) *G
 		ClientID:        clientID,
 		ClientSecret:    clientSecret,
 		ProviderVersion: providerVersion,
-		HTTPClient: &http.Client{
-			Timeout: 30 * time.Second,
-		},
+		HTTPClient:      &http.Client{},
 	}
 }
 
@@ -96,7 +109,10 @@ func (c *GalaxyClient) getAccessToken(ctx context.Context) error {
 	data := url.Values{}
 	data.Set("grant_type", "client_credentials")
 
-	req, err := http.NewRequestWithContext(ctx, "POST", c.BaseURL+"/oauth/v2/token", strings.NewReader(data.Encode()))
+	tokenCtx, cancel := context.WithTimeout(ctx, defaultRequestTimeout)
+	defer cancel()
+
+	req, err := http.NewRequestWithContext(tokenCtx, "POST", c.BaseURL+"/oauth/v2/token", strings.NewReader(data.Encode()))
 	if err != nil {
 		return fmt.Errorf("failed to create token request: %w", err)
 	}
@@ -164,6 +180,13 @@ func sleepCtx(ctx context.Context, d time.Duration) error {
 	}
 }
 
+func (c *GalaxyClient) waitForRetry(ctx context.Context, d time.Duration) error {
+	if c.retryWait != nil {
+		return c.retryWait(ctx, d)
+	}
+	return sleepCtx(ctx, d)
+}
+
 // apiPath builds a URL path by PathEscape-ing every dynamic segment. This exists so callers
 // can't forget to escape - the Galaxy API accepts a "name=value" lookup form in path params
 // (per its OpenAPI spec) and unescaped '=' or other reserved chars produce malformed URLs.
@@ -181,6 +204,48 @@ func computeRetryBackoff(attempt int, base time.Duration) time.Duration {
 	return min(b/2+time.Duration(rand.Int63n(int64(b))), backoffCap)
 }
 
+func parseRetryAfter(value string, now time.Time) (time.Duration, bool) {
+	value = strings.TrimSpace(value)
+	if seconds, err := strconv.ParseInt(value, 10, 64); err == nil {
+		if seconds <= 0 {
+			return 0, false
+		}
+		if seconds > int64(backoffCap/time.Second) {
+			return backoffCap + time.Second, true
+		}
+		return time.Duration(seconds) * time.Second, true
+	}
+	if date, err := http.ParseTime(value); err == nil && date.After(now) {
+		return date.Sub(now), true
+	}
+	return 0, false
+}
+
+func responseRetryDelay(method string, status int, retryAfter string, attempt int, base time.Duration, now time.Time) (time.Duration, bool) {
+	delay, hasRetryAfter := parseRetryAfter(retryAfter, now)
+	if status != http.StatusTooManyRequests {
+		switch method {
+		case http.MethodGet, http.MethodPut, http.MethodPatch, http.MethodDelete:
+		default:
+			return 0, false
+		}
+		switch status {
+		case http.StatusInternalServerError, http.StatusBadGateway, http.StatusServiceUnavailable, http.StatusGatewayTimeout:
+		case http.StatusConflict:
+			if !hasRetryAfter {
+				return 0, false
+			}
+		default:
+			return 0, false
+		}
+	}
+	// Do not retry sooner than a server delay that exceeds our wait budget.
+	if delay > backoffCap {
+		return 0, false
+	}
+	return max(computeRetryBackoff(attempt, base), delay), true
+}
+
 func (c *GalaxyClient) doRequestWithRetry(ctx context.Context, method, path string, body interface{}, result interface{}, retries int) error {
 	if err := c.ensureValidToken(ctx); err != nil {
 		if ctx.Err() != nil || retries <= 0 {
@@ -193,7 +258,7 @@ func (c *GalaxyClient) doRequestWithRetry(ctx context.Context, method, path stri
 			"wait_time":    waitTime.String(),
 			"retries_left": retries - 1,
 		})
-		if sleepErr := sleepCtx(ctx, waitTime); sleepErr != nil {
+		if sleepErr := c.waitForRetry(ctx, waitTime); sleepErr != nil {
 			return sleepErr
 		}
 		return c.doRequestWithRetry(ctx, method, path, body, result, retries-1)
@@ -217,8 +282,11 @@ func (c *GalaxyClient) doRequestWithRetry(ctx context.Context, method, path stri
 		bodyReader = bytes.NewReader(jsonBody)
 	}
 
+	attemptCtx, cancel := context.WithTimeout(ctx, requestTimeout(method, path))
+	defer cancel()
+
 	fullURL := c.BaseURL + path
-	req, err := http.NewRequestWithContext(ctx, method, fullURL, bodyReader)
+	req, err := http.NewRequestWithContext(attemptCtx, method, fullURL, bodyReader)
 	if err != nil {
 		return fmt.Errorf("failed to create request: %w", err)
 	}
@@ -238,6 +306,7 @@ func (c *GalaxyClient) doRequestWithRetry(ctx context.Context, method, path stri
 
 	resp, err := c.HTTPClient.Do(req)
 	if err != nil {
+		cancel()
 		if ctx.Err() != nil || retries <= 0 || method == http.MethodPost {
 			return fmt.Errorf("request failed: %w", err)
 		}
@@ -250,19 +319,26 @@ func (c *GalaxyClient) doRequestWithRetry(ctx context.Context, method, path stri
 			"endpoint":     path,
 			"method":       method,
 		})
-		if sleepErr := sleepCtx(ctx, waitTime); sleepErr != nil {
+		if sleepErr := c.waitForRetry(ctx, waitTime); sleepErr != nil {
 			return sleepErr
 		}
 		return c.doRequestWithRetry(ctx, method, path, body, result, retries-1)
 	}
-	defer func() {
+	responseClosed := false
+	closeResponse := func() {
+		if responseClosed {
+			return
+		}
+		responseClosed = true
 		if closeErr := resp.Body.Close(); closeErr != nil {
 			// Log the close error but don't override the main error
 			tflog.Warn(ctx, "Failed to close response body", map[string]interface{}{
 				"error": closeErr.Error(),
 			})
 		}
-	}()
+		cancel()
+	}
+	defer closeResponse()
 
 	// Token expiry: clear cache and retry; the refresh is the fix.
 	if (resp.StatusCode == http.StatusUnauthorized || resp.StatusCode == http.StatusForbidden) && retries > 0 {
@@ -270,23 +346,22 @@ func (c *GalaxyClient) doRequestWithRetry(ctx context.Context, method, path stri
 		c.accessToken = ""
 		c.tokenMu.Unlock()
 
-		if err := sleepCtx(ctx, time.Duration(maxRequestRetries-retries)*time.Second); err != nil {
+		closeResponse()
+		if err := c.waitForRetry(ctx, time.Duration(maxRequestRetries-retries)*time.Second); err != nil {
 			return err
 		}
 		return c.doRequestWithRetry(ctx, method, path, body, result, retries-1)
 	}
 
-	// 429: retry within budget — context expiry also terminates.
-	if resp.StatusCode == http.StatusTooManyRequests {
-		if retries <= 0 {
-			return fmt.Errorf("request %s %s rate limited: retry budget exhausted", method, path)
-		}
-		attempt := maxRequestRetries - retries
-		base := backoffBase
-		if strings.HasPrefix(path, clusterPathPrefix) {
-			base = clusterBackoffBase
-		}
-		waitTime := computeRetryBackoff(attempt, base)
+	if resp.StatusCode == http.StatusTooManyRequests && retries <= 0 {
+		return fmt.Errorf("request %s %s rate limited: retry budget exhausted", method, path)
+	}
+
+	base := backoffBase
+	if resp.StatusCode == http.StatusTooManyRequests && strings.HasPrefix(path, clusterPathPrefix) {
+		base = clusterBackoffBase
+	}
+	if waitTime, retry := responseRetryDelay(method, resp.StatusCode, resp.Header.Get("Retry-After"), maxRequestRetries-retries, base, time.Now()); retries > 0 && retry {
 		tflog.Warn(ctx, "Encountered retriable error, retrying after backoff", map[string]interface{}{
 			"status_code":  resp.StatusCode,
 			"wait_time":    waitTime.String(),
@@ -294,25 +369,8 @@ func (c *GalaxyClient) doRequestWithRetry(ctx context.Context, method, path stri
 			"endpoint":     path,
 			"method":       method,
 		})
-		if err := sleepCtx(ctx, waitTime); err != nil {
-			return err
-		}
-		return c.doRequestWithRetry(ctx, method, path, body, result, retries-1)
-	}
-
-	// 500: only retry on idempotent methods (GET, PUT, PATCH, DELETE) to avoid duplicating non-idempotent operations (POST).
-	// All observed 500s on this API are transient CockroachDB TransactionRetryExhaustedException errors.
-	if retries > 0 && resp.StatusCode == http.StatusInternalServerError && method != http.MethodPost {
-		attempt := maxRequestRetries - retries
-		waitTime := computeRetryBackoff(attempt, backoffBase)
-		tflog.Warn(ctx, "Encountered retriable error, retrying after backoff", map[string]interface{}{
-			"status_code":  resp.StatusCode,
-			"wait_time":    waitTime.String(),
-			"retries_left": retries - 1,
-			"endpoint":     path,
-			"method":       method,
-		})
-		if err := sleepCtx(ctx, waitTime); err != nil {
+		closeResponse()
+		if err := c.waitForRetry(ctx, waitTime); err != nil {
 			return err
 		}
 		return c.doRequestWithRetry(ctx, method, path, body, result, retries-1)
@@ -1348,4 +1406,107 @@ func (c *GalaxyClient) UpdateDataQualitySchedule(ctx context.Context, catalogID,
 
 func (c *GalaxyClient) DeleteDataQualitySchedule(ctx context.Context, catalogID, schemaID, tableID, scheduleID string) error {
 	return c.doRequest(ctx, "DELETE", apiPath("/public/api/v1/catalog/%s/schema/%s/table/%s/dataQualitySchedule/%s", catalogID, schemaID, tableID, scheduleID), nil, nil)
+}
+
+// Data Domain resource CRUD
+func (c *GalaxyClient) CreateDataDomain(ctx context.Context, domain interface{}) (map[string]interface{}, error) {
+	var result map[string]interface{}
+	err := c.doRequest(ctx, "POST", "/public/api/v1/dataDomain", domain, &result)
+	return result, err
+}
+
+func (c *GalaxyClient) GetDataDomain(ctx context.Context, id string) (map[string]interface{}, error) {
+	var result map[string]interface{}
+	err := c.doRequest(ctx, "GET", apiPath("/public/api/v1/dataDomain/%s", id), nil, &result)
+	return result, err
+}
+
+func (c *GalaxyClient) UpdateDataDomain(ctx context.Context, id string, domain interface{}) (map[string]interface{}, error) {
+	var result map[string]interface{}
+	err := c.doRequest(ctx, "PATCH", apiPath("/public/api/v1/dataDomain/%s", id), domain, &result)
+	return result, err
+}
+
+func (c *GalaxyClient) DeleteDataDomain(ctx context.Context, id string) error {
+	return c.doRequest(ctx, "DELETE", apiPath("/public/api/v1/dataDomain/%s", id), nil, nil)
+}
+
+// Data Domain data source (plural variant is scoped to a data product)
+func (c *GalaxyClient) ListDataDomainsByDataProduct(ctx context.Context, dataProductID string) ([]interface{}, error) {
+	return c.GetAllPaginatedResults(ctx, apiPath("/public/api/v1/dataProduct/%s/dataDomain", dataProductID))
+}
+
+// Live Table resource CRUD (no update endpoint)
+func (c *GalaxyClient) CreateLiveTable(ctx context.Context, table interface{}) (map[string]interface{}, error) {
+	var result map[string]interface{}
+	err := c.doRequest(ctx, "POST", "/public/api/v1/liveTable", table, &result)
+	return result, err
+}
+
+func (c *GalaxyClient) GetLiveTable(ctx context.Context, id string) (map[string]interface{}, error) {
+	var result map[string]interface{}
+	err := c.doRequest(ctx, "GET", apiPath("/public/api/v1/liveTable/%s", id), nil, &result)
+	return result, err
+}
+
+func (c *GalaxyClient) DeleteLiveTable(ctx context.Context, id string) error {
+	return c.doRequest(ctx, "DELETE", apiPath("/public/api/v1/liveTable/%s", id), nil, nil)
+}
+
+func (c *GalaxyClient) ListLiveTables(ctx context.Context) ([]interface{}, error) {
+	return c.GetAllPaginatedResults(ctx, "/public/api/v1/liveTable")
+}
+
+// Kafka Ingest Source resource CRUD
+func (c *GalaxyClient) CreateKafkaIngestSource(ctx context.Context, source interface{}) (map[string]interface{}, error) {
+	var result map[string]interface{}
+	err := c.doRequest(ctx, "POST", "/public/api/v1/kafkaIngestSource", source, &result)
+	return result, err
+}
+
+func (c *GalaxyClient) GetKafkaIngestSource(ctx context.Context, id string) (map[string]interface{}, error) {
+	var result map[string]interface{}
+	err := c.doRequest(ctx, "GET", apiPath("/public/api/v1/kafkaIngestSource/%s", id), nil, &result)
+	return result, err
+}
+
+func (c *GalaxyClient) UpdateKafkaIngestSource(ctx context.Context, id string, source interface{}) (map[string]interface{}, error) {
+	var result map[string]interface{}
+	err := c.doRequest(ctx, "PATCH", apiPath("/public/api/v1/kafkaIngestSource/%s", id), source, &result)
+	return result, err
+}
+
+func (c *GalaxyClient) DeleteKafkaIngestSource(ctx context.Context, id string) error {
+	return c.doRequest(ctx, "DELETE", apiPath("/public/api/v1/kafkaIngestSource/%s", id), nil, nil)
+}
+
+func (c *GalaxyClient) ListKafkaIngestSources(ctx context.Context) ([]interface{}, error) {
+	return c.GetAllPaginatedResults(ctx, "/public/api/v1/kafkaIngestSource")
+}
+
+// File Ingest Source resource CRUD
+func (c *GalaxyClient) CreateFileIngestSource(ctx context.Context, source interface{}) (map[string]interface{}, error) {
+	var result map[string]interface{}
+	err := c.doRequest(ctx, "POST", "/public/api/v1/fileIngestSource", source, &result)
+	return result, err
+}
+
+func (c *GalaxyClient) GetFileIngestSource(ctx context.Context, id string) (map[string]interface{}, error) {
+	var result map[string]interface{}
+	err := c.doRequest(ctx, "GET", apiPath("/public/api/v1/fileIngestSource/%s", id), nil, &result)
+	return result, err
+}
+
+func (c *GalaxyClient) UpdateFileIngestSource(ctx context.Context, id string, source interface{}) (map[string]interface{}, error) {
+	var result map[string]interface{}
+	err := c.doRequest(ctx, "PATCH", apiPath("/public/api/v1/fileIngestSource/%s", id), source, &result)
+	return result, err
+}
+
+func (c *GalaxyClient) DeleteFileIngestSource(ctx context.Context, id string) error {
+	return c.doRequest(ctx, "DELETE", apiPath("/public/api/v1/fileIngestSource/%s", id), nil, nil)
+}
+
+func (c *GalaxyClient) ListFileIngestSources(ctx context.Context) ([]interface{}, error) {
+	return c.GetAllPaginatedResults(ctx, "/public/api/v1/fileIngestSource")
 }

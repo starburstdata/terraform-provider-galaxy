@@ -14,12 +14,14 @@ import (
 	"fmt"
 	"strings"
 
+	"github.com/hashicorp/terraform-plugin-framework-validators/stringvalidator"
 	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/boolplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
+	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
 
@@ -52,6 +54,17 @@ func (r *role_privilege_grantResource) Schema(ctx context.Context, req resource.
 		attr.Optional = false
 		attr.Computed = true
 		s.Attributes["list_all_privileges"] = attr
+	}
+
+	// The API enum no longer lists these privileges, but existing configurations still use them.
+	// Keep accepting them until an explicit migration removes them.
+	if attr, ok := s.Attributes["privilege"].(schema.StringAttribute); ok {
+		attr.Validators = []validator.String{
+			stringvalidator.Any(
+				append(attr.Validators, stringvalidator.OneOf(legacyPrivileges...))...,
+			),
+		}
+		s.Attributes["privilege"] = attr
 	}
 
 	// Add RequiresReplace to identifying and required attributes since the API
@@ -267,7 +280,11 @@ var knownEntityKinds = map[string]bool{
 	"Account": true, "AiModel": true, "Cluster": true, "Catalog": true,
 	"Schema": true, "Table": true, "Column": true, "Location": true,
 	"Function": true, "Tag": true, "Policy": true, "RowFilter": true, "DataProduct": true,
+	"DataDomain": true, "AgentSkill": true, "ExternalMcpServer": true, "AgentPersona": true, "TableBranch": true,
 }
+
+// legacyPrivileges are privilege values removed from the Galaxy API enum that existing configurations may still use.
+var legacyPrivileges = []string{"ApplyTagInPath", "ViewDataDomain"}
 
 var knownGrantKinds = map[string]bool{"Allow": true, "Deny": true}
 

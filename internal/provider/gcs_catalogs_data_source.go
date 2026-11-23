@@ -69,7 +69,7 @@ func (d *gcs_catalogsDataSource) Read(ctx context.Context, req datasource.ReadRe
 	tflog.Debug(ctx, "Reading gcs_catalogs with automatic pagination")
 
 	// Use automatic pagination to get ALL GCS catalogs across all pages
-	allCatalogs, err := d.client.GetAllPaginatedResults(ctx, "/public/api/v1/catalog?catalogType=GCS")
+	allCatalogs, err := d.client.GetAllPaginatedResults(ctx, "/public/api/v1/catalogType/gcs/catalog")
 	if err != nil {
 		resp.Diagnostics.AddError(
 			"Error reading gcs_catalogs",
@@ -135,41 +135,106 @@ func (d *gcs_catalogsDataSource) mapSingleGcsCatalog(ctx context.Context, catalo
 	attributeTypes := datasource_gcs_catalogs.ResultValue{}.AttributeTypes(ctx)
 	attributes := map[string]attr.Value{}
 
-	// Map catalog ID
 	if catalogId, ok := catalogMap["catalogId"].(string); ok {
 		attributes["catalog_id"] = types.StringValue(catalogId)
 	} else {
 		attributes["catalog_id"] = types.StringNull()
 	}
 
-	// Map name
 	if name, ok := catalogMap["name"].(string); ok {
 		attributes["name"] = types.StringValue(name)
 	} else {
 		attributes["name"] = types.StringNull()
 	}
 
-	// Map description
 	if description, ok := catalogMap["description"].(string); ok {
 		attributes["description"] = types.StringValue(description)
 	} else {
 		attributes["description"] = types.StringNull()
 	}
 
-	// Map metastore type
 	if metastoreType, ok := catalogMap["metastoreType"].(string); ok {
 		attributes["metastore_type"] = types.StringValue(metastoreType)
 	} else {
 		attributes["metastore_type"] = types.StringNull()
 	}
 
-	// Handle validate field
+	// credentialsKey is write-only; the API returns "<Value is encrypted>" or omits it.
+	// Surface the sentinel as null rather than leaking it into state.
+	if credentialsKey, ok := catalogMap["credentialsKey"].(string); ok && credentialsKey != "" && credentialsKey != "<Value is encrypted>" {
+		attributes["credentials_key"] = types.StringValue(credentialsKey)
+	} else {
+		attributes["credentials_key"] = types.StringNull()
+	}
+
+	if defaultBucket, ok := catalogMap["defaultBucket"].(string); ok {
+		attributes["default_bucket"] = types.StringValue(defaultBucket)
+	} else {
+		attributes["default_bucket"] = types.StringNull()
+	}
+
+	if defaultDataLocation, ok := catalogMap["defaultDataLocation"].(string); ok {
+		attributes["default_data_location"] = types.StringValue(defaultDataLocation)
+	} else {
+		attributes["default_data_location"] = types.StringNull()
+	}
+
+	if defaultTableFormat, ok := catalogMap["defaultTableFormat"].(string); ok {
+		attributes["default_table_format"] = types.StringValue(defaultTableFormat)
+	} else {
+		attributes["default_table_format"] = types.StringNull()
+	}
+
+	if externalTableCreationEnabled, ok := catalogMap["externalTableCreationEnabled"].(bool); ok {
+		attributes["external_table_creation_enabled"] = types.BoolValue(externalTableCreationEnabled)
+	} else {
+		attributes["external_table_creation_enabled"] = types.BoolNull()
+	}
+
+	if externalTableWritesEnabled, ok := catalogMap["externalTableWritesEnabled"].(bool); ok {
+		attributes["external_table_writes_enabled"] = types.BoolValue(externalTableWritesEnabled)
+	} else {
+		attributes["external_table_writes_enabled"] = types.BoolNull()
+	}
+
+	if hiveMetastoreHost, ok := catalogMap["hiveMetastoreHost"].(string); ok {
+		attributes["hive_metastore_host"] = types.StringValue(hiveMetastoreHost)
+	} else {
+		attributes["hive_metastore_host"] = types.StringNull()
+	}
+
+	if hiveMetastorePort, ok := catalogMap["hiveMetastorePort"].(float64); ok {
+		attributes["hive_metastore_port"] = types.Int64Value(int64(hiveMetastorePort))
+	} else if hiveMetastorePort, ok := catalogMap["hiveMetastorePort"].(int64); ok {
+		attributes["hive_metastore_port"] = types.Int64Value(hiveMetastorePort)
+	} else {
+		attributes["hive_metastore_port"] = types.Int64Null()
+	}
+
+	if metadataMaxStaleness, ok := catalogMap["metadataMaxStalenessSeconds"].(float64); ok {
+		attributes["metadata_max_staleness_seconds"] = types.Int64Value(int64(metadataMaxStaleness))
+	} else {
+		attributes["metadata_max_staleness_seconds"] = types.Int64Null()
+	}
+
+	if readOnly, ok := catalogMap["readOnly"].(bool); ok {
+		attributes["read_only"] = types.BoolValue(readOnly)
+	} else {
+		attributes["read_only"] = types.BoolNull()
+	}
+
+	if sshTunnelId, ok := catalogMap["sshTunnelId"].(string); ok {
+		attributes["ssh_tunnel_id"] = types.StringValue(sshTunnelId)
+	} else {
+		attributes["ssh_tunnel_id"] = types.StringNull()
+	}
+
 	if validate, ok := catalogMap["validate"].(bool); ok {
 		attributes["validate"] = types.BoolValue(validate)
 	} else {
 		attributes["validate"] = types.BoolNull()
 	}
-	// Create the ResultValue using the constructor
+
 	catalog, diags := datasource_gcs_catalogs.NewResultValue(attributeTypes, attributes)
 	if diags.HasError() {
 		tflog.Error(ctx, fmt.Sprintf("Error creating GCS catalog ResultValue: %v", diags))
