@@ -21,8 +21,8 @@ func GcsCatalogResourceSchema(ctx context.Context) schema.Schema {
 				Required:            true,
 				Sensitive:           true,
 				WriteOnly:           true,
-				Description:         "",
-				MarkdownDescription: "",
+				Description:         "Base64 encoded or plain text GCS JSON key",
+				MarkdownDescription: "Base64 encoded or plain text GCS JSON key",
 			},
 			"default_bucket": schema.StringAttribute{
 				Optional:            true,
@@ -77,6 +77,12 @@ func GcsCatalogResourceSchema(ctx context.Context) schema.Schema {
 				Description:         "Terraform import identifier.",
 				MarkdownDescription: "Terraform import identifier.",
 			},
+			"metadata_max_staleness_seconds": schema.Int64Attribute{
+				Optional:            true,
+				Computed:            true,
+				Description:         "Maximum metadata staleness in seconds (30, 60, 90, or 120)",
+				MarkdownDescription: "Maximum metadata staleness in seconds (30, 60, 90, or 120)",
+			},
 			"metastore_type": schema.StringAttribute{
 				Required: true,
 			},
@@ -118,6 +124,7 @@ type GcsCatalogModel struct {
 	HiveMetastoreHost            types.String `tfsdk:"hive_metastore_host"`
 	HiveMetastorePort            types.Int64  `tfsdk:"hive_metastore_port"`
 	Id                           types.String `tfsdk:"id"`
+	MetadataMaxStalenessSeconds  types.Int64  `tfsdk:"metadata_max_staleness_seconds"`
 	MetastoreType                types.String `tfsdk:"metastore_type"`
 	Name                         types.String `tfsdk:"name"`
 	ReadOnly                     types.Bool   `tfsdk:"read_only"`

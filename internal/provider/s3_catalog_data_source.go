@@ -117,6 +117,12 @@ func (d *s3_catalogDataSource) updateModelFromResponse(ctx context.Context, mode
 		model.MetastoreType = types.StringValue(metastoreType)
 	}
 
+	if v, ok := response["metadataMaxStalenessSeconds"].(float64); ok {
+		model.MetadataMaxStalenessSeconds = types.Int64Value(int64(v))
+	} else {
+		model.MetadataMaxStalenessSeconds = types.Int64Null()
+	}
+
 	if defaultTableFormat, ok := response["defaultTableFormat"].(string); ok {
 		model.DefaultTableFormat = types.StringValue(defaultTableFormat)
 	}

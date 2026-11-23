@@ -45,8 +45,7 @@ func (d *kafkaIngestSourcesDataSource) Configure(ctx context.Context, req dataso
 	if req.ProviderData == nil {
 		return
 	}
-
-	client, ok := req.ProviderData.(*client.GalaxyClient)
+	c, ok := req.ProviderData.(*client.GalaxyClient)
 	if !ok {
 		resp.Diagnostics.AddError(
 			"Unexpected Data Source Configure Type",
@@ -54,8 +53,7 @@ func (d *kafkaIngestSourcesDataSource) Configure(ctx context.Context, req dataso
 		)
 		return
 	}
-
-	d.client = client
+	d.client = c
 }
 
 func (d *kafkaIngestSourcesDataSource) Read(ctx context.Context, req datasource.ReadRequest, resp *datasource.ReadResponse) {
@@ -66,56 +64,13 @@ func (d *kafkaIngestSourcesDataSource) Read(ctx context.Context, req datasource.
 		return
 	}
 
-	tflog.Debug(ctx, "Reading Kafka ingest sources with automatic pagination")
-
-	// Use automatic pagination to get ALL Kafka ingest sources across all pages
-	allSources, err := d.client.GetAllPaginatedResults(ctx, "/public/api/v1/kafkaIngestSource")
+	results, err := d.client.ListKafkaIngestSources(ctx)
 	if err != nil {
 		resp.Diagnostics.AddError(
-			"Error reading Kafka ingest sources",
-			"Could not read Kafka ingest sources: "+err.Error(),
+			"Error reading kafka_ingest_sources",
+			"Could not read kafka_ingest_sources: "+err.Error(),
 		)
 		return
-	}
-
-	// Convert []interface{} to []map[string]interface{} for mapping
-	var sourceMaps []map[string]interface{}
-	for _, sourceInterface := range allSources {
-		if sourceMap, ok := sourceInterface.(map[string]interface{}); ok {
-			sourceMaps = append(sourceMaps, sourceMap)
-		}
-	}
-
-	// Map API response to model
-	if len(sourceMaps) > 0 {
-		sources, err := d.mapKafkaIngestSourcesResult(ctx, sourceMaps)
-		if err != nil {
-			resp.Diagnostics.AddError(
-				"Error mapping Kafka ingest sources response",
-				"Could not map Kafka ingest sources response: "+err.Error(),
-			)
-			return
-		}
-		config.Result = sources
-	} else {
-		elementType := datasource_kafka_ingest_sources.ResultType{
-			ObjectType: types.ObjectType{
-				AttrTypes: datasource_kafka_ingest_sources.ResultValue{}.AttributeTypes(ctx),
-			},
-		}
-		emptyList, _ := types.ListValueFrom(ctx, elementType, []datasource_kafka_ingest_sources.ResultValue{})
-		config.Result = emptyList
-	}
-
-	resp.Diagnostics.Append(resp.State.Set(ctx, &config)...)
-}
-
-func (d *kafkaIngestSourcesDataSource) mapKafkaIngestSourcesResult(ctx context.Context, result []map[string]interface{}) (types.List, error) {
-	sources := make([]datasource_kafka_ingest_sources.ResultValue, 0)
-
-	for _, sourceMap := range result {
-		source := d.mapSingleKafkaIngestSource(ctx, sourceMap)
-		sources = append(sources, source)
 	}
 
 	elementType := datasource_kafka_ingest_sources.ResultType{
@@ -123,66 +78,47 @@ func (d *kafkaIngestSourcesDataSource) mapKafkaIngestSourcesResult(ctx context.C
 			AttrTypes: datasource_kafka_ingest_sources.ResultValue{}.AttributeTypes(ctx),
 		},
 	}
-
-	listValue, diags := types.ListValueFrom(ctx, elementType, sources)
-	if diags.HasError() {
-		return types.ListNull(elementType), fmt.Errorf("failed to create list value: %v", diags)
-	}
-	return listValue, nil
-}
-
-func (d *kafkaIngestSourcesDataSource) mapSingleKafkaIngestSource(ctx context.Context, sourceMap map[string]interface{}) datasource_kafka_ingest_sources.ResultValue {
-	attributeTypes := datasource_kafka_ingest_sources.ResultValue{}.AttributeTypes(ctx)
-	attributes := map[string]attr.Value{}
-
-	// Map kafka_ingest_source_id
-	if id, ok := sourceMap["kafkaIngestSourceId"].(string); ok {
-		attributes["kafka_ingest_source_id"] = types.StringValue(id)
-	} else {
-		attributes["kafka_ingest_source_id"] = types.StringNull()
-	}
-
-	// Map name
-	if name, ok := sourceMap["name"].(string); ok {
-		attributes["name"] = types.StringValue(name)
-	} else {
-		attributes["name"] = types.StringNull()
-	}
-
-	// Map description
-	if description, ok := sourceMap["description"].(string); ok {
-		attributes["description"] = types.StringValue(description)
-	} else {
-		attributes["description"] = types.StringNull()
-	}
-
-	// Map kafka_brokers - it's a list of strings
-	var kafkaBrokers []string
-	if brokers, ok := sourceMap["kafkaBrokers"].([]interface{}); ok {
-		for _, broker := range brokers {
-			if brokerStr, ok := broker.(string); ok {
-				kafkaBrokers = append(kafkaBrokers, brokerStr)
+	items := make([]datasource_kafka_ingest_sources.ResultValue, 0, len(results))
+	for _, raw := range results {
+		m, ok := raw.(map[string]interface{})
+		if !ok {
+			tflog.Warn(ctx, fmt.Sprintf("unexpected entry type, skipping: %T", raw))
+			continue
+		}
+		attrs := map[string]attr.Value{
+			"description":            types.StringNull(),
+			"kafka_brokers":          types.ListNull(types.StringType),
+			"kafka_ingest_source_id": types.StringNull(),
+			"name":                   types.StringNull(),
+		}
+		if v, ok := m["description"].(string); ok {
+			attrs["description"] = types.StringValue(v)
+		}
+		if v, ok := m["kafkaIngestSourceId"].(string); ok {
+			attrs["kafka_ingest_source_id"] = types.StringValue(v)
+		}
+		if v, ok := m["name"].(string); ok {
+			attrs["name"] = types.StringValue(v)
+		}
+		if brokers, ok := m["kafkaBrokers"].([]interface{}); ok {
+			elems := make([]attr.Value, 0, len(brokers))
+			for _, b := range brokers {
+				if s, ok := b.(string); ok {
+					elems = append(elems, types.StringValue(s))
+				}
 			}
+			listValue, dd := types.ListValue(types.StringType, elems)
+			resp.Diagnostics.Append(dd...)
+			attrs["kafka_brokers"] = listValue
 		}
+		v, dd := datasource_kafka_ingest_sources.NewResultValue(datasource_kafka_ingest_sources.ResultValue{}.AttributeTypes(ctx), attrs)
+		resp.Diagnostics.Append(dd...)
+		items = append(items, v)
 	}
 
-	if len(kafkaBrokers) > 0 {
-		brokerValues := make([]attr.Value, len(kafkaBrokers))
-		for i, broker := range kafkaBrokers {
-			brokerValues[i] = types.StringValue(broker)
-		}
-		listValue, _ := types.ListValue(types.StringType, brokerValues)
-		attributes["kafka_brokers"] = listValue
-	} else {
-		attributes["kafka_brokers"] = types.ListNull(types.StringType)
-	}
+	listValue, dd := types.ListValueFrom(ctx, elementType, items)
+	resp.Diagnostics.Append(dd...)
+	config.Result = listValue
 
-	// Create the ResultValue using the constructor
-	source, diags := datasource_kafka_ingest_sources.NewResultValue(attributeTypes, attributes)
-	if diags.HasError() {
-		tflog.Error(ctx, fmt.Sprintf("Error creating Kafka ingest source ResultValue: %v", diags))
-		return datasource_kafka_ingest_sources.NewResultValueNull()
-	}
-
-	return source
+	resp.Diagnostics.Append(resp.State.Set(ctx, &config)...)
 }
