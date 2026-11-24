@@ -45,8 +45,7 @@ func (d *fileIngestSourcesDataSource) Configure(ctx context.Context, req datasou
 	if req.ProviderData == nil {
 		return
 	}
-
-	client, ok := req.ProviderData.(*client.GalaxyClient)
+	c, ok := req.ProviderData.(*client.GalaxyClient)
 	if !ok {
 		resp.Diagnostics.AddError(
 			"Unexpected Data Source Configure Type",
@@ -54,8 +53,7 @@ func (d *fileIngestSourcesDataSource) Configure(ctx context.Context, req datasou
 		)
 		return
 	}
-
-	d.client = client
+	d.client = c
 }
 
 func (d *fileIngestSourcesDataSource) Read(ctx context.Context, req datasource.ReadRequest, resp *datasource.ReadResponse) {
@@ -66,56 +64,13 @@ func (d *fileIngestSourcesDataSource) Read(ctx context.Context, req datasource.R
 		return
 	}
 
-	tflog.Debug(ctx, "Reading file ingest sources with automatic pagination")
-
-	// Use automatic pagination to get ALL file ingest sources across all pages
-	allSources, err := d.client.GetAllPaginatedResults(ctx, "/public/api/v1/fileIngestSource")
+	results, err := d.client.ListFileIngestSources(ctx)
 	if err != nil {
 		resp.Diagnostics.AddError(
-			"Error reading file ingest sources",
-			"Could not read file ingest sources: "+err.Error(),
+			"Error reading file_ingest_sources",
+			"Could not read file_ingest_sources: "+err.Error(),
 		)
 		return
-	}
-
-	// Convert []interface{} to []map[string]interface{} for mapping
-	var sourceMaps []map[string]interface{}
-	for _, sourceInterface := range allSources {
-		if sourceMap, ok := sourceInterface.(map[string]interface{}); ok {
-			sourceMaps = append(sourceMaps, sourceMap)
-		}
-	}
-
-	// Map API response to model
-	if len(sourceMaps) > 0 {
-		sources, err := d.mapFileIngestSourcesResult(ctx, sourceMaps)
-		if err != nil {
-			resp.Diagnostics.AddError(
-				"Error mapping file ingest sources response",
-				"Could not map file ingest sources response: "+err.Error(),
-			)
-			return
-		}
-		config.Result = sources
-	} else {
-		elementType := datasource_file_ingest_sources.ResultType{
-			ObjectType: types.ObjectType{
-				AttrTypes: datasource_file_ingest_sources.ResultValue{}.AttributeTypes(ctx),
-			},
-		}
-		emptyList, _ := types.ListValueFrom(ctx, elementType, []datasource_file_ingest_sources.ResultValue{})
-		config.Result = emptyList
-	}
-
-	resp.Diagnostics.Append(resp.State.Set(ctx, &config)...)
-}
-
-func (d *fileIngestSourcesDataSource) mapFileIngestSourcesResult(ctx context.Context, result []map[string]interface{}) (types.List, error) {
-	sources := make([]datasource_file_ingest_sources.ResultValue, 0)
-
-	for _, sourceMap := range result {
-		source := d.mapSingleFileIngestSource(ctx, sourceMap)
-		sources = append(sources, source)
 	}
 
 	elementType := datasource_file_ingest_sources.ResultType{
@@ -123,59 +78,43 @@ func (d *fileIngestSourcesDataSource) mapFileIngestSourcesResult(ctx context.Con
 			AttrTypes: datasource_file_ingest_sources.ResultValue{}.AttributeTypes(ctx),
 		},
 	}
-
-	listValue, diags := types.ListValueFrom(ctx, elementType, sources)
-	if diags.HasError() {
-		return types.ListNull(elementType), fmt.Errorf("failed to create list value: %v", diags)
-	}
-	return listValue, nil
-}
-
-func (d *fileIngestSourcesDataSource) mapSingleFileIngestSource(ctx context.Context, sourceMap map[string]interface{}) datasource_file_ingest_sources.ResultValue {
-	attributeTypes := datasource_file_ingest_sources.ResultValue{}.AttributeTypes(ctx)
-	attributes := map[string]attr.Value{}
-
-	// Map file_ingest_source_id
-	if id, ok := sourceMap["fileIngestSourceId"].(string); ok {
-		attributes["file_ingest_source_id"] = types.StringValue(id)
-	} else {
-		attributes["file_ingest_source_id"] = types.StringNull()
-	}
-
-	// Map name
-	if name, ok := sourceMap["name"].(string); ok {
-		attributes["name"] = types.StringValue(name)
-	} else {
-		attributes["name"] = types.StringNull()
-	}
-
-	// Map description
-	if description, ok := sourceMap["description"].(string); ok {
-		attributes["description"] = types.StringValue(description)
-	} else {
-		attributes["description"] = types.StringNull()
-	}
-
-	// Map bucket
-	if bucket, ok := sourceMap["bucket"].(string); ok {
-		attributes["bucket"] = types.StringValue(bucket)
-	} else {
-		attributes["bucket"] = types.StringNull()
+	items := make([]datasource_file_ingest_sources.ResultValue, 0, len(results))
+	for _, raw := range results {
+		m, ok := raw.(map[string]interface{})
+		if !ok {
+			tflog.Warn(ctx, fmt.Sprintf("unexpected entry type, skipping: %T", raw))
+			continue
+		}
+		attrs := map[string]attr.Value{
+			"bucket":                types.StringNull(),
+			"description":           types.StringNull(),
+			"file_ingest_source_id": types.StringNull(),
+			"name":                  types.StringNull(),
+			"prefix":                types.StringNull(),
+		}
+		if v, ok := m["bucket"].(string); ok {
+			attrs["bucket"] = types.StringValue(v)
+		}
+		if v, ok := m["description"].(string); ok {
+			attrs["description"] = types.StringValue(v)
+		}
+		if v, ok := m["fileIngestSourceId"].(string); ok {
+			attrs["file_ingest_source_id"] = types.StringValue(v)
+		}
+		if v, ok := m["name"].(string); ok {
+			attrs["name"] = types.StringValue(v)
+		}
+		if v, ok := m["prefix"].(string); ok {
+			attrs["prefix"] = types.StringValue(v)
+		}
+		v, dd := datasource_file_ingest_sources.NewResultValue(datasource_file_ingest_sources.ResultValue{}.AttributeTypes(ctx), attrs)
+		resp.Diagnostics.Append(dd...)
+		items = append(items, v)
 	}
 
-	// Map prefix
-	if prefix, ok := sourceMap["prefix"].(string); ok {
-		attributes["prefix"] = types.StringValue(prefix)
-	} else {
-		attributes["prefix"] = types.StringNull()
-	}
+	listValue, dd := types.ListValueFrom(ctx, elementType, items)
+	resp.Diagnostics.Append(dd...)
+	config.Result = listValue
 
-	// Create the ResultValue using the constructor
-	source, diags := datasource_file_ingest_sources.NewResultValue(attributeTypes, attributes)
-	if diags.HasError() {
-		tflog.Error(ctx, fmt.Sprintf("Error creating file ingest source ResultValue: %v", diags))
-		return datasource_file_ingest_sources.NewResultValueNull()
-	}
-
-	return source
+	resp.Diagnostics.Append(resp.State.Set(ctx, &config)...)
 }

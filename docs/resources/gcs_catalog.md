@@ -19,7 +19,7 @@ description: |-
 
 > **NOTE**: [Write-only arguments](https://developer.hashicorp.com/terraform/language/resources/ephemeral#write-only-arguments) are supported in Terraform 1.11 and later.
 
-- `credentials_key` (String, Sensitive, [Write-only](https://developer.hashicorp.com/terraform/language/resources/ephemeral#write-only-arguments))
+- `credentials_key` (String, Sensitive, [Write-only](https://developer.hashicorp.com/terraform/language/resources/ephemeral#write-only-arguments)) Base64 encoded or plain text GCS JSON key
 - `metastore_type` (String)
 - `name` (String) Catalog name
 - `read_only` (Boolean) Is catalog read only
@@ -34,6 +34,7 @@ description: |-
 - `external_table_writes_enabled` (Boolean) Allow writing to external tables. Defaults to false.
 - `hive_metastore_host` (String) Hive metastore host url
 - `hive_metastore_port` (Number) Hive metastore host port. Defaults to 9083.
+- `metadata_max_staleness_seconds` (Number) Maximum metadata staleness in seconds (30, 60, 90, or 120)
 - `ssh_tunnel_id` (String) SSH tunnel identifier
 - `validate` (Boolean) Validate catalog configuration before creation
 

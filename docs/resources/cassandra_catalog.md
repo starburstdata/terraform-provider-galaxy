@@ -30,11 +30,11 @@ description: |-
 - `database_id` (String) AstraDB database ID
 - `description` (String) Catalog description
 - `local_datacenter` (String) Local datacenter
-- `password` (String, Sensitive, [Write-only](https://developer.hashicorp.com/terraform/language/resources/ephemeral#write-only-arguments))
+- `password` (String, Sensitive, [Write-only](https://developer.hashicorp.com/terraform/language/resources/ephemeral#write-only-arguments)) Cassandra password
 - `port` (Number) Cassandra port. Defaults to 9042.
 - `region` (String) AstraDB region
 - `ssh_tunnel_id` (String) SSH tunnel identifier
-- `token` (String, Sensitive, [Write-only](https://developer.hashicorp.com/terraform/language/resources/ephemeral#write-only-arguments))
+- `token` (String, Sensitive, [Write-only](https://developer.hashicorp.com/terraform/language/resources/ephemeral#write-only-arguments)) AstraDB token
 - `username` (String) Cassandra username
 - `validate` (Boolean) Validate catalog configuration before creation
 

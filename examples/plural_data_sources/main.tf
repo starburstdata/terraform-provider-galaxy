@@ -155,6 +155,14 @@ output "gcs_catalogs_count" {
   description = "Total number of GCS catalogs"
 }
 
+# ENG-32720: regression guard — references element attributes, which will fail
+# with "Attempt to get attribute from null value" if the mapper skips required
+# fields again.
+output "gcs_catalog_names" {
+  value       = [for c in data.galaxy_gcs_catalogs.all.result : c.name]
+  description = "Names of all GCS catalogs"
+}
+
 output "snowflake_catalogs_count" {
   value       = length(data.galaxy_snowflake_catalogs.all.result)
   description = "Total number of Snowflake catalogs"

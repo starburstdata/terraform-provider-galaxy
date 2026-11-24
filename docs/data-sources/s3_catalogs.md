@@ -37,6 +37,7 @@ Read-Only:
 - `glue_secret_key` (String) AWS secret key for AWS Glue access
 - `hive_metastore_host` (String) Hive metastore host url
 - `hive_metastore_port` (Number) Hive metastore host port. Defaults to 9083.
+- `metadata_max_staleness_seconds` (Number) Maximum metadata staleness in seconds (30, 60, 90, or 120)
 - `metastore_type` (String)
 - `name` (String) Catalog name
 - `read_only` (Boolean) Is catalog read only
