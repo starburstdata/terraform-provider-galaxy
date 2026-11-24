@@ -15,8 +15,9 @@ func RedshiftCatalogResourceSchema(ctx context.Context) schema.Schema {
 			"access_key": schema.StringAttribute{
 				Optional:            true,
 				Computed:            true,
-				Description:         "",
-				MarkdownDescription: "",
+				Sensitive:           true,
+				Description:         "AWS access key",
+				MarkdownDescription: "AWS access key",
 			},
 			"auth_type": schema.StringAttribute{
 				Required: true,
@@ -51,8 +52,8 @@ func RedshiftCatalogResourceSchema(ctx context.Context) schema.Schema {
 				Optional:            true,
 				Sensitive:           true,
 				WriteOnly:           true,
-				Description:         "",
-				MarkdownDescription: "",
+				Description:         "Password",
+				MarkdownDescription: "Password",
 			},
 			"read_only": schema.BoolAttribute{
 				Required:            true,
@@ -74,8 +75,9 @@ func RedshiftCatalogResourceSchema(ctx context.Context) schema.Schema {
 			"secret_key": schema.StringAttribute{
 				Optional:            true,
 				Computed:            true,
-				Description:         "",
-				MarkdownDescription: "",
+				Sensitive:           true,
+				Description:         "AWS secret key",
+				MarkdownDescription: "AWS secret key",
 			},
 			"ssh_tunnel_id": schema.StringAttribute{
 				Optional:            true,

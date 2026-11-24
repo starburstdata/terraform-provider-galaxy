@@ -30,9 +30,9 @@ description: |-
 - `authentication_type` (String) Snowflake authentication type
 - `cloud_kind` (String) Snowflake cloud kind. Defaults to AWS.
 - `description` (String) Catalog description
-- `password` (String, Sensitive, [Write-only](https://developer.hashicorp.com/terraform/language/resources/ephemeral#write-only-arguments))
-- `private_key` (String, Sensitive, [Write-only](https://developer.hashicorp.com/terraform/language/resources/ephemeral#write-only-arguments))
-- `private_key_passphrase` (String, Sensitive, [Write-only](https://developer.hashicorp.com/terraform/language/resources/ephemeral#write-only-arguments))
+- `password` (String, Sensitive, [Write-only](https://developer.hashicorp.com/terraform/language/resources/ephemeral#write-only-arguments)) Snowflake password
+- `private_key` (String, Sensitive, [Write-only](https://developer.hashicorp.com/terraform/language/resources/ephemeral#write-only-arguments)) Base64 encoded or plain text PEM Snowflake private key
+- `private_key_passphrase` (String, Sensitive, [Write-only](https://developer.hashicorp.com/terraform/language/resources/ephemeral#write-only-arguments)) Snowflake private key passphrase
 - `role` (String) Snowflake role
 - `validate` (Boolean) Validate catalog configuration before creation
 - `warehouse` (String) Snowflake warehouse name

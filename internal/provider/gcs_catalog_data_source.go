@@ -112,6 +112,12 @@ func (d *gcs_catalogDataSource) updateModelFromResponse(ctx context.Context, mod
 	// CredentialsKey is write-only - the API returns "<Value is encrypted>"
 	// We don't update the credentials_key field from the API response since it's not the actual value.
 
+	if v, ok := response["metadataMaxStalenessSeconds"].(float64); ok {
+		model.MetadataMaxStalenessSeconds = types.Int64Value(int64(v))
+	} else {
+		model.MetadataMaxStalenessSeconds = types.Int64Null()
+	}
+
 	if defaultBucket, ok := response["defaultBucket"].(string); ok {
 		model.DefaultBucket = types.StringValue(defaultBucket)
 	} else if model.DefaultBucket.IsUnknown() {

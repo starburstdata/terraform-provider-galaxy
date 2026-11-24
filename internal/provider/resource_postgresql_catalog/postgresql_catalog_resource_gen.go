@@ -63,8 +63,8 @@ func PostgresqlCatalogResourceSchema(ctx context.Context) schema.Schema {
 				Required:            true,
 				Sensitive:           true,
 				WriteOnly:           true,
-				Description:         "",
-				MarkdownDescription: "",
+				Description:         "PostgreSQL database password",
+				MarkdownDescription: "PostgreSQL database password",
 			},
 			"port": schema.Int64Attribute{
 				Optional:            true,
